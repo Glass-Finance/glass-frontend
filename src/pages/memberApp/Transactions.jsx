@@ -236,8 +236,10 @@ export default function Transactions() {
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-ink-strong m-0">No transactions yet</p>
-          <p className="text-[13px] text-ink-faint m-0">Your payment history will appear here.</p>
+          <p className="text-base font-medium text-ink m-0">No Payment History</p>
+          <p className="text-sm font-normal text-ink/60 m-0">
+            Once you make payment, your transaction history will appear here.
+          </p>
         </div>
       ) : (
         groups.map(([label, txs]) => (

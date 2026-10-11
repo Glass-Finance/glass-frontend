@@ -399,9 +399,9 @@ export function EmptyHistoryState() {
         className="w-[52px] h-[52px] object-contain mb-3.5"
         loading="lazy"
       />
-      <p className="text-[17px] font-normal text-ink mb-1.5">No Payment History</p>
-      <p className="text-[13px] text-ink-faint m-0 leading-[1.55] max-w-[230px]">
-        Once you make your transaction history will appear here.
+      <p className="text-sm font-medium text-ink mb-1.5">No Payment History</p>
+      <p className="text-sm font-normal text-ink m-0 leading-[1.55] max-w-[230px]">
+        Once you make payment, your transaction history will appear here.
       </p>
     </div>
   );
