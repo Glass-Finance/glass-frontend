@@ -1,0 +1,81 @@
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, it, expect } from "vitest";
+import { readFileSync as readSrc } from "node:fs";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+const config = readSrc(join(root, "vite.config.js"), "utf8");
+const sw = readSrc(join(root, "src", "sw.js"), "utf8");
+
+// These guard the two mistakes made while building this feature, both of
+// which shipped-silently in the sense that the build passed and only the
+// running worker revealed them. Keep them here so a future edit cannot
+// reintroduce either without failing CI.
+
+describe("PWA worker configuration", () => {
+  it("uses injectManifest so the worker's behaviour is explicit code", () => {
+    expect(config).toMatch(/strategies:\s*["']injectManifest["']/);
+  });
+
+  it("never configures navigateFallback to the offline page", () => {
+    // `navigateFallback: '/offline.html'` makes Workbox's NavigationRoute
+    // answer EVERY navigation from the precached offline page: the handler
+    // replaces the request with `new Request('/offline.html')` and serves it
+    // unconditionally, so the online app renders "You're offline".
+    expect(config).not.toMatch(/navigateFallback:\s*["']\/?offline\.html["']/);
+  });
+
+  it("does not configure a runtime cache for the API", () => {
+    expect(config).not.toMatch(/runtimeCaching/);
+  });
+
+  it("registers the shell as the navigation handler, not the offline page", () => {
+    expect(sw).toMatch(/createHandlerBoundToURL\(["']\/index\.html["']\)/);
+    expect(sw).not.toMatch(/createHandlerBoundToURL\(["']\/offline\.html["']\)/);
+  });
+
+  it("keeps the API on NetworkOnly, never a caching strategy", () => {
+    expect(sw).toMatch(/new NetworkOnly\(\)/);
+    // A caching strategy on an API route would put financial responses in a cache.
+    const apiRoute = sw.match(/registerRoute\(([^)]*),\s*new (\w+)\(/);
+    expect(apiRoute?.[2]).toBe("NetworkOnly");
+  });
+
+  it("matches the API route at the start of the full URL, not the path", () => {
+    // Workbox's RegExpRoute only honours a cross-origin match when it begins
+    // at index 0. A path-only pattern never fires against api.glasspay.app,
+    // leaving the rule as dead code that only catches same-origin requests.
+    const apiRoute = sw.match(/registerRoute\(\/(.*?)\/i,\s*new NetworkOnly\(\)/);
+    expect(apiRoute?.[1]).toBeTruthy();
+    // The literal in src/sw.js is written with escaped slashes; drop the
+    // backslashes so the comparison is against the pattern the engine sees.
+    const pattern = apiRoute[1].replace(/\\/g, "");
+    expect(pattern.startsWith("^https?://")).toBe(true);
+    expect(pattern).toContain("/api/v1/");
+    // The path-only version that silently never matched the production host.
+    expect(pattern.startsWith("^/api/")).toBe(false);
+  });
+
+  it("only precaches built assets, never anything under /api/", () => {
+    const globs = config.match(/globPatterns:\s*\[([^\]]*)\]/);
+    expect(globs?.[1]).toBeTruthy();
+    expect(globs?.[1]).not.toMatch(/api/);
+  });
+});
+
+describe("offline fallback page", () => {
+  const html = readFileSync(join(root, "public", "offline.html"), "utf8");
+
+  it("is static: no external scripts, styles or links", () => {
+    expect(html).not.toMatch(/<script[^>]+src=/i);
+    expect(html).not.toMatch(/<link[^>]+rel=["']stylesheet["']/i);
+    expect(html).not.toMatch(/<link[^>]+href=["']https?:/i);
+  });
+
+  it("cannot reach an authenticated screen", () => {
+    expect(html).not.toContain("/dashboard");
+    expect(html).not.toContain("/member/home");
+    expect(html).not.toContain("/payment");
+  });
+});
