@@ -368,7 +368,7 @@ export default function Topbar({
           aria-label="Take the dashboard tour"
           title="Take the dashboard tour"
         >
-          <HelpCircle size={18} />
+          <HelpCircle size={18} className="text-ink-muted" />
         </Button>
 
         {/* Bell */}
@@ -380,7 +380,7 @@ export default function Topbar({
             className="relative"
             aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`}
           >
-            <Bell size={17} />
+            <Bell size={17} className="text-ink-muted" />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-danger border-2 border-white flex items-center justify-center text-white text-[9px] font-bold px-0.5">
                 {unreadCount > 99 ? "99+" : unreadCount}
