@@ -11,6 +11,16 @@ import EmptyState from "../../../components/common/EmptyState";
 import { useKycSummary } from "../../../hooks/useKyc";
 import KycStatusBadge from "../../../components/memberApp/KycStatusBadge";
 import KycWizardModal from "../../../components/kyc/KycWizardModal";
+import {
+  IconNavUser,
+  IconNavRole,
+  IconNavSecurity,
+  IconNavPayments,
+  IconNavAutopay,
+  IconNavPayoutAccount,
+  IconNavCommunity,
+  IconNavMembers,
+} from "../../../components/ui/icons/AdminMenuIcons";
 import { kycDisabled } from "../../../lib/flags";
 
 // The communities overview owns the "pick one community" empty state -- the
@@ -37,16 +47,19 @@ const ACCOUNT_ITEMS = [
     label: "Profile",
     desc: "Configure your details to how you want them to appear on Glass.",
     path: "/dashboard/settings/account/profile",
+    icon: IconNavUser,
   },
   {
     label: "My Role",
     desc: "Tell us how you participate financially in this community.",
     path: "/dashboard/settings/account/role",
+    icon: IconNavRole,
   },
   {
     label: "Security",
     desc: "Keep your account locked down with password and login controls.",
     path: "/dashboard/settings/account/security",
+    icon: IconNavSecurity,
   },
   {
     label: "Notifications",
@@ -73,17 +86,20 @@ const FINANCE_ITEMS = [
     label: "Payment Methods",
     desc: "The cards and accounts Glass uses to collect your dues.",
     path: "/dashboard/settings/finance/payment-methods",
+    icon: IconNavPayments,
   },
   {
     label: "Auto-Pay",
     desc: "Turn on automatic charging so you never miss a due date.",
     path: "/dashboard/settings/finance/auto-pay",
+    icon: IconNavAutopay,
   },
   {
     label: "Payout Account",
     desc: "The account your community's collected dues are settled into.",
     path: "/dashboard/settings/finance/paystack",
     communityScoped: true,
+    icon: IconNavPayoutAccount,
   },
 ];
 
@@ -93,12 +109,14 @@ const COMMUNITY_ITEMS = [
     desc: "How your community looks and behaves to its members.",
     path: "/dashboard/settings/community/profile",
     communityScoped: true,
+    icon: IconNavCommunity,
   },
   {
     label: "Member Access",
     desc: "Control who can join, and who else can manage this community.",
     path: "/dashboard/settings/community/member-access",
     communityScoped: true,
+    icon: IconNavMembers,
   },
 ];
 
@@ -148,11 +166,14 @@ function scopedPath(path, community) {
 function BreadcrumbParent({ parent, community }) {
   const navigate = useNavigate();
   return (
+    // Figma draws the breadcrumb's parent label in #000000 (node 1:5719), not
+    // the brand blue the tertiary role carries, so text-ink overrides it.
     <Button
       variant="tertiary"
       size="sm"
       fullWidth={false}
       onClick={() => navigate(scopedPath(PARENT_PATH[parent], community))}
+      className="text-ink"
     >
       {parent}
     </Button>
@@ -170,25 +191,35 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col gap-3 w-full">
-      {items.map((item, i) => (
-        <button
-          key={i}
-          onClick={() => (item.kyc ? onOpenKyc() : navigate(scopedPath(item.path, community)))}
-          className="w-full flex items-center gap-4 px-5 py-4 bg-surface-container rounded-xl text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
-        >
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">{item.label}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
-          </div>
-          {/* Live status beside the row. This list is full-width, so the pill
+      {items.map((item, i) => {
+        const RowIcon = item.icon;
+        return (
+          <button
+            key={i}
+            onClick={() => (item.kyc ? onOpenKyc() : navigate(scopedPath(item.path, community)))}
+            className="w-full flex items-center gap-6 pl-9 pr-6 py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
+          >
+            {/* Figma 'navMenuIcons/*' lead glyph, 32px. Figma only defines these
+              on eight rows; the Notifications and Identity Verification rows
+              have no glyph in the file, so they get an empty 32px slot to keep
+              the label column aligned. */}
+            <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+              {RowIcon ? <RowIcon size={32} /> : null}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[18px] leading-6 font-medium text-ink">{item.label}</p>
+              <p className="text-[16px] leading-6 mt-1 text-ink">{item.desc}</p>
+            </div>
+            {/* Live status beside the row. This list is full-width, so the pill
               keeps its label here -- only the phone-width member list drops to
               the icon (KycStatusBadge showLabel). */}
-          {item.kyc && kycSummary?.status && (
-            <KycStatusBadge status={kycSummary.status} className="flex-shrink-0" />
-          )}
-          <ChevronRight size={15} className="text-gray-400 flex-shrink-0" />
-        </button>
-      ))}
+            {item.kyc && kycSummary?.status && (
+              <KycStatusBadge status={kycSummary.status} className="flex-shrink-0" />
+            )}
+            <ChevronRight size={16} className="text-ink flex-shrink-0" />
+          </button>
+        );
+      })}
     </div>
   );
 }

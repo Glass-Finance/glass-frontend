@@ -329,7 +329,7 @@ export default function OrganizationProfile() {
                 fullWidth={false}
                 type="button"
                 onClick={handleBack}
-                className="mb-4 -ml-1"
+                className="mb-4 -ml-1 text-ink"
               >
                 <ArrowLeft size={15} />
                 {isAuthenticated ? "Back to dashboard" : "Back"}

@@ -59,7 +59,7 @@ export default function PayingMember() {
           fullWidth={false}
           type="button"
           onClick={handleBack}
-          className="self-start mb-4 -ml-1"
+          className="self-start mb-4 -ml-1 text-ink"
         >
           <ArrowLeft size={15} />
           {isAuthenticated ? "Back to dashboard" : "Back"}
