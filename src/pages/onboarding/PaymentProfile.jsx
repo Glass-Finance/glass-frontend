@@ -277,7 +277,7 @@ export default function PaymentProfile() {
                   size="sm"
                   fullWidth={false}
                   onClick={handleBack}
-                  className="mb-4 -ml-1 text-ink"
+                  className="mb-4 -ml-1"
                 >
                   <ArrowLeft size={15} />
                   {isAuthenticated ? "Back to dashboard" : "Back"}

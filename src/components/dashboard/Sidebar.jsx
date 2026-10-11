@@ -324,7 +324,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                 onCloseMobile?.();
               }}
               title="Platform Admin"
-              className=""
+              className="text-white"
             >
               <ShieldCheck size={15} />
             </Button>
@@ -557,7 +557,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                 onCloseMobile?.();
               }}
               title="Platform Admin"
-              className="mt-2"
+              className="mt-2 text-white"
             >
               <ShieldCheck size={14} />
             </Button>

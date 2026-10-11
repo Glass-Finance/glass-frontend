@@ -54,7 +54,7 @@ export default function VerifyIdentity() {
             size="icon-md"
             onClick={() => navigate("/onboarding/choose-path", { state: { email } })}
             aria-label="Back to choose path"
-            className="flex-shrink-0 text-ink"
+            className="flex-shrink-0"
           >
             <ArrowLeft size={17} strokeWidth={2} />
           </Button>
