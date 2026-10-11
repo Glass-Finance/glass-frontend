@@ -105,13 +105,13 @@ Six roles. All **Inter**, label weight **500**, border radius **4px at rest**.
 
 ### 2.1 Role matrix
 
-| Role         | Fill           | Label                             | Stroke              | Radius              |
-| ------------ | -------------- | --------------------------------- | ------------------- | ------------------- |
-| **Primary**  | `#002fa7`      | `#ffffff`                         | —                   | **4px, all states** |
-| **Outline**  | **none**       | `#002fa7` · `#000000` · `#db0000` | `#000000 @10%`, 1px | 4px                 |
-| **Tertiary** | none           | `#002fa7` · `#db0000`             | none                | 4px, height 24      |
-| **Critical** | `#db0000`      | `#ffffff`                         | —                   | 4px                 |
-| **Tonal**    | `#ffffff @60%` | `#002fa7`                         | `#000000 @10%`, 1px | 4px                 |
+| Role         | Fill           | Label                                      | Stroke              | Radius              |
+| ------------ | -------------- | ------------------------------------------ | ------------------- | ------------------- |
+| **Primary**  | `#002fa7`      | `#ffffff`                                  | —                   | **4px, all states** |
+| **Outline**  | **none**       | `#002fa7` · `#000000` · `#db0000`          | `#000000 @10%`, 1px | 4px                 |
+| **Tertiary** | none           | **`#000000 @60%`** · `#002fa7` · `#db0000` | none                | 4px, height 24      |
+| **Critical** | `#db0000`      | `#ffffff`                                  | —                   | 4px                 |
+| **Tonal**    | `#ffffff @60%` | `#002fa7`                                  | `#000000 @10%`, 1px | 4px                 |
 
 > ### ⚠️ Extension: Success and Warning are NOT in Figma
 >
@@ -150,6 +150,17 @@ Six roles. All **Inter**, label weight **500**, border radius **4px at rest**.
 > _geometrically identical_ — same no-fill, same `#000000 @10%` 1px stroke, same radii and
 > heights. They differ **only** in label colour: blue / black / red. They are not broken
 > duplicates.
+
+> **Tertiary renders the "Subtle" variant.** `Tertiary Button` (1:11927) is a component set of
+> two label colours: brand blue `#002fa7` and a **Subtle** variant at `#000000 @60%`. The blue
+> default exists in the library but is **never placed on a page** — every tertiary the file
+> actually uses ("Back", "See All", breadcrumbs) is Subtle. `ui/Button` therefore renders
+> tertiary as muted ink, not brand blue. Rendering it blue leaked blue into every back link,
+> See-All link and breadcrumb in the app, which is what the "why is this blue" reports were
+> all about. Use `outline` when a blue text link is actually wanted.
+>
+> The brand-blue rail is the one place tertiary sits on a coloured surface; its icon buttons
+> pin `className="text-white"` rather than inheriting the role.
 
 ### 2.2 Sizes
 

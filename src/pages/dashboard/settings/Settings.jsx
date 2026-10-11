@@ -166,8 +166,9 @@ function scopedPath(path, community) {
 function BreadcrumbParent({ parent, community }) {
   const navigate = useNavigate();
   return (
-    // Figma draws the breadcrumb's parent label in #000000 (node 1:5719), not
-    // the brand blue the tertiary role carries, so text-ink overrides it.
+    // Figma draws the breadcrumb's parent label in solid #000000 (node
+    // 1:5719). The tertiary role renders the muted "Subtle" ink (black @60%),
+    // so text-ink lifts it back to full black here.
     <Button
       variant="tertiary"
       size="sm"

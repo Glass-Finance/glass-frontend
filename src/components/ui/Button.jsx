@@ -89,9 +89,15 @@ const VARIANTS = {
     on: "bg-white/60 text-brand border border-black/10 hover:bg-white/75 active:bg-white/90",
     off: "bg-white/60 text-brand border border-black/10 opacity-60",
   },
+  // Tertiary is the muted text-link role. Figma defines it as two variants in
+  // component set 1:11927: a brand-blue default and a "Subtle" one at
+  // #000000 @60%. The blue default is library-only -- every tertiary the file
+  // actually places on a page ("Back", "See All", breadcrumbs) is Subtle, so
+  // that is what this role renders. The previous text-brand here leaked blue
+  // into every back link, See-All link and breadcrumb in the app.
   tertiary: {
-    on: "bg-transparent text-brand hover:bg-black/5 active:bg-black/10",
-    off: "bg-transparent text-brand opacity-60",
+    on: "bg-transparent text-black/60 hover:bg-black/5 active:bg-black/10",
+    off: "bg-transparent text-black/60 opacity-60",
   },
 };
 

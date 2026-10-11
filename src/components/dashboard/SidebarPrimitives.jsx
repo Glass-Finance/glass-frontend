@@ -37,6 +37,8 @@ export function SidebarLogo({ onClick, title }) {
 }
 
 export function LogoutButton({ onClick, loggingOut }) {
+  // Always rendered on the brand-blue rail, so it pins white rather than
+  // inheriting the tertiary role's muted ink.
   return (
     <Button
       variant="tertiary"
@@ -45,7 +47,7 @@ export function LogoutButton({ onClick, loggingOut }) {
       onClick={onClick}
       disabled={loggingOut}
       title="Log out"
-      className=""
+      className="text-white"
     >
       <LogOut size={14} />
     </Button>

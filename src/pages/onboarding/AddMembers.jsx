@@ -374,7 +374,7 @@ export default function AddMembers() {
                 fullWidth={false}
                 type="button"
                 onClick={handleBack}
-                className="mb-4 -ml-1 text-ink"
+                className="mb-4 -ml-1"
               >
                 <ArrowLeft size={15} />
                 {isAuthenticated ? "Back to dashboard" : "Back"}
