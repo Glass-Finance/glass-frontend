@@ -8,8 +8,10 @@
 // hardcoded black strokes are rewritten to `currentColor` so each glyph
 // inherits its row's text colour.
 //
-// Render at 32px: that is the Figma instance width for a settings menu row
-// (DESIGN-SYSTEM.md section 2.2a icon boxes).
+// The viewBox stays 32 -- that is Figma's instance width for a settings menu
+// row -- but rows render these at 24px, scaled down alongside the row copy
+// (18/16 -> 14/12) on the design owner's instruction. `size` sets the rendered
+// box, so the stroke scales with it rather than being pinned to 1.5.
 //
 // Source node id is noted on each component.
 
@@ -203,8 +205,8 @@ export function IconNavCommunity({ size = 32, className = "" }) {
 
 // Settings > Account > Notifications. Figma draws no glyph for this row (the
 // file's 'navMenuIcons/*' set stops at the eight rows that carry one), so this
-// bell is drawn here to the same spec as its siblings: 32px box, 1.5 stroke,
-// currentColor, round caps and joins.
+// bell is drawn here to the same spec as its siblings: 32-unit viewBox, 1.5
+// stroke, currentColor, round caps and joins.
 export function IconNavNotifications({ size = 32, className = "" }) {
   return (
     <svg
@@ -237,7 +239,7 @@ export function IconNavNotifications({ size = 32, className = "" }) {
 
 // Settings > Account > Identity Verification. Also absent from Figma's
 // navMenuIcons set -- an ID card carrying the member's portrait and detail
-// lines, drawn to the same 32px / 1.5 stroke / currentColor spec.
+// lines, drawn to the same 32-unit viewBox / 1.5 stroke / currentColor spec.
 export function IconNavIdentity({ size = 32, className = "" }) {
   return (
     <svg
