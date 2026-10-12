@@ -14,6 +14,10 @@ import {
   CreditCard,
   ChevronRight,
   Loader2,
+  // The "No communities yet" empty state renders <Users> below. It was never
+  // imported, so that branch threw `ReferenceError: Users is not defined` for
+  // every user with zero communities -- the first-run state for a new member.
+  Users,
 } from "lucide-react";
 import { formatNaira as sharedFormatNaira, formatDateShort, toTitleCase } from "../../utils/format";
 import { useCommunitiesWithMetrics } from "../../hooks/useCommunities";
