@@ -109,6 +109,11 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
   const [identity, setIdentity] = useState(() => readCachedIdentity());
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [initFailed, setInitFailed] = useState(false);
+  // Ref, not state: the renderButton effect below needs to know whether
+  // initialize() succeeded, and it runs immediately after the init effect in
+  // the same commit. A state write here would only add a second render pass,
+  // and would make "did init work" a re-render trigger for no benefit.
+  const initializedRef = useRef(false);
 
   const hasClientId = typeof clientId === "string" && clientId.trim().length > 0;
   const gisError = !hasClientId ? "missing-client-id" : initFailed ? "init-failed" : null;
@@ -130,6 +135,12 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
     if (!hiddenBtnRef.current) return;
 
     try {
+      // initialize() registers the client + credential callback globally --
+      // it has nothing to do with layout. It used to share an effect with
+      // renderButton() below, whose deps include the ResizeObserver-measured
+      // `width`, so every width change re-initialized the client (Google logs
+      // "initialize() is called multiple times", and the prior instance's
+      // callback is discarded). Kept width-free on purpose.
       window.google?.accounts?.id?.initialize({
         client_id: clientId,
         callback: async (credentialResponse) => {
@@ -167,9 +178,30 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
           }
         },
       });
-      // Re-rendered whenever `width` changes (matches the visible button's
-      // measured width) -- Google's SDK replaces the container's contents in
-      // place, same as the old <GoogleLogin/> widget did.
+      initializedRef.current = true;
+    } catch (err) {
+      initializedRef.current = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- error state must be set synchronously to prevent a render with a stale ref
+      setInitFailed(true);
+      notifyError(err, { context: "Google auth" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally width-free: see the comment above
+  }, [clientId, scriptLoadedSuccessfully, hasClientId]);
+
+  // Separate effect, and the only one that depends on `width`: Google's SDK
+  // replaces the container's contents in place, so a resize needs a fresh
+  // renderButton() at the new measured width (same as the old <GoogleLogin/>
+  // widget did). By then the client is already initialized by the effect
+  // above, which runs first because it has no width dependency.
+  useEffect(() => {
+    if (!hasClientId) return;
+    if (!scriptLoadedSuccessfully) return;
+    if (!hiddenBtnRef.current) return;
+    // Google only renders a working button for an initialized client; when
+    // initialize() threw, there is nothing to render into.
+    if (!initializedRef.current) return;
+
+    try {
       window.google.accounts.id.renderButton(hiddenBtnRef.current, {
         type: "standard",
         theme: "outline",
@@ -181,7 +213,6 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
       setInitFailed(true);
       notifyError(err, { context: "Google auth" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-render on script-ready/width only
   }, [clientId, scriptLoadedSuccessfully, width, hasClientId]);
 
   if (gisError) {

@@ -295,6 +295,59 @@ describe("GIS configuration/loading failures", () => {
     expect(renderButtonMock).toHaveBeenCalledTimes(1);
   });
 
+  // Regression: initialize() and renderButton() used to share one effect that
+  // depended on the ResizeObserver-measured `width`, so every resize re-ran
+  // initialize(). Google logs "initialize() is called multiple times" and only
+  // keeps the last instance -- the previously registered callback is dropped.
+  // The button is sized to `width`, so renderButton() must keep re-running on
+  // resize; initialize() must not.
+  it("re-renders the button on resize but does not re-initialize the client", () => {
+    useGoogleOAuthMock.mockReturnValue({
+      clientId: "test-client-id",
+      scriptLoadedSuccessfully: true,
+    });
+    let resizeCallback;
+    window.ResizeObserver = class {
+      constructor(cb) {
+        resizeCallback = cb;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+    const initializeMock = vi.fn((opts) => {
+      googleCallback = opts.callback;
+    });
+    const renderButtonMock = vi.fn();
+    window.google = {
+      accounts: {
+        id: {
+          initialize: initializeMock,
+          renderButton: renderButtonMock,
+        },
+      },
+    };
+
+    render(<GoogleAuthButton />);
+
+    expect(initializeMock).toHaveBeenCalledTimes(1);
+    expect(renderButtonMock).toHaveBeenCalledTimes(1);
+
+    // The container is now a different measured width (rotation, sidebar,
+    // window drag) -- Google's SDK replaces the container contents in place,
+    // so this has to happen.
+    act(() => {
+      resizeCallback([{ contentRect: { width: 512 } }]);
+    });
+
+    expect(renderButtonMock).toHaveBeenCalledTimes(2);
+    expect(renderButtonMock).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ width: "512" }),
+    );
+    expect(initializeMock).toHaveBeenCalledTimes(1);
+  });
+
   it("still calls googleAuth with the credential JWT on successful sign-in", async () => {
     useGoogleOAuthMock.mockReturnValue({
       clientId: "test-client-id",

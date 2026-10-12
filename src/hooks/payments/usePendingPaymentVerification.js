@@ -34,6 +34,21 @@ export function usePendingPaymentVerification() {
           toastSuccess("Payment confirmed", { reference });
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Put the reference back. This hook exists precisely to recover payers
+        // who never reached the callback page, and a rejected verification
+        // (flaky mobile network, a 5xx, an aborted request) says nothing about
+        // whether the money left at the provider — the charge may well have
+        // gone through. Consuming the key up front made one transient failure
+        // lose the recovery permanently, because nothing else ever reads it
+        // again: the payer saw the obligation as Due and paid a second time.
+        // Restoring it keeps recovery possible on the next mount. Still
+        // attempt-once per mount — this effect does not loop.
+        try {
+          sessionStorage.setItem("paymentPendingRef", reference);
+        } catch {
+          /* ignore */
+        }
+      });
   }, [queryClient]);
 }
