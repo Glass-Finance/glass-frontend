@@ -212,10 +212,11 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
             </div>
             <div className="flex-1 min-w-0">
               {/* Owner-directed divergence from Figma, which specifies 18/500
-                + 16/400 here: the row copy read oversized next to the 16px
-                tab labels, so both steps down while keeping the ratio. */}
-              <p className="text-base leading-6 font-medium text-ink">{item.label}</p>
-              <p className="text-[13px] leading-5 mt-1 text-ink">{item.desc}</p>
+                + 16/400 here: the row copy read oversized against the 16px
+                tab labels and the surrounding chrome, so both step down to
+                the 14/12 pair the page's other controls use. */}
+              <p className="text-sm leading-5 font-medium text-ink">{item.label}</p>
+              <p className="text-xs leading-4 mt-0.5 text-ink">{item.desc}</p>
             </div>
             {/* Live status beside the row. This list is full-width, so the pill
               keeps its label here -- only the phone-width member list drops to

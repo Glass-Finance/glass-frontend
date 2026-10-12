@@ -35,7 +35,9 @@ import { Skeleton } from "../../components/common/SkeletonUI";
 import { AdminPaymentModal } from "../../components/dashboard/AdminPaymentModal";
 import { CommunityCard } from "./CommunitiesHomeSections";
 import KycWizardModal from "../../components/kyc/KycWizardModal";
+import KycStatusBadge from "../../components/memberApp/KycStatusBadge";
 import { useKycGate } from "../../hooks/useKycGate";
+import { kycDisabled } from "../../lib/flags";
 
 function formatNaira(amount) {
   return sharedFormatNaira(amount, { emptyDash: true });
@@ -321,14 +323,26 @@ export default function CommunitiesHome() {
   const { user, isPlatformAdmin } = useAuth();
   const { data, isLoading, error } = useCommunitiesWithMetrics();
   const kycGate = useKycGate();
-  // The wizard is driven entirely by the gate now that the header badge is
-  // gone -- there is no second entry point that opens it directly.
+  // The header badge is a second entry point that opens the wizard directly,
+  // alongside the gate — same split the member Home header uses.
+  const [kycWizardOpen, setKycWizardOpen] = useState(false);
+  // Show every state, approved included: this is the screen where the user
+  // decides whether to create a community, so the status is worth reading
+  // even when nothing is blocking them. Hidden under the kill switch and for
+  // platform staff, who are backend-exempt and cannot start an attempt, and
+  // held back while the summary is still unknown — a failed summary must not
+  // masquerade as "Not started". A settled summary with no record is exactly
+  // that, so it falls through to NOT_STARTED below (same fallback
+  // useKycVerification already applies).
+  const showKycBadge = !kycDisabled() && !isPlatformAdmin && !kycGate.isLoading && !kycGate.isError;
   const closeKycWizard = () => {
+    setKycWizardOpen(false);
     kycGate.closeGate();
   };
   // Done-after-approval: resume whatever the gate interrupted (create a
   // community, open an owned community) instead of parking on the dashboard.
   const completeKycWizard = () => {
+    setKycWizardOpen(false);
     kycGate.completeGate();
   };
   const {
@@ -423,17 +437,31 @@ export default function CommunitiesHome() {
       {/* Header. On phones the KYC chip rides on the title line, pushed to its
           right edge, and the two actions take the full width below it — sharing
           one row squeezed the labels onto two lines ("Join / Community").
-          From md up the actions stay right-aligned and the chip moves to the
-          far right, after them. */}
+          From md up the actions stay right-aligned and the title block (chip
+          included) stays left. */}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-3 px-4 pt-7 pb-5 md:items-center md:px-7">
-        {/* Title only -- the KYC status chip that used to sit beside it is
-            gone; identity status is surfaced elsewhere in the app, and
-            wrapping the badge in a Button put a focus ring around a passive
-            status read-out. */}
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold text-ink">Your Communities</h1>
-          {user?.firstName && (
-            <p className="text-xs text-gray-400 mt-0.5">Welcome back, {user.firstName}</p>
+        {/* Title and KYC chip travel together: full width on phones, so
+            justify-between parks the chip at the right edge of the title line.
+            The chip is a bare transparent button, not the design-system Button —
+            wrapping a status pill in one put that variant's focus ring and box
+            around what is otherwise a plain read-out. */}
+        <div className="flex w-full min-w-0 items-start justify-between gap-3 md:w-auto">
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold text-ink">Your Communities</h1>
+            {user?.firstName && (
+              <p className="text-xs text-gray-400 mt-0.5">Welcome back, {user.firstName}</p>
+            )}
+          </div>
+
+          {showKycBadge && (
+            <button
+              type="button"
+              onClick={() => setKycWizardOpen(true)}
+              className="bg-transparent border-none cursor-pointer p-0 flex-shrink-0"
+              aria-label="Identity verification status"
+            >
+              <KycStatusBadge status={kycGate.status ?? "NOT_STARTED"} />
+            </button>
           )}
         </div>
 
@@ -480,7 +508,7 @@ export default function CommunitiesHome() {
       </div>
 
       <KycWizardModal
-        open={kycGate.gateOpen}
+        open={kycWizardOpen || kycGate.gateOpen}
         onClose={closeKycWizard}
         onComplete={completeKycWizard}
         historyPath="/dashboard/verify-identity/history"
