@@ -47,10 +47,41 @@ export default function Footer() {
   const navigate = useNavigate();
 
   return (
-    <footer className="relative isolate bg-brand-ink text-white">
+    <footer className="relative isolate overflow-hidden bg-brand-ink text-white">
+      {/* Decorative Glass mark, centred on the whole footer. Not a Figma node
+          (1:1374 draws no watermark) — owner-approved extension, see
+          DESIGN-SYSTEM.md §9.8. Stops are the sanctioned brand blue and deep
+          navy; the mask is what cuts the stepped line through the plate. */}
+      <svg
+        aria-hidden="true"
+        viewBox="26 18 204 182"
+        className="pointer-events-none select-none absolute left-1/2 top-1/2 z-0 h-[104%] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.55]"
+      >
+        <defs>
+          <linearGradient id="footerMarkGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#002fa7" />
+            <stop offset="1" stopColor="#001f6e" />
+          </linearGradient>
+          <mask id="footerMarkMask">
+            <rect x="0" y="0" width="260" height="220" fill="#fff" />
+            <path
+              d="M165 10 L165 80 L103 80 L103 140 L157 140 L157 120 L240 120"
+              fill="none"
+              stroke="#000"
+              strokeWidth="6.5"
+              strokeLinejoin="miter"
+            />
+          </mask>
+        </defs>
+        <path
+          mask="url(#footerMarkMask)"
+          fill="url(#footerMarkGrad)"
+          d="M31 84 L90 22 L222 22 L222 140 L150 194 L31 194Z"
+        />
+      </svg>
+
       {/* ── CTA ── */}
       <div className="relative pt-20 md:pt-28 pb-20 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,rgba(30,50,160,0.35)_0%,transparent_70%)]" />
         <div className="relative z-10 max-w-[860px] mx-auto px-6 text-center">
           <h2 className="text-[clamp(30px,5vw,54px)] font-bold text-white leading-tight tracking-tight mb-5">
             <BlurText
@@ -86,7 +117,8 @@ export default function Footer() {
       </div>
 
       {/* ── Footer content ── */}
-      <div className="max-w-[1140px] mx-auto px-6 pt-14 pb-8">
+      {/* z-10 so the nav columns and copyright sit above the watermark. */}
+      <div className="relative z-10 max-w-[1140px] mx-auto px-6 pt-14 pb-8">
         {/* Brand */}
         <div className="mb-6">
           <a href="/" className="inline-flex items-center gap-2 no-underline mb-3">
