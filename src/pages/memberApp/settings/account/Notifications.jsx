@@ -24,7 +24,7 @@ function PrefRow({ label, desc, value, onChange, disabled, last = false }) {
 function Section({ title, children, ariaBusy = false }) {
   return (
     <div className="mb-5">
-<p className="text-[14px] font-medium text-black/60 mt-0 mx-1 mb-2">{title}</p>
+      <p className="text-[14px] font-medium text-black/60 mt-0 mx-1 mb-2">{title}</p>
       <div
         aria-busy={ariaBusy || undefined}
         className="rounded-xl bg-surface-container border border-black/10 overflow-hidden"
