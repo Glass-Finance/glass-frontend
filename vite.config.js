@@ -1,11 +1,81 @@
 import { defineConfig, configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   // svgr turns `*.svg?react` imports (KYC scenes in src/assets/kyc) into
   // React components so they can inherit currentColor and size props.
-  plugins: [react(), svgr()],
+  plugins: [
+    react(),
+    svgr(),
+    VitePWA({
+      // injectManifest (not generateSW) so the worker's navigation, API and
+      // offline behaviour is explicit code in src/sw.js rather than inferred
+      // from a config object. See src/sw.js for the three rules that must not
+      // regress, and docs/pwa.md.
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
+      registerType: "autoUpdate",
+      includeAssets: [
+        "favicon.ico",
+        "apple-touch-icon.png",
+        "og-image.png",
+        "maskable-icon-512.png",
+      ],
+      manifest: {
+        id: "/",
+        name: "Glasspay",
+        short_name: "Glasspay",
+        description: "Community finance platform for Nigerian associations, clubs, and schools.",
+        theme_color: "#002FA7",
+        background_color: "#F7F8FC",
+        display: "standalone",
+        scope: "/",
+        start_url: "/",
+        shortcuts: [
+          {
+            name: "My Communities",
+            url: "/member/communities",
+            icons: [{ src: "/favicon-192x192.png", sizes: "192x192" }],
+          },
+          {
+            name: "Make Payment",
+            url: "/member/manage-payments",
+            icons: [{ src: "/favicon-192x192.png", sizes: "192x192" }],
+          },
+        ],
+        icons: [
+          { src: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+          { src: "/favicon-512x512.png", sizes: "512x512", type: "image/png" },
+          {
+            src: "/maskable-icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+      injectManifest: {
+        // The app shell: index.html, the entry JS/CSS, the lazy route chunks
+        // each screen needs, icons and illustrations. This is build OUTPUT --
+        // no user data of any kind -- and precaching it is what lets an
+        // offline navigation render the app instead of hanging on a chunk that
+        // has to come from the network.
+        //
+        // Fonts (woff/woff2) are deliberately NOT precached: they add ~1 MB to
+        // a first load and the only offline consequence is the shell falling
+        // back to system fonts. For a mobile-first audience on metered data
+        // that trade is worth it. No user data is involved either way.
+        globPatterns: ["**/*.{js,css,html,ico,png,webp,svg}"],
+        // The largest emitted chunk is the receipt generator (jspdf, ~400 kB).
+        // The plugin fails the build on a "file too large" warning, so raise
+        // the ceiling above it rather than silently dropping an asset.
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
+    }),
+  ],
   test: {
     environment: "jsdom",
     globals: true,

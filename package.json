@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "verify:pwa": "node scripts/verify-pwa-sw.mjs",
     "probe:idempotency": "node scripts/probe-payment-idempotency.mjs",
     "check:landing-sync": "node scripts/check-landing-sync.mjs",
     "audit:endpoints": "node scripts/endpoint-audit.mjs",
@@ -73,6 +74,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^7.0.2",
     "vite": "^8.0.16",
+    "vite-plugin-pwa": "^2.0.0",
     "vite-plugin-svgr": "^5.2.0",
     "vitest": "^4.1.10"
   }

@@ -5,6 +5,7 @@ import { useActiveCommunityId } from "../../../../hooks/useActiveCommunityId";
 import { useMyMemberRecord } from "../../../../hooks/useMyAccount";
 import { updateCommunityMember } from "../../../../api/communities";
 import { getErrorMessage } from "../../../../utils/errorHandler";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
 
 const OPTIONS = [
   {
@@ -75,11 +76,14 @@ export default function Role() {
 
   // ── Loading skeleton ───────────────────────────────────────────────────────
   if (isLoading) {
+    // Decorative placeholder. The wrapper is hidden from assistive tech and
+    // aria-busy marks the region, so a screen-reader user is told the section
+    // is loading rather than being handed a run of visual-only bars.
     return (
-      <div className="flex flex-col gap-5 w-full">
+      <div aria-hidden="true" aria-busy="true" className="flex flex-col gap-5 w-full">
         <div>
-          <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse" />
-          <div className="h-3 w-56 bg-gray-100 rounded animate-pulse" />
+          <Skeleton className="h-4 w-24 rounded mb-2" />
+          <Skeleton className="h-3 w-56 rounded" />
         </div>
         <div className="bg-surface-container rounded-2xl p-6 border border-surface-container-border">
           <div className="flex flex-col gap-3">
@@ -88,10 +92,10 @@ export default function Role() {
                 key={i}
                 className="flex items-start gap-3 px-4 py-4 rounded-xl bg-gray-100 animate-pulse border-[1.5px] border-surface-container-border"
               >
-                <div className="w-5 h-5 rounded-full bg-gray-200 flex-shrink-0 mt-0.5" />
+                <Skeleton className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <div className="h-3.5 w-32 bg-gray-200 rounded mb-2" />
-                  <div className="h-3 w-full bg-gray-200 rounded" />
+                  <Skeleton className="h-3.5 w-32 rounded mb-2" />
+                  <Skeleton className="h-3 w-full rounded" />
                 </div>
               </div>
             ))}

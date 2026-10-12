@@ -1,8 +1,9 @@
 import { toTitleCase } from "../../../../utils/format";
-import { Skeleton, ActivityIcon } from "../SkeletonUI";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
+import { ActivityIcon } from "../SkeletonUI";
 import { timeAgo } from "../helpers";
 
-export default function RecentActivityCard({ isLoading, items }) {
+export default function RecentActivityCard({ isLoading, items, error = null }) {
   return (
     <div className="bg-surface-container rounded-xl border border-surface-container-border p-4">
       <span className="text-sm font-medium text-black block mb-4">Recent Activity</span>
@@ -19,6 +20,12 @@ export default function RecentActivityCard({ isLoading, items }) {
             </div>
           ))}
         </div>
+      ) : error ? (
+        // Must precede the empty check: a failed /activity fetch resolves to
+        // an empty list, so without this the card shows "No recent activity
+        // yet" -- an empty community -- when what actually happened is that
+        // the request errored.
+        <p className="text-xs text-danger py-3">Couldn't load recent activity.</p>
       ) : items.length === 0 ? (
         // Shaped like a real row below (same gap-3/py-3, same w-9 h-9
         // rounded-full icon slot) but dashed and empty instead of filled +

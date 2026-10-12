@@ -1089,3 +1089,15 @@ html.dashboard-compact {
     animation: none;
   }
 }
+
+/* ── Skeleton shimmer ──────────────────────────────────────────────────────
+   `animate-pulse` is Tailwind's default 2s opacity pulse, used by every
+   skeleton in the app (SkeletonUI, CardSkeleton, SkeletonRow, Sidebar,
+   Role). It ships in @layer utilities via the `@import "tailwindcss"` at
+   the top of this file, so an unlayered rule here outranks it — the same
+   mechanism the two reduced-motion blocks above rely on. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}

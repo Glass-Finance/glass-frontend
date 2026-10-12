@@ -3,12 +3,13 @@ import { Button } from "../../../../components/ui/Button";
 import ReceiptDownloadButton from "../../../../components/dashboard/ReceiptDownloadButton";
 import { toTitleCase, formatDate } from "../../../../utils/format";
 import TimerIcon from "../../../../assets/dashboard/timer.webp";
-import { Skeleton } from "../SkeletonUI";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
 import { formatNaira, statusStyle } from "../helpers";
 
 export default function MemberPaymentsSection({
   transactions,
   isLoading,
+  error = null,
   search,
   onSearchChange,
   sortDir,
@@ -96,6 +97,17 @@ export default function MemberPaymentsSection({
                   ))}
                 </tr>
               ))
+            ) : error ? (
+              // Must precede the empty-row check: a failed fetch resolves to
+              // an empty array, so without this the table shows "No
+              // transactions found" rather than telling the admin the load
+              // actually failed. Same colSpan as the empty row so the header
+              // alignment is unchanged.
+              <tr>
+                <td colSpan={7} className="px-5 py-4 text-center text-xs text-danger">
+                  Couldn't load member payments.
+                </td>
+              </tr>
             ) : transactions.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-5 py-4">

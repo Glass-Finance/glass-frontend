@@ -30,6 +30,11 @@ import CrispChat from "./components/common/CrispChat.jsx";
 import { notifyError } from "./utils/errorHandler.js";
 import { toastSuccess } from "./utils/toast.js";
 import { initMonitoring } from "./utils/monitoring.js";
+// Registers the service worker via vite-plugin-pwa's virtual module. Importing
+// this (rather than relying on an injected <script src="/registerSW.js">) is
+// what makes registerType:"autoUpdate" do anything -- see
+// src/pwa/registerServiceWorker.js.
+import "./pwa/registerServiceWorker.js";
 
 initMonitoring();
 
