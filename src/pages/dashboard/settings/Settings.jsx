@@ -202,13 +202,14 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
           <button
             key={i}
             onClick={() => (item.kyc ? onOpenKyc() : navigate(scopedPath(item.path, community)))}
-            className="w-full flex items-center gap-6 pl-9 pr-6 py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
+            className="w-full flex items-center gap-4 pl-9 pr-6 py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
           >
-            {/* Figma 'navMenuIcons/*' lead glyph, 32px. The file only draws
-              glyphs for eight of the ten rows; Notifications and Identity
-              Verification are drawn in AdminMenuIcons.jsx to match. */}
-            <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-              {RowIcon ? <RowIcon size={32} /> : null}
+            {/* Figma 'navMenuIcons/*' lead glyph. 24px, down from Figma's 32px
+              and scaled with the row copy (18/16 -> 14/12). The file only
+              draws glyphs for eight of the ten rows; Notifications and
+              Identity Verification are drawn in AdminMenuIcons.jsx to match. */}
+            <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
+              {RowIcon ? <RowIcon size={24} /> : null}
             </div>
             <div className="flex-1 min-w-0">
               {/* Owner-directed divergence from Figma, which specifies 18/500
