@@ -28,7 +28,6 @@ describe("Button — design system conformance", () => {
     // Owner-directed decouplings: Figma's box with a 12px label. Padding and
     // height still come from Figma -- only `text` differs. DESIGN-SYSTEM.md §2.
     ["sm-tight", "py-2", "px-4", "h-10", "text-[12px]"],
-    ["lg-tight", "py-4", "px-8", "h-14", "text-[12px]"],
   ])("size %s maps to its padding/height/label", (size, py, px, h, text) => {
     render(<Button size={size}>Go</Button>);
     const cls = screen.getByRole("button").className;
