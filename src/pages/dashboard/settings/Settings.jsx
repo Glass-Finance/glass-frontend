@@ -20,6 +20,8 @@ import {
   IconNavPayoutAccount,
   IconNavCommunity,
   IconNavMembers,
+  IconNavNotifications,
+  IconNavIdentity,
 } from "../../../components/ui/icons/AdminMenuIcons";
 import { kycDisabled } from "../../../lib/flags";
 
@@ -65,6 +67,7 @@ const ACCOUNT_ITEMS = [
     label: "Notifications",
     desc: "Choose which updates you get by email and SMS.",
     path: "/dashboard/settings/account/notifications",
+    icon: IconNavNotifications,
   },
   // KYC is personal, not community-scoped: it gates what *you* can create and
   // manage, so it deliberately carries no ?community= and every community
@@ -76,6 +79,7 @@ const ACCOUNT_ITEMS = [
     label: "Identity Verification",
     desc: "Verify your identity to create and manage communities.",
     path: "/dashboard/verify-identity",
+    icon: IconNavIdentity,
     kyc: true,
   },
 ];
@@ -200,16 +204,18 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
             onClick={() => (item.kyc ? onOpenKyc() : navigate(scopedPath(item.path, community)))}
             className="w-full flex items-center gap-6 pl-9 pr-6 py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
           >
-            {/* Figma 'navMenuIcons/*' lead glyph, 32px. Figma only defines these
-              on eight rows; the Notifications and Identity Verification rows
-              have no glyph in the file, so they get an empty 32px slot to keep
-              the label column aligned. */}
+            {/* Figma 'navMenuIcons/*' lead glyph, 32px. The file only draws
+              glyphs for eight of the ten rows; Notifications and Identity
+              Verification are drawn in AdminMenuIcons.jsx to match. */}
             <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
               {RowIcon ? <RowIcon size={32} /> : null}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[18px] leading-6 font-medium text-ink">{item.label}</p>
-              <p className="text-[16px] leading-6 mt-1 text-ink">{item.desc}</p>
+              {/* Owner-directed divergence from Figma, which specifies 18/500
+                + 16/400 here: the row copy read oversized next to the 16px
+                tab labels, so both steps down while keeping the ratio. */}
+              <p className="text-base leading-6 font-medium text-ink">{item.label}</p>
+              <p className="text-[13px] leading-5 mt-1 text-ink">{item.desc}</p>
             </div>
             {/* Live status beside the row. This list is full-width, so the pill
               keeps its label here -- only the phone-width member list drops to
