@@ -268,13 +268,19 @@ export default function ManagePayments() {
             // Same vertical placement as the Notifications empty state:
             // both centre their block in 55vh, but that page's content
             // starts 54px lower (its tab strip), so it needs +2x that here.
+            //
+            // Type overrides because the desktop page-level default is
+            // 28/500, which would swamp a phone screen. This uses the
+            // pattern every designed mobile empty state uses instead:
+            // 16/500 on 24px leading, 14/400 description at #000000 @60%
+            // (283:21374, 1:10113, 1:9996).
             <EmptyState
               illustration={managePaymentsEmptyIllustration}
               illustrationClassName="w-20 h-20 object-contain mb-2.5"
               title="No Payment Plans Yet"
-              titleClassName="text-sm font-semibold text-ink"
+              titleClassName="text-base font-medium text-ink"
               subtitle="Your active payment plans can be managed here."
-              subtitleClassName="text-xs text-ink-ghost mt-2.5 max-w-[240px] leading-relaxed"
+              subtitleClassName="text-sm font-normal text-ink/60 mt-2.5 max-w-[240px]"
               className="min-h-[calc(55vh+122px)] justify-center"
             />
           ) : filtered.length === 0 ? (

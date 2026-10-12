@@ -137,7 +137,7 @@ export default function Groups() {
         <Button
           onClick={() => setEditing("new")}
           fullWidth={false}
-          size="sm"
+          size="sm-tight"
           className="px-3.5 inline-flex items-center gap-1.5"
         >
           <Plus size={14} /> New group
@@ -185,17 +185,19 @@ export default function Groups() {
       ) : rows.length === 0 ? (
         // Full-page state built from the compact `icon` layout, so it has to
         // ask for the page-level action size explicitly -- see EmptyState.
+        // EmptyState's prop is `subtitle`; `description` isn't one of its
+        // keys, so this line has been rendering nothing since the switch.
         <EmptyState
           icon={Users}
           title={search ? "No groups match that search" : "No groups yet"}
-          description={
+          subtitle={
             search
               ? "Try a different name."
               : "Groups let you bill a subset of your members — a choir, a floor, a staff team — without picking names one at a time."
           }
           action={!search ? () => setEditing("new") : undefined}
           actionLabel={!search ? "Create your first group" : undefined}
-          actionSize="lg-tight"
+          actionSize="sm-tight"
         />
       ) : (
         <ul className="flex flex-col gap-2 mb-4">
