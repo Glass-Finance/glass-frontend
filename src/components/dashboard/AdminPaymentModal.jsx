@@ -87,10 +87,24 @@ export function AdminPaymentModal({ item, onClose }) {
   // Build-time kill switch (VITE_FLAGS) -- mirrors PaymentSummary; see
   // src/lib/flags.js and docs/runbooks/incident-rollback.md.
   const killSwitch = paymentsDisabled();
+  // `item.amount` is raw.amount straight from the backend, so it can be
+  // null/undefined when the obligation record has no amount yet. Zero is a
+  // legitimate value (a free plan bills ₦0), so only null/undefined count as
+  // "unknown" -- hence `== null`, not a falsy check. The amount row already
+  // renders "—" for this case (formatNaira's emptyDash), but the Pay button
+  // used to stay enabled and forward amount:null to the charge endpoint.
+  const amountUnavailable = item.amount == null;
 
   async function handlePay() {
     if (killSwitch) {
       setError("Payments are temporarily unavailable. Please try again later.");
+      return;
+    }
+    // Second line of defence for the disabled button above: never forward a
+    // null/undefined amount to the charge endpoint even if the button is
+    // somehow reached (keyboard, stale render, future refactor).
+    if (amountUnavailable) {
+      setError("Amount unavailable. Please close this and try again.");
       return;
     }
     setError("");
@@ -307,7 +321,7 @@ export function AdminPaymentModal({ item, onClose }) {
         <div className="px-6 pb-4 flex items-center justify-end">
           <Button
             onClick={handlePay}
-            disabled={isLinkInactive || killSwitch}
+            disabled={isLinkInactive || killSwitch || amountUnavailable}
             loading={initiatePayment.isPending || redirecting}
             fullWidth={false}
             className="w-[262px]"
@@ -321,6 +335,8 @@ export function AdminPaymentModal({ item, onClose }) {
               "Payments Temporarily Unavailable"
             ) : isLinkInactive ? (
               "Payment Unavailable"
+            ) : amountUnavailable ? (
+              "Amount Unavailable"
             ) : (
               "Make Payment"
             )}
