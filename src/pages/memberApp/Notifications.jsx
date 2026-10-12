@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Bell, User } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import { useInvites } from "../../hooks/useInvites";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useCommunityMap } from "../../hooks/useCommunityMap";
@@ -23,6 +23,7 @@ import { formatRelativeDateTime } from "../../utils/format";
 import paymentsEmptyIllustration from "../../assets/memberApp/empty-states/notifications-payments-empty.webp";
 import communityEmptyIllustration from "../../assets/memberApp/empty-states/notifications-community-empty.webp";
 import invitesEmptyIllustration from "../../assets/memberApp/empty-states/notifications-invites-empty.webp";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 const TABS = ["Payments", "Community", "Invites"];
 
@@ -312,15 +313,11 @@ export default function Notifications() {
       <GlassLogoGlow />
       {/* Header */}
       <div className="flex items-center justify-center relative pt-6 px-5 pb-5">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
           className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
+        />
         <h1 className="text-lg font-medium text-ink m-0">Notifications</h1>
       </div>
 

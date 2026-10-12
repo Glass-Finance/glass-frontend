@@ -5,7 +5,7 @@ import LoadingState from "../../../../components/common/LoadingState";
 import SuccessBadge from "../../../../components/common/SuccessBadge";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { ChevronLeft, ShieldCheck, Shield, Copy, Check } from "lucide-react";
+import { ShieldCheck, Shield, Copy, Check } from "lucide-react";
 import { useMe } from "../../../../hooks/useMyAccount";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,6 +19,7 @@ import { resolveMfaQrImageSrc } from "../../../../utils/mfaQrImageUrl";
 import { useCopyToClipboard } from "../../../../hooks/useCopyToClipboard";
 import { Button } from "../../../../components/ui/Button";
 import { toastSuccess } from "../../../../utils/toast";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 // ── OTP digit input ───────────────────────────────────────────────────────────
 function CodeInput({ value, onChange, disabled }) {
@@ -376,17 +377,13 @@ export default function TwoFactorAuth() {
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => (flow ? setFlow(null) : goBackInApp(navigate, "/member/security"))}
-          className=""
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">
+          className="absolute left-4"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">
           {flow === "setup"
             ? "Set Up MFA"
             : flow === "disable"

@@ -187,7 +187,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
             >
               Cancel
             </Button>
-            <Button type="submit" loading={isSaving} fullWidth={false} className="flex-1">
+            <Button type="submit" loading={isSaving} fullWidth={false} size="sm" className="flex-1">
               {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
               {isSaving ? "Saving…" : "Save Changes"}
             </Button>

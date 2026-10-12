@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Check, Copy, CheckCheck, Share2 } from "lucide-react";
+import { Check, Copy, CheckCheck, Share2 } from "lucide-react";
 import { useTransactionDetail } from "../../hooks/useTransactionDetail";
 import { useAuth } from "../../store/AuthContext";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
@@ -10,6 +10,7 @@ import ReceiptModal from "../../components/common/ReceiptModal";
 import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusStyle } from "../../utils/transactionStatus";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 function StatusPill({ status }) {
   const { label, ...s } = transactionStatusStyle(status);
@@ -61,19 +62,13 @@ export default function TransactionDetail() {
     <div className="relative overflow-hidden min-h-screen pb-10 max-w-[430px] mx-auto">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
-          className="flex-shrink-0"
-        >
-          <ChevronLeft size={18} color="var(--color-ink-strong)" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0 flex-1 text-center mr-9">
-          Transaction Details
-        </h1>
+          className="absolute left-4"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Transaction Details</h1>
       </div>
 
       {isLoading ? (

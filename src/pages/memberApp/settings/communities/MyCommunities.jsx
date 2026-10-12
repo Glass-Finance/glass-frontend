@@ -2,15 +2,14 @@ import { useState } from "react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { AlertTriangle, ChevronLeft, ChevronRight, Loader2, LogOut, Plus, X } from "lucide-react";
+import { AlertTriangle, ChevronRight, Loader2, LogOut, Plus, X } from "lucide-react";
 import { useMyCommunities, useLeaveCommunity } from "../../../../hooks/useMyAccount";
 import { resolveIsPayingAdmin } from "../../../../utils/communityRole";
 import PageLoadingState from "../../../../components/common/PageLoadingState";
 import KycWizardModal from "../../../../components/kyc/KycWizardModal";
-import KycStatusBadge from "../../../../components/memberApp/KycStatusBadge";
 import { Button } from "../../../../components/ui/Button";
 import { useKycGate } from "../../../../hooks/useKycGate";
-import { kycDisabled } from "../../../../lib/flags";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 function getInitials(name = "") {
   return name
@@ -159,27 +158,24 @@ export default function MyCommunities() {
   return (
     <div className="relative overflow-hidden pb-10 min-h-screen">
       <GlassLogoGlow />
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => goBackInApp(navigate, "/member/settings")}
-          className=""
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">My Communities</h1>
+          className="absolute left-4"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">My Communities</h1>
       </div>
 
-      <div className="pt-0 px-4 pb-4 flex items-center gap-2">
+      <div className="pt-0 px-4 pb-4">
         <Button
           onClick={() => {
             kycGate.enforce(() => navigate("/onboarding/choose-path"));
           }}
           disabled={kycGate.isLoading}
           aria-busy={kycGate.isLoading}
-          className="flex-1"
+          size="md"
+          fullWidth={false}
         >
           {kycGate.isLoading ? (
             <>
@@ -193,15 +189,6 @@ export default function MyCommunities() {
             </>
           )}
         </Button>
-        {!kycDisabled() && kycGate.status && (
-          <button
-            onClick={() => setKycWizardOpen(true)}
-            className="bg-transparent border-none cursor-pointer p-0 flex-shrink-0"
-            aria-label="Identity verification status"
-          >
-            <KycStatusBadge status={kycGate.status} />
-          </button>
-        )}
       </div>
 
       <KycWizardModal

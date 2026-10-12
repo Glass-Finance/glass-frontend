@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { ChevronLeft } from "lucide-react";
+import {} from "lucide-react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import OtpBoxes from "../../../../components/common/OtpBoxes";
 import { renderDashedOtpBoxes } from "../../../../components/common/renderDashedOtpBoxes";
@@ -14,6 +14,7 @@ import { getEmailError } from "../../../../utils/validators";
 import { Button } from "../../../../components/ui/Button";
 import { TextInput } from "../../../../components/ui/TextInput";
 import SuccessBadge from "../../../../components/common/SuccessBadge";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 // Masks an email's local part for display in the OTP prompt, e.g.
 // "aminaargawal@gmail.com" -> "**********al@gmail.com" — keep the last 2
@@ -29,17 +30,9 @@ function StepHeader({ title, onBack }) {
   return (
     <div className="flex items-center justify-center relative pt-6 px-5 pb-6">
       {onBack && (
-        <Button
-          variant="tertiary"
-          size="icon-md"
-          aria-label="Back"
-          onClick={onBack}
-          className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
+        <MobileBackButton aria-label="Back" onClick={onBack} className="absolute left-5" />
       )}
-      <h1 className="text-lg font-semibold text-ink m-0">{title}</h1>
+      <h1 className="text-lg font-medium text-ink m-0">{title}</h1>
     </div>
   );
 }

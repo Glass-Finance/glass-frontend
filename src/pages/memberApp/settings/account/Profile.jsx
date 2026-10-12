@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useMe, useUpdateProfile } from "../../../../hooks/useMyAccount";
 import { useFileUpload } from "../../../../hooks/useFileUpload";
 import { useAuth } from "../../../../store/AuthContext";
@@ -12,6 +12,7 @@ import { toTitleCase } from "../../../../utils/format";
 import { Button } from "../../../../components/ui/Button";
 import { TextInput } from "../../../../components/ui/TextInput";
 import verifiedBadge from "../../../../assets/icons/verified-badge.webp";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 // Only used for the two non-editable "display" boxes below (verified email/
 // phone) -- real text fields (first/last name) use the shared TextInput
@@ -117,17 +118,13 @@ export default function Profile() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
-          className=""
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">Profile</h1>
+          className="absolute left-4"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Profile</h1>
       </div>
 
       <div className="px-4">

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronLeft, Download, Loader2 } from "lucide-react";
+import { ChevronDown, Download, Loader2 } from "lucide-react";
 import { usePayments } from "../../hooks/usePayments";
 import PageLoadingState from "../../components/common/PageLoadingState";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 const FILTER_OPTIONS = ["All", "Recurring", "One-time"];
 
@@ -116,15 +117,11 @@ export default function UpcomingPayments() {
       <GlassLogoGlow />
       {/* Header */}
       <div className="relative flex items-center justify-center pt-6 px-5 pb-5">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
           className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
+        />
         <h1 className="text-lg font-medium text-ink m-0">Upcoming Payments</h1>
         <Button
           variant="tertiary"

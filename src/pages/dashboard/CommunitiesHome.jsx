@@ -35,9 +35,7 @@ import { Skeleton } from "../../components/common/SkeletonUI";
 import { AdminPaymentModal } from "../../components/dashboard/AdminPaymentModal";
 import { CommunityCard } from "./CommunitiesHomeSections";
 import KycWizardModal from "../../components/kyc/KycWizardModal";
-import KycStatusBadge from "../../components/memberApp/KycStatusBadge";
 import { useKycGate } from "../../hooks/useKycGate";
-import { kycDisabled } from "../../lib/flags";
 
 function formatNaira(amount) {
   return sharedFormatNaira(amount, { emptyDash: true });
@@ -105,7 +103,7 @@ function OverviewCard({ icon, title, badge, children, footerLabel, onFooter }) {
           variant="tertiary"
           size="xs"
           onClick={onFooter}
-          className="w-full border-t border-gray-50"
+          className="w-full justify-start border-t border-gray-50"
         >
           {footerLabel} <ChevronRight size={12} />
         </Button>
@@ -323,17 +321,14 @@ export default function CommunitiesHome() {
   const { user, isPlatformAdmin } = useAuth();
   const { data, isLoading, error } = useCommunitiesWithMetrics();
   const kycGate = useKycGate();
-  // The KYC badge opens the wizard modal directly instead of routing to the
-  // verify page — same flow, no context switch.
-  const [kycWizardOpen, setKycWizardOpen] = useState(false);
+  // The wizard is driven entirely by the gate now that the header badge is
+  // gone -- there is no second entry point that opens it directly.
   const closeKycWizard = () => {
-    setKycWizardOpen(false);
     kycGate.closeGate();
   };
   // Done-after-approval: resume whatever the gate interrupted (create a
   // community, open an owned community) instead of parking on the dashboard.
   const completeKycWizard = () => {
-    setKycWizardOpen(false);
     kycGate.completeGate();
   };
   const {
@@ -431,44 +426,41 @@ export default function CommunitiesHome() {
           From md up the actions stay right-aligned and the chip moves to the
           far right, after them. */}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-3 px-4 pt-7 pb-5 md:items-center md:px-7">
-        {/* Title and KYC chip travel together: full width on phones, so
-            justify-between parks the chip at the right edge of the title line. */}
-        <div className="flex w-full min-w-0 items-start justify-between gap-3 md:w-auto">
-          <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-ink">Your Communities</h1>
-            {user?.firstName && (
-              <p className="text-xs text-gray-400 mt-0.5">Welcome back, {user.firstName}</p>
-            )}
-          </div>
-
-          {!kycDisabled() && kycGate.status && (
-            <Button
-              variant="tertiary"
-              size="icon-sm"
-              onClick={() => setKycWizardOpen(true)}
-              aria-label="Identity verification status"
-              className="flex-shrink-0 mt-1"
-            >
-              <KycStatusBadge status={kycGate.status} />
-            </Button>
+        {/* Title only -- the KYC status chip that used to sit beside it is
+            gone; identity status is surfaced elsewhere in the app, and
+            wrapping the badge in a Button put a focus ring around a passive
+            status read-out. */}
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold text-ink">Your Communities</h1>
+          {user?.firstName && (
+            <p className="text-xs text-gray-400 mt-0.5">Welcome back, {user.firstName}</p>
           )}
         </div>
 
         <div
           data-tour="communities-home-actions"
-          className="flex w-full gap-2.5 md:w-auto md:items-center"
+          className="flex w-full gap-3 md:w-auto md:items-center"
         >
+          {/* Figma 1:7274 -- 189x56, white fill, #000000 stroke, black label,
+              32px padding and a trailing dropdown chevron. The label dropped
+              to 12px and the box to h40 (sm-tight) with the 2026-10-12
+              button-sizing sweep: 16px read too large against "Your
+              Communities" and the pair crowded the header. */}
           <Button
-            variant="outline"
-            size="xs"
-            className="flex-1 md:flex-none whitespace-nowrap"
+            variant="outline-neutral"
+            size="sm-tight"
+            fullWidth={false}
             onClick={() => navigate("/onboarding/choose-path", { state: { intent: "join" } })}
           >
             Join Community
+            <ChevronDown size={16} />
           </Button>
+          {/* Figma 1:7277 -- 208x56, #002FA7 fill, 32px padding; same
+              sm-tight exception as the Join button above. */}
           <Button
             variant="primary"
-            size="xs"
+            size="sm-tight"
+            fullWidth={false}
             onClick={() => {
               kycGate.enforce(() => navigate("/onboarding/choose-path"));
             }}
@@ -477,7 +469,7 @@ export default function CommunitiesHome() {
           >
             {kycGate.isLoading ? (
               <>
-                <Loader2 size={13} className="animate-spin mr-1.5" />
+                <Loader2 size={16} className="animate-spin" />
                 Checking…
               </>
             ) : (
@@ -488,7 +480,7 @@ export default function CommunitiesHome() {
       </div>
 
       <KycWizardModal
-        open={kycWizardOpen || kycGate.gateOpen}
+        open={kycGate.gateOpen}
         onClose={closeKycWizard}
         onComplete={completeKycWizard}
         historyPath="/dashboard/verify-identity/history"

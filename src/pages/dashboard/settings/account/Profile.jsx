@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Pencil, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Pencil, ShieldCheck } from "lucide-react";
 import {
   useMe,
   useUpdateProfile,
@@ -452,37 +452,23 @@ export default function Profile() {
 
             {error && <p className="text-xs text-danger mb-3">{error}</p>}
 
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSave}
-                disabled={updateProfile.isPending || !isDirty}
-                variant="outline"
-                size="md"
-              >
-                {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
-              </Button>
-            </div>
+            <Button
+              onClick={handleSave}
+              disabled={updateProfile.isPending || !isDirty}
+              variant="primary"
+              size="sm"
+              fullWidth={false}
+            >
+              {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
+            </Button>
           </div>
         </>
       )}
 
       {view === "email" && (
         <>
-          {/* Neither Figma mock shows a way back to the main profile view --
-              kept for now rather than silently dropping the only navigation
-              out of this screen. Styled as the app's standard back-arrow link
-              (matches PaymentProfile.jsx/PayingMember.jsx/CreatePlanModal.jsx)
-              instead of a "Cancel" text button. */}
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth={false}
-            onClick={() => setView("profile")}
-            className="self-start -ml-1"
-          >
-            <ArrowLeft size={15} /> Back
-          </Button>
-
+          {/* No back link here: the breadcrumb above (Account › Profile) is
+              the way out, and Figma's settings frames draw no such element. */}
           <div className="bg-surface-container rounded-xl border border-surface-container-border">
             <div className="px-6 py-4 border-b border-gray-100">
               <p className="text-sm font-bold text-gray-900">Update Your Email</p>
@@ -522,16 +508,6 @@ export default function Profile() {
       {view === "phone" && (
         <>
           {/* See the email view's identical comment above. */}
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth={false}
-            onClick={() => setView("profile")}
-            className="self-start -ml-1"
-          >
-            <ArrowLeft size={15} /> Back
-          </Button>
-
           <div className="bg-surface-container rounded-xl border border-surface-container-border">
             <div className="px-6 py-4 border-b border-gray-100">
               <p className="text-sm font-bold text-gray-900">

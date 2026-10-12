@@ -1,25 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../../components/ui/Button";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { ChevronLeft, History } from "lucide-react";
+import { History } from "lucide-react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import useKycFlow from "../../../../components/kyc/useKycFlow";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 function StepHeader({ title, onBack, right }) {
   return (
     <div className="flex items-center justify-center relative pt-6 px-5 pb-6">
       {onBack && (
-        <Button
-          variant="tertiary"
-          size="icon-md"
-          aria-label="Back"
-          onClick={onBack}
-          className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
+        <MobileBackButton aria-label="Back" onClick={onBack} className="absolute left-5" />
       )}
-      <h1 className="text-lg font-semibold text-ink m-0">{title}</h1>
+      <h1 className="text-lg font-medium text-ink m-0">{title}</h1>
       {right && <div className="absolute right-5">{right}</div>}
     </div>
   );

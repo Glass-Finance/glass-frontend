@@ -72,9 +72,10 @@ Ordered lightest → darkest: `#ccdaff` · `#bdd0fe` · `#dbe6ff` · `#94b1fb` �
 Four values. Anything else (`rounded-md` 6, `rounded-2xl` 16, arbitrary `[10px]`/`[20px]`/`[46px]`) is off-system.
 
 > **Pill exception (confirmed 2026-10-09, extended 2026-10-10):** `rounded-full` is legal on
-> **toggle tracks** (Figma r=100), **frequency badges** (r=24/999), **status chips**, and
-> **landing CTAs** (r=60, see §2.2b) — the file uses pills there deliberately. It stays banned
-> on product buttons, cards, inputs and modals.
+> **toggle tracks** (Figma r=100), **frequency badges** (r=24/999), **status chips**,
+> **landing CTAs** (r=60, see §2.2b), and the **mobile back button** (Figma node `1:14109`,
+> r=999 — a true 48×48 circle; see §2.2c) — the file uses pills there deliberately. It stays
+> banned on product buttons, cards, inputs and modals.
 
 > Note: an earlier version of `design-audit.md` claimed a `6` in the scale. There is no 6.
 > One `Dialog` node carries r=24, outside the scale — provisional, see §9.3.
@@ -104,13 +105,13 @@ Six roles. All **Inter**, label weight **500**, border radius **4px at rest**.
 
 ### 2.1 Role matrix
 
-| Role         | Fill           | Label                             | Stroke              | Radius              |
-| ------------ | -------------- | --------------------------------- | ------------------- | ------------------- |
-| **Primary**  | `#002fa7`      | `#ffffff`                         | —                   | **4px, all states** |
-| **Outline**  | **none**       | `#002fa7` · `#000000` · `#db0000` | `#000000 @10%`, 1px | 4px                 |
-| **Tertiary** | none           | `#002fa7` · `#db0000`             | none                | 4px, height 24      |
-| **Critical** | `#db0000`      | `#ffffff`                         | —                   | 4px                 |
-| **Tonal**    | `#ffffff @60%` | `#002fa7`                         | `#000000 @10%`, 1px | 4px                 |
+| Role         | Fill           | Label                                      | Stroke              | Radius              |
+| ------------ | -------------- | ------------------------------------------ | ------------------- | ------------------- |
+| **Primary**  | `#002fa7`      | `#ffffff`                                  | —                   | **4px, all states** |
+| **Outline**  | **none**       | `#002fa7` · `#000000` · `#db0000`          | `#000000 @10%`, 1px | 4px                 |
+| **Tertiary** | none           | **`#000000 @60%`** · `#002fa7` · `#db0000` | none                | 4px, height 24      |
+| **Critical** | `#db0000`      | `#ffffff`                                  | —                   | 4px                 |
+| **Tonal**    | `#ffffff @60%` | `#002fa7`                                  | `#000000 @10%`, 1px | 4px                 |
 
 > ### ⚠️ Extension: Success and Warning are NOT in Figma
 >
@@ -150,6 +151,17 @@ Six roles. All **Inter**, label weight **500**, border radius **4px at rest**.
 > heights. They differ **only** in label colour: blue / black / red. They are not broken
 > duplicates.
 
+> **Tertiary renders the "Subtle" variant.** `Tertiary Button` (1:11927) is a component set of
+> two label colours: brand blue `#002fa7` and a **Subtle** variant at `#000000 @60%`. The blue
+> default exists in the library but is **never placed on a page** — every tertiary the file
+> actually uses ("Back", "See All", breadcrumbs) is Subtle. `ui/Button` therefore renders
+> tertiary as muted ink, not brand blue. Rendering it blue leaked blue into every back link,
+> See-All link and breadcrumb in the app, which is what the "why is this blue" reports were
+> all about. Use `outline` when a blue text link is actually wanted.
+>
+> The brand-blue rail is the one place tertiary sits on a coloured surface; its icon buttons
+> pin `className="text-white"` rather than inheriting the role.
+
 ### 2.2 Sizes
 
 | Size    | Padding T/R/B/L | Height | Label |
@@ -163,6 +175,9 @@ Six roles. All **Inter**, label weight **500**, border radius **4px at rest**.
 Heights are the quick check: **32 · 40 · 48 · 56 · 64.** Tertiary is 24.
 Critical's X-large uses `20/24/20/24` (h=64) — narrower horizontally than Primary's
 `20/40/20/40`.
+
+Figma pairs each box with one label size. **§2.2d** defines the two deliberate
+exceptions where the label drops to 12px.
 
 ### 2.2a Icon-only sizes (extension)
 
@@ -218,6 +233,51 @@ Critical's X-large uses `20/24/20/24` (h=64) — narrower horizontally than Prim
 > "Get Started Free". Implementation is the shared `ui/LandingCta` component — do not
 > hand-roll the styles at a call site. **Product surfaces (dashboard, auth, member app)
 > never use it.** "Sign In" stays on the outline/text treatment even on landing.
+
+### 2.2c Mobile Back Button (Figma component `1:14109`)
+
+Not an extension — this one **is** a Figma component, and the member app had been faking it
+with a 40×40 `rounded-g-1` `tertiary` icon button. Geometry straight from the file:
+
+| Property | Value                                                      |
+| -------- | ---------------------------------------------------------- |
+| Box      | 48×48                                                      |
+| Radius   | 999 (true circle) — the §1.5 pill exception                |
+| Fill     | `#ffffff @ 0.6` → `bg-surface-container`                   |
+| Stroke   | `#000000 @ 0.1`, 1px → `border border-black/10`            |
+| Glyph    | `Icon/Back` (node `82:14693`), 24×24, stroke-width **1.5** |
+
+The glyph is a single chevron at stroke-width 1.5 (not lucide's default 2) and is coloured by
+the parent, so it inherits the button's text colour. Implemented as
+`ui/MobileBackButton` — use it for **every member-app back affordance** (all 22 screens).
+It is a _mobile_ component; the dashboard's breadcrumb back links are text buttons and do
+not use it.
+
+```jsx
+<MobileBackButton aria-label="Back" onClick={() => navigate(-1)} />
+```
+
+`aria-label` defaults to `"Back"`; override it when the destination is not simply "back"
+(e.g. `"Go back"` on Invites, which returns to Home).
+
+### 2.2d Tight label decouplings (owner-directed)
+
+Two sizes keep a **Figma box** but drop the **label to 12px**:
+
+| Size       | Padding T/R/B/L | Height | Label | Used for                                                  |
+| ---------- | --------------- | ------ | ----- | --------------------------------------------------------- |
+| `sm-tight` | 8/16/8/16       | 40     | 12px  | `CommunitiesHome` Join/Create Community header CTAs       |
+| `lg-tight` | 16/32/16/32     | 56     | 12px  | Dashboard + page-header CTAs, page-level empty-state CTAs |
+
+Padding and height are byte-for-byte `Small` and `Large` — only the label size
+differs. Figma pairs h40↔14px and h56↔16px, and these break that pairing on
+purpose: at 16px the label read too large in dashboard headers and crowded the
+button edge, so it was dropped to 12px while keeping the taller box (chosen
+2026-10-12, dashboard button-sizing sweep).
+
+They are a **decoupling, not a new Figma size** — no Figma node draws either.
+Do not add a third without the same conversation, and never invent one to fix
+a single call site when `className` would do.
 
 ### 2.3 States
 

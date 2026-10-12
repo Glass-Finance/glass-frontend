@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { usePayments, useManagePayments } from "../../hooks/usePayments";
 import PageLoadingState from "../../components/common/PageLoadingState";
 import EmptyState from "../../components/common/EmptyState";
@@ -11,6 +11,7 @@ import Toggle from "../../components/common/Toggle";
 import ConfirmSheet from "../../components/memberApp/ConfirmSheet";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { normalizeImageObject } from "../../utils/normalizeImageFields";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 function frequencyLabel(freq) {
   const f = (freq ?? "").toUpperCase();
@@ -243,16 +244,12 @@ export default function ManagePayments() {
       <GlassLogoGlow />
       {/* Header */}
       <div className="relative flex items-center justify-center pt-[22px] px-5 pb-5">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
           className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">Manage Payments</h1>
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Manage Payments</h1>
       </div>
 
       <div className="px-4">

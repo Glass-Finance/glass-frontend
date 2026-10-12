@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronLeft, Download, Loader2 } from "lucide-react";
+import { ChevronDown, Download, Loader2 } from "lucide-react";
 import { useTransactions } from "../../hooks/useTransactions";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import PageLoadingState from "../../components/common/PageLoadingState";
@@ -9,6 +9,7 @@ import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusLabel, transactionStatusStyle } from "../../utils/transactionStatus";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyTransactions } from "../../api/exports";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 const STATUS_OPTIONS = ["All Status", "Success", "Failed", "Pending"];
 
@@ -170,25 +171,20 @@ export default function Transactions() {
     <div className="relative overflow-hidden min-h-screen max-w-[430px] mx-auto pb-10">
       <GlassLogoGlow />
       {/* ── Top bar ── */}
-      <div className="pt-6 px-5 pb-4 flex items-center gap-3 sticky top-0 z-40">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative pt-6 px-5 pb-4 flex items-center justify-center sticky top-0 z-40">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
-          className="flex-shrink-0"
-        >
-          <ChevronLeft size={18} color="var(--color-ink-strong)" />
-        </Button>
-        <h1 className="text-lg font-medium text-ink m-0 flex-1 text-center mr-9">
-          Payment History
-        </h1>
+          className="absolute left-5"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Payment History</h1>
         <Button
           variant="tertiary"
           size="icon-sm"
           onClick={exportCsv}
           disabled={isExporting}
           aria-label={isExporting ? "Preparing export" : "Export payment history as CSV"}
+          className="absolute right-5"
         >
           {isExporting ? (
             <Loader2 size={15} className="animate-spin text-ink-strong" />
@@ -240,8 +236,10 @@ export default function Transactions() {
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-ink-strong m-0">No transactions yet</p>
-          <p className="text-[13px] text-ink-faint m-0">Your payment history will appear here.</p>
+          <p className="text-base font-medium text-ink m-0">No Payment History</p>
+          <p className="text-sm font-normal text-ink/60 m-0">
+            Once you make payment, your transaction history will appear here.
+          </p>
         </div>
       ) : (
         groups.map(([label, txs]) => (

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Check, X, Loader2, Clock, Share2 } from "lucide-react";
+import { Check, X, Loader2, Clock, Share2 } from "lucide-react";
 import { verifyPayment } from "../../api/members";
 import { beginAuthGrace } from "../../api/client";
 import { settleLocalPaymentForReference, useManagePayments } from "../../hooks/usePayments";
@@ -13,6 +13,7 @@ import { formatNaira, toTitleCase } from "../../utils/format";
 import { Button } from "../../components/ui/Button";
 import SuccessBadge from "../../components/common/SuccessBadge";
 import { isVerificationSuccessStatus, isFailedStatus } from "../../utils/paymentStatus";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 const POLL_INTERVAL_MS = 1500;
 const MAX_POLLS = 20;
@@ -306,15 +307,7 @@ export default function PaymentSuccess() {
           drops the back/title bar the other states still use. */}
       {state !== "success" && (
         <div className="flex items-center px-4 pt-10 pb-4 relative">
-          <Button
-            variant="tertiary"
-            size="icon-md"
-            aria-label="Back"
-            onClick={() => goTo(dest)}
-            className=""
-          >
-            <ChevronLeft size={18} className="text-gray-700" />
-          </Button>
+          <MobileBackButton aria-label="Back" onClick={() => goTo(dest)} />
           <h1 className="absolute left-1/2 -translate-x-1/2 text-title-sm font-medium text-gray-800">
             Payment Summary
           </h1>

@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Button } from "../../../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { ChevronLeft, ChevronDown, Inbox } from "lucide-react";
+import { ChevronDown, Inbox } from "lucide-react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import PageLoadingState from "../../../../components/common/PageLoadingState";
 import { useKycAttempts } from "../../../../hooks/useKyc";
 import { kycStatusStyle, idTypeLabel } from "../../../../utils/kycStatus";
 import { formatDate } from "../../../../utils/format";
 import { getErrorMessage } from "../../../../utils/errorHandler";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 const STATUS_FILTERS = [
   { value: "", label: "All Status" },
@@ -71,16 +72,12 @@ export default function VerifyIdentityHistory() {
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
       <div className="flex items-center justify-center relative pt-6 px-5 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+        <MobileBackButton
           aria-label="Back"
           onClick={() => goBackInApp(navigate, "/member/verify-identity")}
           className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">Verification History</h1>
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Verification History</h1>
       </div>
 
       <div className="px-4">

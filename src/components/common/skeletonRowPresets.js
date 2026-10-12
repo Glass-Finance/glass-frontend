@@ -11,9 +11,19 @@
 // and a hairline divider. The colour `#f2f2f2` (bg-hairline-soft) is the
 // approved design-system replacement for the raw `bg-[#EBEBEB]` this row
 // used to carry.
+//
+// The divider is `border-black/10` rather than `border-hairline-soft`:
+// upstream origin/main replaced `border-hairline-soft` with `border-black/10`
+// in this very file (on PrefRow, and on the local SkeletonRow copy it
+// deleted), so leaving the old token here would make the loading placeholder
+// the one row on the screen still using it. This preset has exactly one
+// production consumer -- the member-app notifications page -- so changing it
+// cannot affect the dashboard settings page, which renders <SkeletonRow />
+// with the component defaults (divider `border-gray-100`) and was not part
+// of the upstream change.
 export const MEMBER_APP_SKELETON_ROW = {
   pad: "py-3.5 px-4",
-  divider: "border-hairline-soft",
+  divider: "border-black/10",
   label: "w-[140px] h-[13px] bg-hairline-soft",
   sub: "w-[200px] h-[11px] bg-hairline-soft",
   toggle: "bg-hairline-soft",

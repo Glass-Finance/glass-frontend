@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../ui/Button";
 import {
   Home as HomeIcon,
@@ -26,6 +26,7 @@ const NAV_ITEMS = [
 // every page — not just Home — has a way to reach Settings.
 export default function SideDrawer({ open, onClose }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout, isAdmin } = useAuth();
 
   async function handleLogout() {
@@ -72,19 +73,35 @@ export default function SideDrawer({ open, onClose }) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto pt-2 px-4 pb-2 flex flex-col gap-1">
-          {NAV_ITEMS.map(({ Icon, label, to }) => (
-            <button
-              key={label}
-              onClick={() => {
-                onClose();
-                navigate(to);
-              }}
-              className="flex items-center gap-3 py-3.5 px-3 rounded-xl border-none bg-transparent cursor-pointer w-full text-left"
-            >
-              <Icon size={20} strokeWidth={1.6} className="text-ink-strong" />
-              <span className="text-[15px] font-normal text-ink">{label}</span>
-            </button>
-          ))}
+          {NAV_ITEMS.map(({ Icon, label, to }) => {
+            // Figma's Navigation Menu marks the current row with a light-blue
+            // #ccdaff container and brand-coloured icon+label (§3). Exact
+            // prefix match so /member/settings/account also lights Settings.
+            const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
+            return (
+              <button
+                key={label}
+                onClick={() => {
+                  onClose();
+                  navigate(to);
+                }}
+                className={`flex items-center gap-3 py-3.5 px-3 rounded-xl border-none cursor-pointer w-full text-left transition-colors ${
+                  isActive ? "bg-brand-100 text-brand" : "bg-transparent text-ink hover:bg-black/5"
+                }`}
+              >
+                <Icon
+                  size={20}
+                  strokeWidth={1.6}
+                  className={isActive ? "text-brand" : "text-ink-strong"}
+                />
+                <span
+                  className={`text-[15px] ${isActive ? "font-medium text-brand" : "font-normal text-ink"}`}
+                >
+                  {label}
+                </span>
+              </button>
+            );
+          })}
 
           {isAdmin && (
             <>

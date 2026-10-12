@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Landmark, Loader2, Info } from "lucide-react";
+import { Landmark, Loader2, Info } from "lucide-react";
 import { getObligation, getPaymentLink } from "../../api/members";
 import {
   useManagePayments,
@@ -20,6 +20,7 @@ import { toastSuccess } from "../../utils/toast";
 import { scheduleCopy, estimateNextCharge } from "../../utils/recurring";
 import { toTitleCase, formatNaira as fmt, formatDate } from "../../utils/format";
 import { paymentsDisabled } from "../../lib/flags";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 function useObligation(obligationId) {
   return useQuery({
@@ -244,15 +245,7 @@ export default function PaymentSummary() {
       <GlassLogoGlow />
       {/* ── Top bar ── */}
       <div className="flex items-center px-4 pt-5 pb-4 relative">
-        <Button
-          variant="tertiary"
-          size="icon-md"
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className=""
-        >
-          <ChevronLeft size={18} className="text-gray-700" />
-        </Button>
+        <MobileBackButton aria-label="Back" onClick={() => navigate(-1)} />
         <h1 className="absolute left-1/2 -translate-x-1/2 text-[16px] font-bold text-gray-900">
           Payment Summary
         </h1>

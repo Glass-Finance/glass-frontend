@@ -205,13 +205,13 @@ export default function Topbar({
 
   return (
     <header className="h-14 bg-surface-container border-b border-surface-container-border flex items-center gap-6 px-4 md:px-8 sticky top-0 z-50 flex-shrink-0">
-      {/* Hamburger — mobile only */}
+      {/* Hamburger — mobile only (sidebar is off-canvas below md) */}
       <Button
         variant="tertiary"
         size="icon-md"
         data-tour="mobile-menu-button"
         onClick={onMenuClick}
-        className="flex-shrink-0"
+        className="flex-shrink-0 md:hidden"
         aria-label="Open menu"
       >
         <Menu size={19} />

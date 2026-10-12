@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, ChevronDown, ChevronRight, Clock, Menu } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock } from "lucide-react";
 import noCommunityIcon from "../../assets/auth/no-community.webp";
 import paymentsDueIcon from "../../assets/memberApp/icon-payments-due.webp";
 import upcomingPaymentsIcon from "../../assets/memberApp/icon-upcoming-payments.webp";
 import paymentHistoryIcon from "../../assets/memberApp/icon-payment-history.webp";
 import { Button } from "../../components/ui/Button";
-import ProfileAvatar from "../../components/memberApp/ProfileAvatar";
 import PulseImg from "../../components/common/PulseImg";
 import {
   formatNaira,
@@ -374,71 +373,6 @@ export function PendingApprovalState({ navigate, community }) {
   );
 }
 
-export function MemberHomeHeader({
-  hasNoCommunity,
-  user,
-  unreadCount,
-  navigate,
-  onOpenMenu,
-  communityName,
-  communityInitial,
-  communityLogo,
-  activeCommunityIdentifier,
-  myCommunities,
-  handleSwitchCommunity,
-}) {
-  return (
-    <div className="flex items-center justify-between pt-[25px] px-5 pb-5">
-      <div className="flex items-center gap-[15px] min-w-0">
-        <Button
-          variant="tertiary"
-          size="icon-md"
-          onClick={onOpenMenu}
-          aria-label="Open menu"
-          className="flex-shrink-0"
-        >
-          <Menu size={28} strokeWidth={2} className="text-ink" />
-        </Button>
-
-        {!hasNoCommunity && (
-          <CommunitySwitcher
-            communities={myCommunities}
-            activeIdentifier={activeCommunityIdentifier}
-            communityName={communityName}
-            communityInitial={communityInitial}
-            communityLogo={communityLogo}
-            onSelect={handleSwitchCommunity}
-            navigate={navigate}
-          />
-        )}
-      </div>
-
-      <div className="flex items-center gap-2.5 flex-shrink-0">
-        <Button
-          variant="tertiary"
-          size="icon-md"
-          aria-label="Notifications"
-          onClick={() => navigate("/member/notifications")}
-          className="relative flex-shrink-0"
-        >
-          <Bell size={17} strokeWidth={1.8} />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[15px] h-[15px] py-0 px-[3px] rounded-full bg-danger text-white text-[9px] font-bold flex items-center justify-center border-[1.5px] border-white">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </Button>
-
-        <ProfileAvatar
-          user={user}
-          onClick={() => navigate("/member/profile")}
-          ariaLabel="Your profile"
-        />
-      </div>
-    </div>
-  );
-}
-
 export function EmptyUpcomingState() {
   return (
     <div className="flex flex-col items-center px-4 pt-7 pb-5 text-center gap-0">
@@ -465,9 +399,9 @@ export function EmptyHistoryState() {
         className="w-[52px] h-[52px] object-contain mb-3.5"
         loading="lazy"
       />
-      <p className="text-[17px] font-normal text-ink mb-1.5">No Payment History</p>
-      <p className="text-[13px] text-ink-faint m-0 leading-[1.55] max-w-[230px]">
-        Once you make your transaction history will appear here.
+      <p className="text-sm font-medium text-ink mb-1.5">No Payment History</p>
+      <p className="text-sm font-normal text-ink m-0 leading-[1.55] max-w-[230px]">
+        Once you make payment, your transaction history will appear here.
       </p>
     </div>
   );

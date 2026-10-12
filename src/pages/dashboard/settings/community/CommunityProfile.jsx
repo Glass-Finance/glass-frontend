@@ -252,7 +252,7 @@ export default function CommunityProfile() {
             onClick={handleSave}
             disabled={updateCommunity.isPending}
             variant="outline"
-            size="md"
+            size="sm"
           >
             {saved ? "Saved!" : updateCommunity.isPending ? "Saving…" : "Save Changes"}
           </Button>

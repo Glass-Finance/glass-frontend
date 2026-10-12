@@ -183,6 +183,8 @@ export default function Groups() {
       ) : isLoading ? (
         <LoadingState />
       ) : rows.length === 0 ? (
+        // Full-page state built from the compact `icon` layout, so it has to
+        // ask for the page-level action size explicitly -- see EmptyState.
         <EmptyState
           icon={Users}
           title={search ? "No groups match that search" : "No groups yet"}
@@ -193,6 +195,7 @@ export default function Groups() {
           }
           action={!search ? () => setEditing("new") : undefined}
           actionLabel={!search ? "Create your first group" : undefined}
+          actionSize="lg-tight"
         />
       ) : (
         <ul className="flex flex-col gap-2 mb-4">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Search, Users, Loader2, CheckCircle2, Clock, X } from "lucide-react";
+import { Search, Users, Loader2, CheckCircle2, Clock, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { searchPublicCommunities } from "../../api/communities";
 import { submitJoinRequest } from "../../api/invites";
@@ -12,6 +12,7 @@ import PulseImg from "../../components/common/PulseImg";
 import LoadingState from "../../components/common/LoadingState";
 import JoinApprovedModal from "../../components/memberApp/JoinApprovedModal";
 import { getErrorMessage } from "../../utils/errorHandler";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 function usePublicSearch(query) {
@@ -262,15 +263,11 @@ export default function DiscoverCommunities() {
       <GlassLogoGlow />
       {/* Header — before: padding: "52px 20px 16px" */}
       <div className="flex items-center justify-center relative pt-[35px] px-5 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
           className="absolute left-5"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
+        />
         <h1 className="text-[18px] leading-6 font-medium text-ink m-0">Browse Communities</h1>
       </div>
 

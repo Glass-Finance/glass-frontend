@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
-import { Button } from "../../../../components/ui/Button";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { ChevronLeft } from "lucide-react";
+import {} from "lucide-react";
 import {
   usePayments,
   useManagePayments,
@@ -13,6 +12,7 @@ import PageLoadingState from "../../../../components/common/PageLoadingState";
 import Toggle from "../../../../components/common/Toggle";
 import ConfirmSheet from "../../../../components/memberApp/ConfirmSheet";
 import { formatNaira } from "../../../../utils/format";
+import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
 
 export default function AutoPay() {
   const navigate = useNavigate();
@@ -102,26 +102,20 @@ export default function AutoPay() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => goBackInApp(navigate, "/member/settings")}
-          className=""
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">Auto-Pay</h1>
+          className="absolute left-4"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Auto-Pay</h1>
       </div>
 
       <div className="px-4">
         {allPlans.length > 0 && (
-          <p className="text-xs font-semibold text-ink-ghost mt-0 mx-1 mb-2 uppercase [letter-spacing:0.4px]">
-            Active Plans
-          </p>
+          <p className="text-[14px] font-medium text-black/60 mt-0 mx-1 mb-2">Active Plans</p>
         )}
-        <div className="border border-surface-container-border bg-white rounded-2xl overflow-hidden">
+        <div className="rounded-xl bg-surface-container border border-black/10 overflow-hidden">
           {isLoading ? (
             <PageLoadingState size={56} padding="36px 24px" />
           ) : allPlans.length === 0 ? (
@@ -142,7 +136,7 @@ export default function AutoPay() {
               return (
                 <div
                   key={plan.paymentLinkId ?? `${plan.name}-${plan.communityName}`}
-                  className={`flex items-center justify-between p-4 ${i < allPlans.length - 1 ? "border-b border-hairline-soft" : "border-none"}`}
+                  className={`flex items-center justify-between p-4 ${i < allPlans.length - 1 ? "border-b border-black/10" : "border-none"}`}
                 >
                   <div className="min-w-0 pr-3">
                     <p className="text-[15px] font-medium text-ink m-0">{plan.name}</p>

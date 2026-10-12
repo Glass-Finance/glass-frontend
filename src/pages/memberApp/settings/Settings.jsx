@@ -1,18 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronLeft,
-  ChevronRight,
-  User,
-  Shield,
-  Bell,
-  CreditCard,
-  RefreshCw,
-  Users,
-  LogOut,
-  IdCard,
-} from "lucide-react";
+import { IdCard, LogOut } from "lucide-react";
 import { useAuth } from "../../../store/AuthContext";
 import GlassLogoGlow from "../../../components/memberApp/GlassLogoGlow";
 import { toastSuccess } from "../../../utils/toast";
@@ -20,13 +9,26 @@ import { useKycSummary } from "../../../hooks/useKyc";
 import KycStatusBadge from "../../../components/memberApp/KycStatusBadge";
 import KycWizardModal from "../../../components/kyc/KycWizardModal";
 import { kycDisabled } from "../../../lib/flags";
+import { MobileBackButton } from "../../../components/ui/MobileBackButton";
+import {
+  IconUserProfile,
+  IconSecurity,
+  IconNotification,
+  IconPayments,
+  IconAutopay,
+  IconCommunity,
+  IconDropdown,
+} from "../../../components/ui/icons/SettingsIcons";
 
+// Row icons are the file's own glyphs (DESIGN-SYSTEM.md §3), not lucide
+// stand-ins. Identity Verification is the one app-added row Figma does not
+// draw, so it keeps a lucide glyph -- there is no Figma icon to match.
 const SECTIONS = [
   {
     label: "Account",
     items: [
       {
-        Icon: User,
+        Icon: IconUserProfile,
         label: "Profile",
         desc: "Your name, email and phone number",
         to: "/member/profile",
@@ -39,13 +41,13 @@ const SECTIONS = [
         kyc: true,
       },
       {
-        Icon: Shield,
+        Icon: IconSecurity,
         label: "Security",
         desc: "Password and login protection",
         to: "/member/security",
       },
       {
-        Icon: Bell,
+        Icon: IconNotification,
         label: "Notifications",
         desc: "What you get notified about",
         to: "/member/notification-settings",
@@ -56,13 +58,13 @@ const SECTIONS = [
     label: "Payments",
     items: [
       {
-        Icon: CreditCard,
+        Icon: IconPayments,
         label: "Payment Methods",
         desc: "Saved banks and auto-pay methods",
         to: "/member/saved-cards",
       },
       {
-        Icon: RefreshCw,
+        Icon: IconAutopay,
         label: "Auto-Pay",
         desc: "Plans set to charge automatically",
         to: "/member/auto-pay",
@@ -73,7 +75,7 @@ const SECTIONS = [
     label: "Community",
     items: [
       {
-        Icon: Users,
+        Icon: IconCommunity,
         label: "My Communities",
         desc: "Communities you belong to",
         to: "/member/communities",
@@ -109,35 +111,31 @@ export default function Settings() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
-          className=""
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-lg font-semibold text-ink m-0">Settings</h1>
+          className="absolute left-4"
+        />
+        {/* Figma draws the title at weight 500, not 600. */}
+        <h1 className="text-lg font-medium text-ink m-0">Settings</h1>
       </div>
 
       <div className="px-4">
         {sections.map((section) => (
           <div key={section.label} className="mb-5">
-            <p className="text-xs font-semibold text-ink-ghost mt-0 mx-1 mb-2 uppercase [letter-spacing:0.4px]">
-              {section.label}
-            </p>
-            <div className="border border-surface-container-border bg-white rounded-2xl overflow-hidden">
+            {/* Figma section header: 14px/500 at #000000 @ 0.6. */}
+            <p className="text-[14px] font-medium text-black/60 mt-0 mx-1 mb-2">{section.label}</p>
+            {/* Figma settings card: r=12, fill #ffffff@0.6, 1px #000000@0.1. */}
+            <div className="rounded-xl bg-surface-container border border-black/10 overflow-hidden">
               {section.items.map(({ Icon, label, desc, to, kyc }, i) => (
                 <button
                   key={label}
                   onClick={() => (kyc ? setKycWizardOpen(true) : navigate(to))}
-                  className={`flex items-center gap-3 w-full text-left py-3.5 px-4 bg-transparent border-none cursor-pointer ${i < section.items.length - 1 ? "border-b border-hairline-soft" : "border-b-0"}`}
+                  className={`flex items-center gap-3 w-full text-left py-3.5 px-4 bg-transparent border-none cursor-pointer transition-colors hover:bg-black/[0.03] ${i < section.items.length - 1 ? "border-b border-black/10" : "border-b-0"}`}
                 >
-                  <div className="w-9 h-9 rounded-[10px] bg-brand-wash flex items-center justify-center flex-shrink-0">
-                    <Icon size={16} className="text-brand-deep" />
-                  </div>
+                  {/* Bare Figma glyph, no tile -- 24px, #000000. */}
+                  <Icon size={24} className="text-ink flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-ink m-0">{label}</p>
                     <p className="text-xs text-ink-ghost mt-0.5 mx-0 mb-0">{desc}</p>
@@ -149,7 +147,7 @@ export default function Settings() {
                       className="flex-shrink-0"
                     />
                   )}
-                  <ChevronRight size={16} className="text-[#ccc] flex-shrink-0" />
+                  <IconDropdown size={20} className="text-black/40 flex-shrink-0" />
                 </button>
               ))}
             </div>
@@ -158,6 +156,7 @@ export default function Settings() {
 
         <Button
           variant="outline-neutral"
+          size="sm"
           onClick={handleLogout}
           fullWidth={false}
           className="w-full"

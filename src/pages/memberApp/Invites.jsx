@@ -1,7 +1,7 @@
 import { useInvites, useMyJoinRequests, useRevokeMyJoinRequest } from "../../hooks/useInvites";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, ChevronLeft, Clock, Home, Info, Undo2, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Home, Info, Undo2, XCircle } from "lucide-react";
 import { getInvite } from "../../api/invites";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import PageLoadingState from "../../components/common/PageLoadingState";
@@ -11,6 +11,7 @@ import { isKycRequiredError, KYC_ACCEPT_BLOCK_COPY } from "../../utils/kycStatus
 import { getErrorMessage } from "../../utils/errorHandler";
 // Same empty-state illustration the Notifications page's Invites tab uses.
 import invitesEmptyIllustration from "../../assets/memberApp/empty-states/notifications-invites-empty.webp";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 // CommunityJoinRequestStatus has four members; the copy is per-status because
 // "Your request to join is pending" was previously hardcoded for all of them.
@@ -149,18 +150,13 @@ export default function Invites() {
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="flex items-center gap-2.5 pt-5 px-4 pb-4">
-        <Button
-          variant="tertiary"
-          size="icon-md"
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+        <MobileBackButton
           aria-label="Go back"
           onClick={() => navigate("/member/home")}
-          aria-label="Go back"
-          className=""
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-ink" />
-        </Button>
-        <h1 className="text-[17px] font-semibold text-ink m-0">Invitations</h1>
+          className="absolute left-4"
+        />
+        <h1 className="text-lg font-medium text-ink m-0">Invitations</h1>
       </div>
 
       <div className="px-4">
