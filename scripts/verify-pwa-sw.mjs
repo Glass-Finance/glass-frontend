@@ -342,6 +342,9 @@ function noCorsRequest(url) {
   return req;
 }
 
+let skipWaitingCalls = 0;
+let clientsClaimCalls = 0;
+
 const sandbox = {
   addEventListener(type, handler) {
     if (!listeners.has(type)) listeners.set(type, []);
@@ -352,9 +355,19 @@ const sandbox = {
   fetch: fetchMock,
   location: new URL(ORIGIN + "/"),
   registration: { scope: ORIGIN + "/", active: null, installing: null, waiting: null },
-  skipWaiting: () => Promise.resolve(),
+  // Tracked so the update lifecycle is asserted BEHAVIOURALLY below: these are
+  // the calls an injectManifest worker must make itself, because
+  // vite-plugin-pwa only injects workbox.skipWaiting / clientsClaim on the
+  // generateSW path.
+  skipWaiting: () => {
+    skipWaitingCalls++;
+    return Promise.resolve();
+  },
   clients: {
-    claim: () => Promise.resolve(),
+    claim: () => {
+      clientsClaimCalls++;
+      return Promise.resolve();
+    },
     matchAll: async () => [],
     openWindow: async () => null,
   },
@@ -624,6 +637,35 @@ console.log("\n8. API navigation exclusion");
   record(
     "a navigation to /api/v1/ is left for the network (not answered by the shell)",
     networkHits.some((u) => u.includes("/api/v1/csp-report")),
+  );
+}
+
+// ── 9. Update lifecycle: the worker activates and takes control ─────────────
+// Behavioural, not a grep of minified output: the mocked scope counts the
+// calls the worker actually makes on each event.
+//
+// This is the F2 regression guard. Without skipWaiting() the new worker
+// installs and then WAITS, so it only activates once every open tab for the
+// scope closes -- leaving a stale build on any long-lived tab. Without
+// clients.claim() an already-open page keeps asking the old worker for lazy
+// chunks that a redeploy may already have deleted.
+console.log("\n9. Update lifecycle");
+{
+  skipWaitingCalls = 0;
+  clientsClaimCalls = 0;
+  await dispatch("install", makeEvent("install", undefined));
+  record(
+    "the worker calls skipWaiting() on install, so an update does not wait for tabs to close",
+    skipWaitingCalls > 0,
+    `skipWaiting() called ${skipWaitingCalls}x`,
+  );
+
+  await dispatch("activate", makeEvent("activate", undefined));
+  await delay(50);
+  record(
+    "the worker calls clients.claim() on activate, so open pages are taken over",
+    clientsClaimCalls > 0,
+    `clients.claim() called ${clientsClaimCalls}x`,
   );
 }
 

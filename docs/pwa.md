@@ -72,41 +72,102 @@ shell and then fails closed to sign-in — it never renders another user's data.
 
 ## CSP
 
-No CSP change is required. Registration is an external script
-(`<script src="/registerSW.js">`, matched by `script-src 'self'`) and the worker
-is same-origin (`worker-src 'self'` was already allowlisted). Adding no inline
-script means no `sha256-` entry in `vercel.json` changed.
+No CSP change is required. Registration is an external script matched by
+`script-src 'self'`, and the worker is same-origin (`worker-src 'self'` was
+already allowlisted). Adding no inline script means no `sha256-` entry in
+`vercel.json` changed.
+
+## Icons
+
+| Icon                                          | Purpose                                  |
+| --------------------------------------------- | ---------------------------------------- |
+| `favicon-192x192.png` / `favicon-512x512.png` | standard (`purpose` omitted)             |
+| `maskable-icon-512.png`                       | Android adaptive (`purpose: "maskable"`) |
+| `apple-touch-icon.png`                        | iOS home screen                          |
+
+The maskable icon is **generated, not hand-made**:
+
+```bash
+node scripts/generate-maskable-icon.mjs
+```
+
+It scales the brand icon so the whole logo sits inside Android's safe zone — a
+**circle of 80% diameter**, not 80% of the canvas _width_. Getting that wrong is
+easy and invisible: the first version scaled to 80% of the width, which left the
+logo's corners 73px outside the circle, so the launcher clipped it.
+`src/__tests__/pwa/maskableIcon.test.js` measures the real geometry (furthest
+subject pixel from centre, bounding-box corners, aspect ratio, opacity) so that
+cannot pass again.
 
 ## Verification
 
 ```bash
 npm run build
-node scripts/verify-pwa-sw.mjs      # drives real fetch events through dist/sw.js
+npm run verify:pwa            # drives real fetch events through dist/sw.js
+npx vitest run src/__tests__/pwa/
 ```
 
-The harness loads the built worker into a mocked ServiceWorkerGlobalScope
-(in-memory `CacheStorage`, a fake `fetch` that serves `dist/` and can be toggled
-offline, a minimal `indexedDB`) and asserts 17 behaviours: precache contents,
-online and offline navigation, API network-only and never-cached, offline API
-failure, the Cloudinary cache, the offline-page fallback, and that `/api/`
-navigations are left for the network.
+`scripts/verify-pwa-sw.mjs` loads the built worker into a mocked
+ServiceWorkerGlobalScope (in-memory `CacheStorage`, a fake `fetch` that serves
+`dist/` and can be toggled offline, a minimal `indexedDB`) and asserts 19
+behaviours: precache contents, online and offline navigation, API network-only
+and never-cached, offline API failure, the Cloudinary cache, the offline-page
+fallback, that `/api/` navigations are left for the network, and the update
+lifecycle.
 
 Device installation is **not** covered by it — see "Remaining manual tests".
 
 ## Update lifecycle
 
-`registerType: "autoUpdate"` — a new deploy's worker installs in the background
-and activates on the next navigation (`clientsClaim` + `skipWaiting`), and
-`cleanupOutdatedCaches` drops superseded precache entries. Nothing interrupts an
-in-flight request; the refresh path in `src/api/client.js` is unaffected because
-API traffic never touches the worker's caches.
+An update propagates in three steps, and **all three are load-bearing**:
+
+1. **The worker activates immediately.** `src/sw.js` calls `self.skipWaiting()`
+   on `install` and `self.clients.claim()` on `activate`. This is hand-authored
+   on purpose: `injectManifest` does **not** get Workbox's
+   `skipWaiting`/`clientsClaim` automatically — vite-plugin-pwa only sets
+   `workbox.skipWaiting` / `workbox.clientsClaim` on the **generateSW** path.
+   Without them the new worker installs and then _waits_, so it only activates
+   once every open tab for the scope closes, leaving a stale build on any
+   long-lived tab.
+2. **The page is told.** Registration goes through
+   `src/pwa/registerServiceWorker.js`, which imports `virtual:pwa-register` and
+   hands the workbox-window client `onNeedReload`. The _injected_
+   `<script src="/registerSW.js">` is `generateSimpleSWRegister` — a bare
+   `navigator.serviceWorker.register()` with no update handling at all, which is
+   why `registerType: "autoUpdate"` had no effect before. Importing the virtual
+   module suppresses that script and switches the plugin to its auto-update
+   client.
+3. **The page reloads only when safe.** `onNeedReload` does **not** reload; it
+   calls `requestReload()` in `src/pwa/updatePolicy.js`. That reloads immediately
+   off a payment route and otherwise _defers_ until the user leaves
+   `/payment/callback` or `/member/pay/:id` — reloading mid-payment would strand
+   the payer by discarding `paymentPendingRef` / `paymentReturnTo` (see
+   `docs/payments.md`). `<PwaUpdateReload />` watches the route and fires the
+   deferred reload on the first safe one.
+
+`cleanupOutdatedCaches` drops superseded precache entries on activate. API
+traffic is unaffected by any of this: it is network-only and never enters a
+cache, so the refresh path in `src/api/client.js` behaves identically with or
+without a worker.
+
+Taking control never _disrupts_ an in-flight request: the worker's routes are
+navigation-, API- and CDN-scoped, and a claim only affects subsequent fetches.
 
 ## Rollback
 
-1. Revert the feature branch. The old `index.html` registers no worker, so
-   browsers drop it on their next visit.
-2. To force immediate removal, ship a one-line deploy that runs
-   `navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()))`,
-   then remove the line.
+1. Revert the feature branch. Registration lives in `src/pwa/registerServiceWorker.js`,
+   which the plugin only injects into a build that imports `virtual:pwa-register`,
+   so a reverted build registers nothing and browsers drop the worker on their
+   next visit.
+2. To force immediate removal on devices that already have it, ship a one-line
+   deploy that runs:
+   ```js
+   navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister()));
+   ```
+   then remove the line. Unregistering stops the worker controlling the page but
+   does **not** delete what it cached, so follow it with
+   `caches.keys().then(ks => ks.forEach(k => caches.delete(k)))` if the storage
+   itself must go.
 
-No data migration is needed — the worker stores build output only.
+No data migration is needed — the worker stores build output only, plus the
+install-dismissal flags in `localStorage`.

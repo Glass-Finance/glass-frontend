@@ -36,6 +36,30 @@ import { ExpirationPlugin } from "workbox-expiration";
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
+// ── Update lifecycle ────────────────────────────────────────────────────────
+// This lifecycle is authored here on purpose. `injectManifest` does NOT get
+// Workbox's skipWaiting/clientsClaim for free: vite-plugin-pwa only sets
+// `workbox.skipWaiting` / `workbox.clientsClaim` on the generateSW path, so
+// with injectManifest the worker has to write them itself. Omitting them is a
+// silent failure -- a new worker installs and then WAITS, so it only activates
+// once every open tab for the scope is closed, which leaves a stale build
+// (and stale precache) on any long-lived tab.
+//
+// skipWaiting -> the new worker activates as soon as it is installed.
+// clients.claim() -> it takes control of already-open pages, so their next
+// navigation and any lazy chunk request is answered by the new worker and the
+// new precache rather than by chunks a redeploy may already have deleted.
+//
+// The page decides WHEN to actually reload (see src/pwa/updatePolicy.js): the
+// worker taking control never interrupts a payment by itself.
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 // ── Navigations: serve the app shell ────────────────────────────────────────
 // createHandlerBoundToURL("/index.html") answers a navigation from the
 // precache. On a precache miss it falls back to the network for the shell

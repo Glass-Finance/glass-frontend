@@ -70,18 +70,38 @@ afterEach(() => {
   setWidth(ORIGINAL_WIDTH);
 });
 
+// Every route asserted below sits behind a `lazy()` boundary, so these
+// assertions are waiting on `await import(...)` to resolve and the chunk to
+// render -- not merely on a paint. The 5s that used to be inlined here is
+// Testing Library's own default and is INDEPENDENT of the suite-wide
+// `testTimeout` (15s, vite.config.js): raising `testTimeout` does not raise a
+// `findBy*` wait. Under full-suite parallelism the sign-in chunk alone took
+// 3.6-5.5s, so these sat on the boundary and failed intermittently purely as a
+// function of how many other files happened to be running. Match the
+// repository convention rather than a second, smaller one.
+//
+// Only the wait budget changes; the queries and their failure messages are
+// untouched.
+const LAZY_ROUTE_TIMEOUT = 15000;
+
 describe("App public routes", () => {
   it("renders the lazy sign-in page for a public auth route", async () => {
     renderAt("/sign-in");
 
-    expect(await screen.findByText("Sign In To Your Account", {}, { timeout: 5000 })).toBeDefined();
+    expect(
+      await screen.findByText("Sign In To Your Account", {}, { timeout: LAZY_ROUTE_TIMEOUT }),
+    ).toBeDefined();
   });
 
   it("renders the catch-all NotFound page for an unknown path", async () => {
     renderAt("/definitely/not/a/route");
 
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Page not found" }, { timeout: 5000 }),
+      await screen.findByRole(
+        "heading",
+        { level: 1, name: "Page not found" },
+        { timeout: LAZY_ROUTE_TIMEOUT },
+      ),
     ).toBeDefined();
   });
 });
@@ -91,7 +111,9 @@ describe("App protected route integration", () => {
     renderAt("/dashboard/home");
 
     await waitFor(() => expect(window.location.pathname).toBe("/sign-in"));
-    expect(await screen.findByText("Sign In To Your Account", {}, { timeout: 5000 })).toBeDefined();
+    expect(
+      await screen.findByText("Sign In To Your Account", {}, { timeout: LAZY_ROUTE_TIMEOUT }),
+    ).toBeDefined();
   });
 
   it("bounces a desktop visitor on a member-app path to the mobile-required screen", async () => {
@@ -105,7 +127,11 @@ describe("App protected route integration", () => {
     // The hand-off screen itself resolves (lazy chunk loaded, QR stub fed the
     // member-home target) rather than crashing on canvas rendering.
     expect(
-      await screen.findByText("Scan To Continue On Your Phone", {}, { timeout: 5000 }),
+      await screen.findByText(
+        "Scan To Continue On Your Phone",
+        {},
+        { timeout: LAZY_ROUTE_TIMEOUT },
+      ),
     ).toBeDefined();
   });
 
@@ -115,6 +141,8 @@ describe("App protected route integration", () => {
 
     // Device gate passes (mobile UA), MemberProtectedRoute rejects: no token.
     await waitFor(() => expect(window.location.pathname).toBe("/member/app-sign-in"));
-    expect(await screen.findByText("Sign In To Your Account", {}, { timeout: 5000 })).toBeDefined();
+    expect(
+      await screen.findByText("Sign In To Your Account", {}, { timeout: LAZY_ROUTE_TIMEOUT }),
+    ).toBeDefined();
   });
 });

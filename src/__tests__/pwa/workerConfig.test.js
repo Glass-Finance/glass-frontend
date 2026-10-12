@@ -64,6 +64,41 @@ describe("PWA worker configuration", () => {
   });
 });
 
+describe("service-worker update strategy", () => {
+  const read = (p) => readSrc(join(root, p), "utf8");
+
+  it("authored its own skipWaiting/claim in the injectManifest worker", () => {
+    // vite-plugin-pwa only injects workbox.skipWaiting / clientsClaim on the
+    // generateSW path. With injectManifest, omitting these makes an updated
+    // worker install and then WAIT for every tab to close.
+    expect(sw).toMatch(/addEventListener\(\s*["']install["'][\s\S]*?skipWaiting\(\)/);
+    expect(sw).toMatch(/addEventListener\(\s*["']activate["'][\s\S]*?clients\.claim\(\)/);
+  });
+
+  it("registers through the virtual module, not the inert injected script", () => {
+    // The injected /registerSW.js is generateSimpleSWRegister -- a bare
+    // navigator.serviceWorker.register() with no update handling -- which made
+    // registerType:"autoUpdate" a no-op. Importing virtual:pwa-register
+    // suppresses it and switches to the workbox-window auto-update client.
+    const registration = read("src/pwa/registerServiceWorker.js");
+    expect(registration).toMatch(/from\s*["']virtual:pwa-register["']/);
+    expect(registration).toMatch(/registerSW\(/);
+
+    const main = read("src/main.jsx");
+    expect(main).toMatch(/import\s+["'][^"']*registerServiceWorker[^"']*["']/);
+  });
+
+  it("defers the forced reload instead of reloading inside a payment", () => {
+    const registration = read("src/pwa/registerServiceWorker.js");
+    // onNeedReload must not call window.location.reload() directly.
+    expect(registration).not.toMatch(/location\.reload/);
+    expect(registration).toMatch(/onNeedReload/);
+
+    const app = read("src/App.jsx");
+    expect(app).toMatch(/PwaUpdateReload/);
+  });
+});
+
 describe("offline fallback page", () => {
   const html = readFileSync(join(root, "public", "offline.html"), "utf8");
 
