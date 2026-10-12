@@ -761,3 +761,32 @@ export has no equivalent: `IconNavNotifications` (bell) and `IconNavIdentity` (I
 
 The trailing `ChevronRight size={16}` and the card's padding/gap are independent of the
 type scale — leave them out of any future row pass unless the row itself changes.
+
+### 9.8 Landing footer watermark (extension)
+
+The landing footer carries a giant Glass mark behind the CTA and link columns. **Figma does
+not draw it** — the footer node `1:1374` ("Frame 1000003394", 1280×883) is flat `#001F6E`
+with no watermark at all. It came in from a `Glass _ Landing Footer` HTML mock and was kept
+on instruction (2026-10-12) as an owner-approved extension, like §2.2b.
+
+| Property       | Value                                                |
+| -------------- | ---------------------------------------------------- |
+| Geometry       | `viewBox="26 18 204 182"`, stepped-line `mask` cut   |
+| Gradient stops | `#002fa7` → `#001f6e` (**both sanctioned** — §1.1)   |
+| Placement      | `absolute` on `<footer>`, `h-[104%]`, centred, `z-0` |
+| Clipping       | `overflow-hidden` on `<footer>` (the 4% overhang)    |
+| Strength       | `opacity-[0.55]`                                     |
+
+The mock's own stops were `#06185f` → `#020b3a` — off-palette, the same class of invented
+near-black navy as the six in §1.6 — and its background was a three-stop radial
+(`#1a46c9` → `#0a2a8f` → `#001a6e`), all off-palette; `#001a6e` was 5/255 off the
+sanctioned `#001f6e`, i.e. a typo of it. **Both were corrected rather than ported**: the
+background stays flat `#001f6e`, and the footer's old `rgba(30,50,160,0.35)` radial glow
+was deleted as the same violation.
+
+Content wrappers carry `relative z-10` so the nav columns and copyright paint above the
+mark; the mark is `aria-hidden` and `pointer-events-none`. Content, copy and type scale are
+untouched and still match `1:1374`.
+
+> `glass-waitlist-v1`'s `Footer.jsx` still has the off-palette radial glow (line 52) and no
+> watermark. Landing components do not auto-sync — re-port or flag the drift.
