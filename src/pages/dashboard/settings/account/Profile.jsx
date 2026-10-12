@@ -456,7 +456,7 @@ export default function Profile() {
               onClick={handleSave}
               disabled={updateProfile.isPending || !isDirty}
               variant="primary"
-              size="md"
+              size="sm"
               fullWidth={false}
             >
               {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}

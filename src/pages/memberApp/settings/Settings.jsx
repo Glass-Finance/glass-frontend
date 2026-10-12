@@ -156,6 +156,7 @@ export default function Settings() {
 
         <Button
           variant="outline-neutral"
+          size="sm"
           onClick={handleLogout}
           fullWidth={false}
           className="w-full"

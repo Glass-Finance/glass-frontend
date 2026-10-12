@@ -192,7 +192,7 @@ export function NotificationDetailModal({
         </div>
         <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-100">
           {action && (
-            <Button onClick={goToAction} size="sm">
+            <Button onClick={goToAction} size="md" fullWidth={false}>
               {action.label} <ChevronRight size={13} />
             </Button>
           )}
@@ -232,7 +232,7 @@ export function NotificationDetailModal({
         <FactRows rows={factRows} />
         <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-100">
           {action && (
-            <Button onClick={goToAction} variant="danger">
+            <Button onClick={goToAction} variant="danger" size="md" fullWidth={false}>
               {action.label} <ChevronRight size={13} />
             </Button>
           )}
@@ -270,7 +270,7 @@ export function NotificationDetailModal({
         <FactRows rows={factRows} />
         <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-100">
           {action && (
-            <Button onClick={goToAction}>
+            <Button onClick={goToAction} size="md" fullWidth={false}>
               {action.label} <ChevronRight size={13} />
             </Button>
           )}
@@ -307,7 +307,7 @@ export function NotificationDetailModal({
         <FactRows rows={factRows} />
         <div className="flex flex-col gap-2 px-6 py-4 border-t border-gray-100">
           {action && (
-            <Button onClick={goToAction}>
+            <Button onClick={goToAction} size="md" fullWidth={false}>
               {action.label} <ChevronRight size={13} />
             </Button>
           )}
@@ -346,7 +346,7 @@ export function NotificationDetailModal({
           Close
         </Button>
         {action && (
-          <Button onClick={goToAction} fullWidth={false} size="sm" className="px-4">
+          <Button onClick={goToAction} fullWidth={false} size="md">
             {action.label} <ChevronRight size={13} />
           </Button>
         )}

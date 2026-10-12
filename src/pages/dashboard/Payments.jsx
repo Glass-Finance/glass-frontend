@@ -111,7 +111,12 @@ export default function Payments() {
               A full picture of all payments created in your community.
             </p>
           </div>
-          <Button variant="primary" size="xs" fullWidth={false} onClick={() => setCreateOpen(true)}>
+          <Button
+            variant="primary"
+            size="lg-tight"
+            fullWidth={false}
+            onClick={() => setCreateOpen(true)}
+          >
             <Plus size={13} /> Create Payment Plan
           </Button>
         </div>
