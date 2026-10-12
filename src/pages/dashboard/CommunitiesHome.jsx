@@ -31,6 +31,7 @@ import { useAuth } from "../../store/AuthContext";
 import { resolveIsPayingAdmin, isCommunityAdmin } from "../../utils/communityRole";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import LoadingState from "../../components/common/LoadingState";
+import { Skeleton } from "../../components/common/SkeletonUI";
 import { AdminPaymentModal } from "../../components/dashboard/AdminPaymentModal";
 import { CommunityCard } from "./CommunitiesHomeSections";
 import KycWizardModal from "../../components/kyc/KycWizardModal";
@@ -46,22 +47,29 @@ const SORT_OPTIONS = ["Recently Viewed", "A-Z", "Z-A", "Newest First"];
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function CardSkeleton() {
+  // Decorative placeholder: hidden from assistive tech, and the grid that
+  // renders these carries aria-busy (see the communities grid below) so a
+  // screen-reader user hears that the region is loading rather than a set of
+  // bare grey bars.
   return (
-    <div className="bg-white rounded-lg border border-surface-container-border overflow-hidden animate-pulse">
+    <div
+      aria-hidden="true"
+      className="bg-white rounded-lg border border-surface-container-border overflow-hidden animate-pulse"
+    >
       <div className="p-5">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 bg-gray-200 rounded flex-shrink-0" />
+          <Skeleton className="w-10 h-10 rounded flex-shrink-0" />
           <div className="flex-1">
-            <div className="h-3 bg-gray-200 rounded w-3/4 mb-2" />
-            <div className="h-2.5 bg-gray-100 rounded w-1/2" />
+            <Skeleton className="h-3 rounded w-3/4 mb-2" />
+            <Skeleton className="h-2.5 rounded w-1/2" />
           </div>
-          <div className="w-14 h-5 bg-gray-100 rounded" />
+          <Skeleton className="w-14 h-5 rounded" />
         </div>
-        <div className="w-full h-28 bg-gray-100 rounded-sm" />
+        <Skeleton className="w-full h-28 rounded-sm" />
       </div>
       <div className="px-5 py-3 border-t border-gray-50 bg-gray-50 flex justify-between">
-        <div className="h-2.5 bg-gray-200 rounded w-1/3" />
-        <div className="h-2.5 bg-gray-100 rounded w-1/4" />
+        <Skeleton className="h-2.5 rounded w-1/3" />
+        <Skeleton className="h-2.5 rounded w-1/4" />
       </div>
     </div>
   );
@@ -606,6 +614,7 @@ export default function CommunitiesHome() {
       {/* Grid / List */}
       <div
         data-tour="communities-grid"
+        aria-busy={isLoading || undefined}
         className={`px-4 md:px-7 pb-10 grid gap-4 ${
           view === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
         }`}

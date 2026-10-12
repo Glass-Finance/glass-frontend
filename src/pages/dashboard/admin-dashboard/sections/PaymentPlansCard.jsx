@@ -1,6 +1,6 @@
 import { toTitleCase } from "../../../../utils/format";
 import { Button } from "../../../../components/ui/Button";
-import { Skeleton } from "../SkeletonUI";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
 import { formatNaira } from "../helpers";
 
 const BAR_COLOR_CLASSES = [
@@ -12,7 +12,7 @@ const BAR_COLOR_CLASSES = [
   "bg-danger-bright",
 ];
 
-export default function PaymentPlansCard({ plans, plansLoading, onManageAll }) {
+export default function PaymentPlansCard({ plans, plansLoading, onManageAll, error = null }) {
   return (
     <div className="rounded-xl border border-surface-container-border p-4 bg-brand-mist">
       <div className="flex items-center justify-between mb-4">
@@ -27,6 +27,15 @@ export default function PaymentPlansCard({ plans, plansLoading, onManageAll }) {
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
+        </div>
+      ) : error ? (
+        // Must precede the empty check: a failed payment-links fetch resolves
+        // to an empty array, so without this the card reads "No payment plans
+        // yet" -- a community that never set up a plan -- rather than a load
+        // failure. Keeps the same h-20 dashed footprint so the card doesn't
+        // collapse to a different height than its loading/empty states.
+        <div className="h-20 rounded-xl border-2 border-dashed border-danger-tint flex items-center justify-center">
+          <span className="text-xs text-danger">Couldn't load payment plans.</span>
         </div>
       ) : plans.length === 0 ? (
         // Same h-20 rounded-xl footprint the loading Skeleton above already

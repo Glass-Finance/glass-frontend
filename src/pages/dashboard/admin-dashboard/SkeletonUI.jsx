@@ -1,6 +1,7 @@
-export function Skeleton({ className = "" }) {
-  return <div className={`bg-gray-200 rounded animate-pulse ${className}`} />;
-}
+// `Skeleton` moved to `components/common/SkeletonUI.jsx` — it's a generic
+// loading primitive, not an admin-dashboard concern, and the member app and
+// the rest of the dashboard need it too. Only the admin-dashboard-specific
+// icon set remains here.
 
 export function ActivityIcon({ type, color }) {
   if (type === "payment")

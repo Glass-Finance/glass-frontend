@@ -1,7 +1,7 @@
 import { Info } from "lucide-react";
-import { Skeleton } from "../SkeletonUI";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
 
-export default function DashboardStats({ stats, isLoading }) {
+export default function DashboardStats({ stats, isLoading, error = null }) {
   return (
     // auto-fit/minmax instead of fixed breakpoints (was grid-cols-2
     // sm:grid-cols-3 lg:grid-cols-5) -- that jumped straight from 3 to 5
@@ -39,6 +39,11 @@ export default function DashboardStats({ stats, isLoading }) {
             />
             {isLoading ? (
               <Skeleton className="h-6 w-16" />
+            ) : error ? (
+              // The stat cards are money and counts, so falling through to the
+              // "0" fallbacks the parent computes on a failed fetch reads as a
+              // real zero-contributions community rather than a load failure.
+              <span className="text-sm font-medium text-danger">Couldn't load</span>
             ) : (
               <span className="text-xl font-bold text-black">{s.value}</span>
             )}

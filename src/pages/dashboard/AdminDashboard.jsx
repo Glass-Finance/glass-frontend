@@ -62,7 +62,12 @@ function DashboardContent({ isPaying, communityId }) {
   const { balances, members, transactions, activity, community, isLoading, error } =
     useCommunityDashboard(communityId);
   const { data: currentUser } = useMe();
-  const { plans, isLoading: plansLoading, create: createPlan } = usePaymentPlans(communityId);
+  const {
+    plans,
+    isLoading: plansLoading,
+    error: plansError,
+    create: createPlan,
+  } = usePaymentPlans(communityId);
 
   async function handleCreatePlan(payload) {
     try {
@@ -381,7 +386,7 @@ function DashboardContent({ isPaying, communityId }) {
         )}
 
         {/* Stats */}
-        <DashboardStats stats={stats} isLoading={isLoading} />
+        <DashboardStats stats={stats} isLoading={isLoading} error={error} />
 
         {/* Your Payments — paying admin's own dues in this community */}
         {isPaying && (
@@ -405,15 +410,21 @@ function DashboardContent({ isPaying, communityId }) {
           <PaymentPlansCard
             plans={visiblePlans}
             plansLoading={plansLoading}
+            error={plansError}
             onManageAll={() => navigate(`/dashboard/payments?community=${communityId ?? ""}`)}
           />
-          <RecentActivityCard isLoading={activity.isLoading} items={recentActivity} />
+          <RecentActivityCard
+            isLoading={activity.isLoading}
+            error={activity.error}
+            items={recentActivity}
+          />
         </div>
 
         {/* Member Payments table */}
         <MemberPaymentsSection
           transactions={filteredTransactions}
           isLoading={isLoading}
+          error={error}
           search={search}
           onSearchChange={setSearch}
           sortDir={sortDir}

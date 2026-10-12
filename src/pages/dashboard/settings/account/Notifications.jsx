@@ -1,5 +1,6 @@
 import { useNotificationPreferences } from "../../../../hooks/useNotifications";
 import Toggle from "../../../../components/common/Toggle";
+import { SkeletonRow } from "../../../../components/common/SkeletonUI";
 
 function NotifRow({ label, description, value, onChange, disabled, last = false }) {
   return (
@@ -15,27 +16,16 @@ function NotifRow({ label, description, value, onChange, disabled, last = false 
   );
 }
 
-function SectionCard({ title, subtitle, children }) {
+function SectionCard({ title, subtitle, children, ariaBusy = false }) {
   return (
-    <div className="bg-surface-container rounded-2xl px-5 pt-4 pb-2 border border-surface-container-border">
+    <div
+      aria-busy={ariaBusy || undefined}
+      className="bg-surface-container rounded-2xl px-5 pt-4 pb-2 border border-surface-container-border"
+    >
       <p className="text-sm font-semibold text-gray-900 mb-0.5">{title}</p>
       {subtitle && <p className="text-xs text-gray-500 mb-3">{subtitle}</p>}
       <div className="-mx-5 border-b border-gray-100 mb-1" />
       {children}
-    </div>
-  );
-}
-
-function SkeletonRow({ last }) {
-  return (
-    <div
-      className={`flex items-center justify-between py-3 ${!last ? "border-b border-gray-100" : ""}`}
-    >
-      <div>
-        <div className="w-36 h-3 rounded-md bg-gray-200 mb-1.5" />
-        <div className="w-52 h-2.5 rounded-md bg-gray-100" />
-      </div>
-      <div className="w-12 h-5 rounded-full bg-gray-200 flex-shrink-0" />
     </div>
   );
 }
@@ -70,6 +60,7 @@ export default function Notifications() {
       <SectionCard
         title="Notification channels"
         subtitle="Choose how you'd like to be notified about activity across your communities."
+        ariaBusy={isLoading}
       >
         {isLoading ? (
           <>
@@ -106,7 +97,11 @@ export default function Notifications() {
       </SectionCard>
 
       {/* ── Payments ─────────────────────────────────────────────────────────── */}
-      <SectionCard title="Payments" subtitle="Stay on top of payment activity in your communities.">
+      <SectionCard
+        title="Payments"
+        subtitle="Stay on top of payment activity in your communities."
+        ariaBusy={isLoading}
+      >
         {isLoading ? (
           <>
             <SkeletonRow />
@@ -153,6 +148,7 @@ export default function Notifications() {
       <SectionCard
         title="Community & Members"
         subtitle="Get notified about membership and community activity."
+        ariaBusy={isLoading}
       >
         {isLoading ? (
           <>

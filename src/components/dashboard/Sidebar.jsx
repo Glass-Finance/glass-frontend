@@ -483,12 +483,20 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               space is left in the rail, which made the tour's spotlight
               highlight that entire empty area instead of just the avatar
               list. This wrapper shrinks to fit its actual content. */}
-            <div data-tour="community-switcher" className="flex flex-col gap-2 items-center w-full">
+            <div
+              data-tour="community-switcher"
+              aria-busy={loading || undefined}
+              className="flex flex-col gap-2 items-center w-full"
+            >
               {loading ? (
-                // Skeleton
-                [0, 1].map((i) => (
-                  <div key={i} className="w-9 h-9 rounded-sm bg-white/10 animate-pulse" />
-                ))
+                // Skeleton. Translucent white rather than the neutral
+                // SkeletonUI grey, because this rail is dark. Decorative, so
+                // the wrapper carries aria-busy and these bars are hidden.
+                <div aria-hidden="true" className="flex flex-col gap-2 items-center w-full">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="w-9 h-9 rounded-sm bg-white/10 animate-pulse" />
+                  ))}
+                </div>
               ) : adminCommunities.length === 0 ? (
                 <div className="w-9 h-9 rounded-sm bg-white/10 flex items-center justify-center">
                   <span className="text-white/40 text-[10px]">—</span>

@@ -193,6 +193,11 @@ export function useCommunityDashboard(communityId) {
     activity: {
       list: activityQuery.data ?? [],
       isLoading: activityQuery.isLoading,
+      // Exposed so the Recent Activity card can tell "the request failed"
+      // apart from "the community has no activity yet" -- the query resolves
+      // to an empty array either way. Passed through only; the query is
+      // unchanged.
+      error: activityQuery.error,
     },
     isLoading,
     error,

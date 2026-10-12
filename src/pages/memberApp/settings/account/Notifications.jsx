@@ -3,6 +3,8 @@ import { Button } from "../../../../components/ui/Button";
 import { ChevronLeft, RefreshCw } from "lucide-react";
 import { useNotificationPreferences } from "../../../../hooks/useNotifications";
 import Toggle from "../../../../components/common/Toggle";
+import { SkeletonRow } from "../../../../components/common/SkeletonUI";
+import { MEMBER_APP_SKELETON_ROW } from "../../../../components/common/skeletonRowPresets";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 
 function PrefRow({ label, desc, value, onChange, disabled, last = false }) {
@@ -19,29 +21,18 @@ function PrefRow({ label, desc, value, onChange, disabled, last = false }) {
   );
 }
 
-function Section({ title, children }) {
+function Section({ title, children, ariaBusy = false }) {
   return (
     <div className="mb-5">
       <p className="text-[11px] font-bold text-ink-ghost mt-0 mx-1 mb-2 uppercase [letter-spacing:0.6px]">
         {title}
       </p>
-      <div className="border border-surface-container-border bg-white rounded-2xl overflow-hidden">
+      <div
+        aria-busy={ariaBusy || undefined}
+        className="border border-surface-container-border bg-white rounded-2xl overflow-hidden"
+      >
         {children}
       </div>
-    </div>
-  );
-}
-
-function SkeletonRow({ last }) {
-  return (
-    <div
-      className={`flex items-center justify-between p-4 ${last ? "border-none" : "border-b border-hairline-soft"}`}
-    >
-      <div>
-        <div className="w-[140px] h-[13px] rounded-md bg-[#EBEBEB] mb-1.5" />
-        <div className="w-[200px] h-[11px] rounded-md bg-hairline-soft" />
-      </div>
-      <div className="w-10 h-[22px] rounded-full bg-[#EBEBEB] flex-shrink-0" />
     </div>
   );
 }
@@ -88,12 +79,12 @@ export default function Notifications() {
         )}
 
         {/* ── Channels ───────────────────────────────────────────────────────── */}
-        <Section title="Notification channels">
+        <Section title="Notification channels" ariaBusy={isLoading}>
           {isLoading ? (
             <>
-              <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow last />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} last />
             </>
           ) : (
             <>
@@ -124,13 +115,13 @@ export default function Notifications() {
         </Section>
 
         {/* ── Payments ───────────────────────────────────────────────────────── */}
-        <Section title="Payments">
+        <Section title="Payments" ariaBusy={isLoading}>
           {isLoading ? (
             <>
-              <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow last />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} last />
             </>
           ) : (
             <>
@@ -168,11 +159,11 @@ export default function Notifications() {
         </Section>
 
         {/* ── Community ──────────────────────────────────────────────────────── */}
-        <Section title="Community">
+        <Section title="Community" ariaBusy={isLoading}>
           {isLoading ? (
             <>
-              <SkeletonRow />
-              <SkeletonRow last />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} />
+              <SkeletonRow {...MEMBER_APP_SKELETON_ROW} last />
             </>
           ) : (
             <>
