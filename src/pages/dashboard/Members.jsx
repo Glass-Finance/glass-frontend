@@ -315,7 +315,7 @@ export default function Members() {
             )}
             <Button
               variant="primary"
-              size="xs"
+              size="lg-tight"
               fullWidth={false}
               onClick={() => setModalOpen(true)}
             >

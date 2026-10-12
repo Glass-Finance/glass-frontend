@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-// Implements the six button roles and five sizes in DESIGN-SYSTEM.md §2,
+// Implements the six button roles and seven sizes in DESIGN-SYSTEM.md §2,
 // extracted from the Figma file "Glass Design By AQ". Read that section
 // before changing anything here -- it records the exact padding, height,
 // label size, radius and state values, and which hex values are banned.
@@ -29,6 +29,15 @@ const SIZES = {
   md: { pad: "py-3", px: "px-6", h: "h-12", text: "text-[14px]" }, // M  12/24/12/24 h48
   lg: { pad: "py-4", px: "px-8", h: "h-14", text: "text-[16px]" }, // L  16/32/16/32 h56
   xl: { pad: "py-5", px: "px-10", h: "h-16", text: "text-[16px]" }, // XL 20/40/20/40 h64
+  // Owner-directed exceptions. Figma pairs each box with a fixed label size
+  // (h40<->14, h56<->16), and these two call-site families deliberately break
+  // that pairing: the label drops to 12px while keeping the taller box, so
+  // long header and empty-state labels stop crowding the button edge.
+  // Same padding/height as sm and lg respectively -- only `text` differs.
+  // Added 2026-10-12 with the dashboard button-sizing sweep; documented in
+  // DESIGN-SYSTEM.md §2 as decouplings rather than new Figma sizes.
+  "sm-tight": { pad: "py-2", px: "px-4", h: "h-10", text: "text-[12px]" }, // h40 12px
+  "lg-tight": { pad: "py-4", px: "px-8", h: "h-14", text: "text-[12px]" }, // h56 12px
   // Icon-only: square, no horizontal padding, because there is no label to
   // clear. Hit areas are the squares the Figma file actually draws (24/32/40
   // were all present; 48 is carried over from the button scale because 40 is

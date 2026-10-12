@@ -20,14 +20,21 @@ export default function EmptyState({
   subtitleClassName,
   action,
   actionLabel,
+  actionSize,
   className = "",
 }) {
   // The bigger page-level states (illustration/illustrationNode) use a
-  // larger illustration with a larger, regular-weight title and a pill
+  // larger illustration with a larger, regular-weight title and a tall
   // action button, per Figma -- the small icon-based states used
   // throughout the app for in-page sections keep their original compact
   // size/shape.
   const isBig = !!(illustration || illustrationNode);
+  // `actionSize` exists for the handful of full-page states that were built
+  // from the compact `icon` layout (Groups) and so wouldn't take the
+  // page-level branch above. Compact in-page/filter empties deliberately
+  // keep `xs` -- they sit inside a list, not on their own page.
+  const btnSize = actionSize || (isBig ? "lg-tight" : "xs");
+  const isPageAction = btnSize === "lg-tight";
   return (
     <div className={`flex flex-col items-center text-center py-10 px-6 ${className}`}>
       {illustrationNode && <div className="mb-4">{illustrationNode}</div>}
@@ -66,13 +73,13 @@ export default function EmptyState({
           {subtitle}
         </p>
       )}
-      {action && isBig && (
-        <Button onClick={action} fullWidth={false} size="md" className="mt-6 px-5">
-          {actionLabel}
-        </Button>
-      )}
-      {action && !isBig && (
-        <Button onClick={action} size="xs" fullWidth={false} className="mt-4">
+      {action && (
+        <Button
+          onClick={action}
+          fullWidth={false}
+          size={btnSize}
+          className={isPageAction ? "mt-6 px-5" : "mt-4"}
+        >
           {actionLabel}
         </Button>
       )}

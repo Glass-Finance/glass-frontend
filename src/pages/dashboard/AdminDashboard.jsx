@@ -322,7 +322,7 @@ function DashboardContent({ isPaying, communityId }) {
           <div data-tour="dashboard-header-actions" className="flex gap-2.5">
             <Button
               variant="outline-neutral"
-              size="xs"
+              size="lg-tight"
               fullWidth={false}
               onClick={() => navigate(`/dashboard/payments?community=${communityId ?? ""}`)}
             >
@@ -330,7 +330,7 @@ function DashboardContent({ isPaying, communityId }) {
             </Button>
             <Button
               variant="primary"
-              size="xs"
+              size="lg-tight"
               fullWidth={false}
               onClick={() => setAddMemberOpen(true)}
             >

@@ -235,7 +235,9 @@ function MfaModal({ mode, onClose, onSuccess }) {
                   {error}
                 </p>
               )}
-              <Button onClick={startSetup}>Begin Setup</Button>
+              <Button onClick={startSetup} size="sm">
+                Begin Setup
+              </Button>
             </>
           )}
 
@@ -301,7 +303,12 @@ function MfaModal({ mode, onClose, onSuccess }) {
                   {error}
                 </p>
               )}
-              <Button onClick={confirmEnable} disabled={code.length !== 6} loading={loading}>
+              <Button
+                onClick={confirmEnable}
+                disabled={code.length !== 6}
+                loading={loading}
+                size="sm"
+              >
                 {loading ? "Activating…" : "Activate MFA"}
               </Button>
             </>
@@ -342,6 +349,7 @@ function MfaModal({ mode, onClose, onSuccess }) {
                 disabled={code.length !== 6}
                 loading={loading}
                 variant="danger"
+                size="sm"
               >
                 {loading ? "Disabling…" : "Disable MFA"}
               </Button>
@@ -382,7 +390,12 @@ function MfaModal({ mode, onClose, onSuccess }) {
                   {error}
                 </p>
               )}
-              <Button onClick={confirmRegenerate} disabled={code.length !== 6} loading={loading}>
+              <Button
+                onClick={confirmRegenerate}
+                disabled={code.length !== 6}
+                loading={loading}
+                size="sm"
+              >
                 {loading ? "Generating…" : "Generate New Codes"}
               </Button>
             </>
@@ -434,7 +447,7 @@ function MfaModal({ mode, onClose, onSuccess }) {
                 />
                 I've saved these codes somewhere safe
               </label>
-              <Button onClick={onSuccess} disabled={!savedConfirmed}>
+              <Button onClick={onSuccess} disabled={!savedConfirmed} size="sm">
                 Done
               </Button>
             </div>
@@ -496,7 +509,7 @@ function MfaModal({ mode, onClose, onSuccess }) {
                 />
                 I've saved these codes somewhere safe
               </label>
-              <Button onClick={onSuccess} disabled={!savedConfirmed}>
+              <Button onClick={onSuccess} disabled={!savedConfirmed} size="sm">
                 Done
               </Button>
             </div>

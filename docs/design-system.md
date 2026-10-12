@@ -176,6 +176,9 @@ Heights are the quick check: **32 · 40 · 48 · 56 · 64.** Tertiary is 24.
 Critical's X-large uses `20/24/20/24` (h=64) — narrower horizontally than Primary's
 `20/40/20/40`.
 
+Figma pairs each box with one label size. **§2.2d** defines the two deliberate
+exceptions where the label drops to 12px.
+
 ### 2.2a Icon-only sizes (extension)
 
 > ### ⚠️ Extension: Figma defines no icon-button role
@@ -256,6 +259,25 @@ not use it.
 
 `aria-label` defaults to `"Back"`; override it when the destination is not simply "back"
 (e.g. `"Go back"` on Invites, which returns to Home).
+
+### 2.2d Tight label decouplings (owner-directed)
+
+Two sizes keep a **Figma box** but drop the **label to 12px**:
+
+| Size       | Padding T/R/B/L | Height | Label | Used for                                                  |
+| ---------- | --------------- | ------ | ----- | --------------------------------------------------------- |
+| `sm-tight` | 8/16/8/16       | 40     | 12px  | `CommunitiesHome` Join/Create Community header CTAs       |
+| `lg-tight` | 16/32/16/32     | 56     | 12px  | Dashboard + page-header CTAs, page-level empty-state CTAs |
+
+Padding and height are byte-for-byte `Small` and `Large` — only the label size
+differs. Figma pairs h40↔14px and h56↔16px, and these break that pairing on
+purpose: at 16px the label read too large in dashboard headers and crowded the
+button edge, so it was dropped to 12px while keeping the taller box (chosen
+2026-10-12, dashboard button-sizing sweep).
+
+They are a **decoupling, not a new Figma size** — no Figma node draws either.
+Do not add a third without the same conversation, and never invent one to fix
+a single call site when `className` would do.
 
 ### 2.3 States
 

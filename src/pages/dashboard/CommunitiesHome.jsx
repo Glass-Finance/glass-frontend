@@ -434,20 +434,24 @@ export default function CommunitiesHome() {
           className="flex w-full gap-3 md:w-auto md:items-center"
         >
           {/* Figma 1:7274 -- 189x56, white fill, #000000 stroke, black label,
-              32px padding and a trailing dropdown chevron. */}
+              32px padding and a trailing dropdown chevron. The label dropped
+              to 12px and the box to h40 (sm-tight) with the 2026-10-12
+              button-sizing sweep: 16px read too large against "Your
+              Communities" and the pair crowded the header. */}
           <Button
             variant="outline-neutral"
-            size="lg"
+            size="sm-tight"
             fullWidth={false}
             onClick={() => navigate("/onboarding/choose-path", { state: { intent: "join" } })}
           >
             Join Community
             <ChevronDown size={16} />
           </Button>
-          {/* Figma 1:7277 -- 208x56, #002FA7 fill, 32px padding. */}
+          {/* Figma 1:7277 -- 208x56, #002FA7 fill, 32px padding; same
+              sm-tight exception as the Join button above. */}
           <Button
             variant="primary"
-            size="lg"
+            size="sm-tight"
             fullWidth={false}
             onClick={() => {
               kycGate.enforce(() => navigate("/onboarding/choose-path"));

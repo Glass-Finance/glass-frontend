@@ -329,7 +329,7 @@ export default function PaystackAccount() {
           <p className="text-xs text-gray-400 mb-5">
             Add a bank account so Glass can settle your community's collected payments.
           </p>
-          <Button onClick={() => setShowModal(true)} fullWidth={false} className="px-5">
+          <Button onClick={() => setShowModal(true)} fullWidth={false} size="sm" className="px-5">
             Add Payout Account
           </Button>
         </div>
