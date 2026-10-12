@@ -549,6 +549,11 @@ product UI.
 | 22   | 500    | 28          | table titles, dialog titles, values | 11   |
 | 24   | 500    | 29          | rare                                | 2    |
 
+§7.1 measures the **Figma file**, not the app — Freq counts Figma nodes. Where the two
+disagree the code verdict wins. The one that matters: settings rows, which Figma draws at
+18/500 + 16/400 and the app ships at **14/500 + 12/400** (owner-directed, §9.7). Do not
+"correct" the app back to the table above.
+
 Weights present: **400, 500, 600** (2 nodes), **700** (names/emails in mock data + one C2
 chip). **500 is the default.** 400 for body/table text. 600/700 appear only in mock data and
 annotations — do not promote them to product headings without the owner saying so.
@@ -731,3 +736,28 @@ Pills are legal here (§1.5 carve-out). Frequency-badge text is 14/500; status c
 
 The `dashboard-overlay/` product mocks (inline styles, radius 7) stay **exempt** — decorative
 reference renders, not conformance targets (§6.5).
+
+### 9.7 Settings rows (owner-directed)
+
+`dashboard/settings/Settings.jsx` renders the sidebar's menu rows. Figma and the app
+disagree here on purpose — the app was scaled down in successive owner passes, and the
+result is **not** an oversight to be reverted:
+
+| Part          | Figma    | Code                                           |
+| ------------- | -------- | ---------------------------------------------- |
+| Row title     | 18 / 500 | `text-sm` + `leading-5` → **14 / 500**         |
+| Row detail    | 16 / 400 | `text-xs` + `leading-4 mt-0.5` → **12 / 400**  |
+| Row glyph     | 32px     | `size={24}` + `w-6 h-6` → **24px**             |
+| Glyph → title | 24px     | `gap-4` → **16px**                             |
+| Row padding   | —        | `pl-9 pr-6 py-[23px]` (deliberately untouched) |
+
+Title went 18 → 16 → 14 and detail 16 → 13 → 12; the intermediate 16/13 pass still read
+heavy against the card. Scaling stops here — 14/12 is the floor, so don't run another pass.
+
+Row glyphs come from `ui/icons/AdminMenuIcons.jsx`: a **32-unit viewBox**, `strokeWidth`
+1.5, `currentColor`. The viewBox is what serialises, so rendering at 24px scales the stroke
+with it — no redraw needed. Two glyphs are hand-drawn to the house spec because the Figma
+export has no equivalent: `IconNavNotifications` (bell) and `IconNavIdentity` (ID card).
+
+The trailing `ChevronRight size={16}` and the card's padding/gap are independent of the
+type scale — leave them out of any future row pass unless the row itself changes.

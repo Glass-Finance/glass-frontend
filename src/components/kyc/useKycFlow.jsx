@@ -160,12 +160,19 @@ export default function useKycFlow({ onDismiss, onHistory, onComplete } = {}) {
       {label}
     </Button>
   );
-  const row = (sec, pri) => (
-    <div className="flex items-center gap-3 w-full">
-      {sec}
-      {pri}
-    </div>
-  );
+  const row = (sec, pri) =>
+    sec ? (
+      <div className="flex items-center gap-3 w-full">
+        {sec}
+        {pri}
+      </div>
+    ) : (
+      // Lone primary: `flex-1` is what makes it span the footer, so cap the
+      // box it fills rather than the modal itself -- centred, not full bleed.
+      // Two-action footers above are untouched: there the primary still
+      // absorbs the space the secondary leaves behind.
+      <div className="flex w-full max-w-[320px] mx-auto">{pri}</div>
+    );
 
   // ── Footer (one primary + one secondary, fixed — never scrolled away) ─────
   // Built inline during render (not via a helper that could transitively
