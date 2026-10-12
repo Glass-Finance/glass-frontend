@@ -113,7 +113,7 @@ export default function Payments() {
           </div>
           <Button
             variant="primary"
-            size="lg-tight"
+            size="sm-tight"
             fullWidth={false}
             onClick={() => setCreateOpen(true)}
           >

@@ -137,7 +137,7 @@ function AllCommunitiesNotifications() {
               {unreadCount > 0 && (
                 <Button
                   variant="primary"
-                  size="lg-tight"
+                  size="sm-tight"
                   fullWidth={false}
                   onClick={() => markAllRead()}
                   disabled={isMarkingAllRead}
@@ -148,7 +148,7 @@ function AllCommunitiesNotifications() {
               )}
               <Button
                 variant="outline-caution"
-                size="lg-tight"
+                size="sm-tight"
                 onClick={() => clearAll()}
                 disabled={isClearingAll}
                 fullWidth={false}

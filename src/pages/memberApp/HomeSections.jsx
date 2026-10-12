@@ -382,8 +382,8 @@ export function EmptyUpcomingState() {
         className="w-[52px] h-[52px] object-contain mb-3.5"
         loading="lazy"
       />
-      <p className="text-[17px] font-normal text-ink mb-1.5">No Upcoming Payments</p>
-      <p className="text-[13px] text-ink-faint m-0 leading-[1.55] max-w-[270px]">
+      <p className="text-sm font-medium text-ink mb-1.5">No Upcoming Payments</p>
+      <p className="text-sm font-normal text-ink m-0 leading-[1.55] max-w-[270px]">
         New Dues from community will show up here once scheduled
       </p>
     </div>

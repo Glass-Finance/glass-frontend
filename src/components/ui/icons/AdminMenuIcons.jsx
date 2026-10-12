@@ -201,6 +201,87 @@ export function IconNavCommunity({ size = 32, className = "" }) {
   );
 }
 
+// Settings > Account > Notifications. Figma draws no glyph for this row (the
+// file's 'navMenuIcons/*' set stops at the eight rows that carry one), so this
+// bell is drawn here to the same spec as its siblings: 32px box, 1.5 stroke,
+// currentColor, round caps and joins.
+export function IconNavNotifications({ size = 32, className = "" }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <path
+        d="M9 11a7 7 0 0 1 14 0C23 18 26.5 17 26.5 24H5.5C5.5 17 9 18 9 11Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.7 26.2a2.3 2.3 0 0 0 4.6 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// Settings > Account > Identity Verification. Also absent from Figma's
+// navMenuIcons set -- an ID card carrying the member's portrait and detail
+// lines, drawn to the same 32px / 1.5 stroke / currentColor spec.
+export function IconNavIdentity({ size = 32, className = "" }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <path
+        d="M6.5 7h19a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-19a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.3 10.7a2.7 2.7 0 0 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 21.4a4.4 4.4 0 0 1 8.6 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.7 13.2h5.8M18.7 17.6h3.8"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // Settings > Community > Member Access (Figma 'navMenuIcons/Members', I1:6086;1:12971)
 export function IconNavMembers({ size = 32, className = "" }) {
   return (
