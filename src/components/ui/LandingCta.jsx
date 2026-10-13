@@ -6,7 +6,16 @@ import { forwardRef } from "react";
 // one of the six product roles in §2.1 and must never be reached for via
 // Button variant="primary". Marketing surfaces only.
 export const LandingCta = forwardRef(function LandingCta(
-  { children, type = "button", onClick, disabled, loading, className = "", ...rest },
+  {
+    children,
+    type = "button",
+    onClick,
+    disabled,
+    loading,
+    compact = false,
+    className = "",
+    ...rest
+  },
   ref,
 ) {
   const isDisabled = disabled || loading;
@@ -21,7 +30,14 @@ export const LandingCta = forwardRef(function LandingCta(
         "inline-flex items-center justify-center gap-2",
         // Geometry from Figma: every landing CTA instance is h=50 with
         // ~36px horizontal padding and radius 60 (a pill at this height).
-        "h-[50px] px-9 rounded-full",
+        // `compact` is the navbar variant only (owner decision, 2026-10-12):
+        // h=50 read as oversized sitting next to the org nav's Sign In pill,
+        // which measures 42px. Expressed as a prop rather than a className
+        // override so there is exactly one height class in the output —
+        // Tailwind does not guarantee cascade order between two arbitrary
+        // utilities like h-[50px] and h-[42px].
+        compact ? "h-[42px]" : "h-[50px]",
+        "px-9 rounded-full",
         // Near-white, not pure white, and black 500/15 label.
         "bg-[#fafbfc] text-black text-[15px] font-medium",
         // Hover/pressed were not measurable via REST; this conservative

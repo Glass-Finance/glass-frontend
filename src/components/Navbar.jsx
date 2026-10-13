@@ -184,6 +184,7 @@ export default function Navbar() {
               <>
                 <LandingCta
                   onClick={() => goToApp("/sign-up", navigate)}
+                  compact
                   className="shadow-lg shadow-black/20"
                 >
                   Get Started Free
@@ -199,6 +200,7 @@ export default function Navbar() {
             ) : (
               <LandingCta
                 onClick={() => goToApp("/sign-in", navigate)}
+                compact
                 className="shadow-lg shadow-black/20"
               >
                 Sign In
@@ -244,6 +246,7 @@ export default function Navbar() {
                       goToApp("/sign-up", navigate);
                       setMenuOpen(false);
                     }}
+                    compact
                   >
                     Get Started Free <ChevronRight className="w-4 h-4" />
                   </LandingCta>
@@ -263,6 +266,7 @@ export default function Navbar() {
                     goToApp("/sign-in", navigate);
                     setMenuOpen(false);
                   }}
+                  compact
                 >
                   Sign In
                 </LandingCta>
