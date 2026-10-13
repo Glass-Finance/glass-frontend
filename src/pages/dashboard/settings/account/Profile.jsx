@@ -457,15 +457,16 @@ export default function Profile() {
                 for a settings save action is `flex justify-end` + a
                 content-hugging button, not a full-width one. No top margin:
                 the field grid above carries mb-5.
-                `sm-tight` (h40 / 12px) rather than `sm` (h40 / 14px): the
-                box is unchanged, only the label is one notch down, so it
-                stops crowding the card's right edge. Owner-directed. */}
+                `sm-tighter` (h40 / 8px) rather than `sm` (h40 / 14px): the
+                box is unchanged, only the label is dropped. This is below
+                the button scale's 12px floor and is a deliberate owner
+                exception, not a scale rung. */}
             <div className="flex justify-end">
               <Button
                 onClick={handleSave}
                 disabled={updateProfile.isPending || !isDirty}
                 variant="primary"
-                size="sm-tight"
+                size="sm-tighter"
                 fullWidth={false}
               >
                 {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
