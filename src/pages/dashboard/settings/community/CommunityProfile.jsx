@@ -254,15 +254,16 @@ export default function CommunityProfile() {
             whole card. Primary variant matches the account side too — a save
             is a primary action. mt-4 is needed here (unlike the account row)
             because this field stack has no bottom margin.
-            `sm-tight` (h40 / 12px) rather than `sm` (h40 / 14px): the box is
-            unchanged, only the label is one notch down, matching the account
-            save row. Owner-directed. */}
+            `sm-tighter` (h40 / 8px) rather than `sm` (h40 / 14px): the box
+            is unchanged, only the label is dropped, matching the account save
+            row. This is below the button scale's 12px floor and is a
+            deliberate owner exception, not a scale rung. */}
         <div className="flex justify-end mt-4">
           <Button
             onClick={handleSave}
             disabled={updateCommunity.isPending}
             variant="primary"
-            size="sm-tight"
+            size="sm-tighter"
             fullWidth={false}
           >
             {saved ? "Saved!" : updateCommunity.isPending ? "Saving…" : "Save Changes"}

@@ -36,6 +36,12 @@ const SIZES = {
   // Added 2026-10-12 with the dashboard button-sizing sweep; documented in
   // DESIGN-SYSTEM.md §2.2d as a decoupling rather than a new Figma size.
   "sm-tight": { pad: "py-2", px: "px-4", h: "h-10", text: "text-[12px]" }, // h40 12px
+  // Second owner-directed decoupling (2026-10-13). Same h40 box, label
+  // dropped again to 8px, for the two settings save rows only. This sits
+  // BELOW the button scale's 12px floor -- `xs` is the smallest documented
+  // label in §2.2 -- so it is a deliberate, owner-ruled exception, not a
+  // new rung on the ladder. Padding and height remain byte-for-byte `sm`.
+  "sm-tighter": { pad: "py-2", px: "px-4", h: "h-10", text: "text-[8px]" }, // h40 8px
   // Icon-only: square, no horizontal padding, because there is no label to
   // clear. Hit areas are the squares the Figma file actually draws (24/32/40
   // were all present; 48 is carried over from the button scale because 40 is

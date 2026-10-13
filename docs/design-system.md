@@ -276,19 +276,26 @@ not use it.
 
 One size keeps a **Figma box** but drops the **label to 12px**:
 
-| Size       | Padding T/R/B/L | Height | Label | Used for                                                              |
-| ---------- | --------------- | ------ | ----- | --------------------------------------------------------------------- |
-| `sm-tight` | 8/16/8/16       | 40     | 12px  | Dashboard / page-header CTAs, page-level empty-state CTAs, Groups CTA |
+| Size         | Padding T/R/B/L | Height | Label   | Used for                                                              |
+| ------------ | --------------- | ------ | ------- | --------------------------------------------------------------------- |
+| `sm-tight`   | 8/16/8/16       | 40     | 12px    | Dashboard / page-header CTAs, page-level empty-state CTAs, Groups CTA |
+| `sm-tighter` | 8/16/8/16       | 40     | **8px** | The two settings save rows only — see below                           |
 
-Padding and height are byte-for-byte `Small` — only the label size differs.
+Padding and height are byte-for-byte `Small` in both — only the label differs.
 Figma pairs h40 with a 14px label; this breaks that pairing on purpose: at
 14px and above the label read too large in dashboard headers and crowded the
 button edge, so it was dropped to 12px while keeping the box (chosen
 2026-10-12, dashboard button-sizing sweep).
 
-It is a **decoupling, not a new Figma size** — no Figma node draws it. Do not
-add a second without the same conversation, and never invent one to fix a
-single call site when `className` would do.
+`sm-tighter` (2026-10-13) drops the label again to **8px, which is below the
+12px floor** §2.2 sets for every other button label in the scale. It is a
+deliberate owner-ruled exception scoped to exactly two call sites —
+Account › Profile and Community › Profile — and is **not** a new rung on the
+ladder. Nothing else should adopt it without the same conversation.
+
+Both entries are **decouplings, not new Figma sizes** — no Figma node draws
+either. Do not add a third without the same conversation, and never invent
+one to fix a single call site when `className` would do.
 
 ### 2.3 States
 
