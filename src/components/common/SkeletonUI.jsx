@@ -15,8 +15,15 @@
 // bar, and the surrounding loading region announces itself (see the
 // `aria-busy` on those containers), so this is hidden from the a11y tree.
 
-export function Skeleton({ className = "" }) {
-  return <div aria-hidden="true" className={`bg-gray-200 rounded animate-pulse ${className}`} />;
+// `tone` exists because the callers are not all one colour. Skeleton bars
+// come in two tones -- a darker one for the primary line, a lighter one for
+// the secondary line -- and merging them into a single colour flattens the
+// shape. It cannot be overridden by passing a second `bg-*` class in
+// `className`: both utilities have identical specificity, so which one wins
+// depends on the order Tailwind emits them in the stylesheet, not on the
+// order they appear in this string.
+export function Skeleton({ className = "", tone = "bg-gray-200" }) {
+  return <div aria-hidden="true" className={`${tone} rounded animate-pulse ${className}`} />;
 }
 
 export default Skeleton;
@@ -44,6 +51,7 @@ export function SkeletonRow({
   label = "w-36 h-3 bg-gray-200",
   sub = "w-52 h-2.5 bg-gray-100",
   toggle = "bg-gray-200",
+  toggleWidth = "w-8 h-[20px]",
 }) {
   return (
     <div
@@ -54,9 +62,11 @@ export function SkeletonRow({
         <div className={`rounded-md ${label} mb-1.5 animate-pulse`} />
         <div className={`rounded-md ${sub} animate-pulse`} />
       </div>
-      {/* Must match Toggle.jsx's own w-8 h-[20px] -- a placeholder wider or
-          taller than the switch it stands in for shifts the row on swap. */}
-      <div className={`w-8 h-[20px] rounded-full flex-shrink-0 ${toggle} animate-pulse`} />
+      {/* Toggle.jsx's switch is w-8 h-[20px], but that is only the whole
+          control when `showLabel` is off. With the label on, the control is
+          the switch plus a gap-1.5 and the "On"/"Off" text, so callers pass a
+          wider `toggleWidth` — see DASHBOARD_SKELETON_ROW. */}
+      <div className={`${toggleWidth} rounded-full flex-shrink-0 ${toggle} animate-pulse`} />
     </div>
   );
 }

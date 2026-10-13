@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import { Skeleton, SkeletonRow } from "../../../components/common/SkeletonUI";
-import { MEMBER_APP_SKELETON_ROW } from "../../../components/common/skeletonRowPresets";
+import {
+  MEMBER_APP_SKELETON_ROW,
+  DASHBOARD_SKELETON_ROW,
+} from "../../../components/common/skeletonRowPresets";
 import Toggle from "../../../components/common/Toggle";
 
 // The shared skeleton primitives. These replace four hand-rolled copies that
@@ -25,6 +28,18 @@ describe("Skeleton", () => {
 
     expect(container.firstChild.getAttribute("aria-hidden")).toBe("true");
   });
+
+  it("honours a tone override so two-tone rows keep their contrast", () => {
+    // Regression: Skeleton hardcoded bg-gray-200, so migrating call sites
+    // silently flattened every lighter bar onto the same tone. The override
+    // has to be a prop, not a second bg-* class in className — equal
+    // specificity means stylesheet order would decide the winner.
+    const { container } = render(<Skeleton className="h-2.5" tone="bg-gray-100" />);
+
+    const el = container.firstChild;
+    expect(el.className).toContain("bg-gray-100");
+    expect(el.className).not.toContain("bg-gray-200");
+  });
 });
 
 describe("SkeletonRow", () => {
@@ -33,6 +48,14 @@ describe("SkeletonRow", () => {
 
     // Two text bars + one toggle placeholder.
     expect(container.querySelectorAll(".animate-pulse")).toHaveLength(3);
+  });
+
+  it("keeps the label and description bars in different tones by default", () => {
+    const { container } = render(<SkeletonRow />);
+    const [label, sub] = container.querySelectorAll(".rounded-md");
+
+    expect(label.className).toContain("bg-gray-200");
+    expect(sub.className).toContain("bg-gray-100");
   });
 
   it("matches the shared Toggle's own w-8 h-[20px] footprint", () => {
@@ -72,8 +95,47 @@ describe("SkeletonRow", () => {
     const { container } = render(<SkeletonRow {...MEMBER_APP_SKELETON_ROW} />);
 
     expect(container.innerHTML).not.toContain("EBEBEB");
-    // The approved replacement.
+    // The approved replacement (#f2f2f2, "Hairline surface").
     expect(container.querySelector(".bg-hairline-soft")).not.toBeNull();
+  });
+
+  it("keeps the member-app label and sub in different tones", () => {
+    // Regression: collapsing all three bars onto one tone flattened the row
+    // and lost the label/description hierarchy the original #EBEBEB-vs-
+    // hairline-soft pairing had.
+    const { container } = render(<SkeletonRow {...MEMBER_APP_SKELETON_ROW} />);
+    const [label, sub] = container.querySelectorAll(".rounded-md");
+
+    expect(label.className).toContain("bg-gray-200");
+    expect(sub.className).toContain("bg-hairline-soft");
+  });
+});
+
+describe("SkeletonRow toggle width", () => {
+  it("defaults to the bare switch width", () => {
+    // Toggle.jsx without showLabel: the w-8 h-[20px] switch is the whole control.
+    const { container } = render(<SkeletonRow />);
+
+    expect(container.querySelector(".rounded-full").className).toContain("w-8");
+  });
+
+  it("widens for the showLabel variant the dashboard rows use", () => {
+    // Regression: the placeholder was hardcoded w-8 while the real control is
+    // the switch + gap-1.5 + an "On"/"Off" label, so the row shifted on swap.
+    const { container } = render(<SkeletonRow {...DASHBOARD_SKELETON_ROW} />);
+
+    const bar = container.querySelector(".rounded-full");
+    expect(bar.className).toContain("w-14");
+    expect(bar.className).toContain("h-[20px]");
+  });
+
+  it("keeps the showLabel placeholder wider than the bare one", () => {
+    const bare = render(<SkeletonRow />);
+    const labelled = render(<SkeletonRow {...DASHBOARD_SKELETON_ROW} />);
+
+    expect(labelled.container.querySelector(".rounded-full").className).not.toBe(
+      bare.container.querySelector(".rounded-full").className,
+    );
   });
 });
 
