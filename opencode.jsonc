@@ -1,0 +1,247 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // GlassPay project-local OpenCode configuration.
+  //
+  // OpenCode v2 syntax only. The v1 field names (`permission`, `bash`,
+  // `task`) are not valid here.
+  //
+  // Rules are an ordered list and the LAST matching rule wins, so the layout
+  // is: broadest rule first, then narrow allowlists, then hard denies last.
+  //
+  // This file is the enforcement mechanism. The skills under
+  // `.opencode/skills/` only describe workflow; nothing in a SKILL.md can
+  // block a command. Keep the command policy here and nowhere else.
+  //
+  // ── Measured behaviour, verified in this repository ──────────────────────
+  //
+  // `deny` is absolute and is enforced. `ask` is NOT: it depends on the
+  // client being able to prompt a human. In a non-interactive session an
+  // `ask` resolves without blocking and the command runs, while the same
+  // command under `deny` is rejected outright. So only `deny` is a real
+  // boundary here; treat every `ask` in this file as "advisory in automation".
+  //
+  // That is why anything genuinely destructive below is denied rather than
+  // asked. Broad `ask` rules are still worth having — they are what makes the
+  // interactive TUI stop and confirm — but they are not a guarantee.
+  //
+  // Last-match-wins has one sharp edge: a broad rule added here is appended
+  // AFTER OpenCode's own base policy and therefore shadows it. The base
+  // policy asks for `read *.env.*`; a `read *` → `allow` below silently
+  // overrides that unless the narrower rule is restated afterwards.
+
+  "permissions": [
+    // ── 1. Default posture: investigate, don't mutate ──────────────────────
+    // OpenCode v2 ships with an allow-all base policy
+    // ({action:"*", resource:"*", effect:"allow"}), so edits and shell run
+    // without prompting out of the box. These two rules are the entire
+    // reason this repository is read-only by default.
+    { "action": "shell", "resource": "*", "effect": "ask" },
+    { "action": "edit", "resource": "*", "effect": "ask" },
+    // Outbound network access is its own axis and was previously inherited
+    // from the allow-all base policy, which meant an agent bound by "never
+    // contact a live backend" could still fetch one. `webfetch` to the
+    // production API is denied outright below; everything else asks.
+    { "action": "websearch", "resource": "*", "effect": "ask" },
+    { "action": "webfetch", "resource": "*", "effect": "ask" },
+
+    // ── 2. Skill loading ──────────────────────────────────────────────────
+    // Deliberately a separate axis from edit/shell. Loading a skill only
+    // injects prose into the conversation; it grants no authority. The four
+    // curated project skills plus the two built-ins load silently, and any
+    // skill that appears later — a plugin, a marketplace, an HTTP catalog —
+    // needs a human decision before it can influence the agent.
+    { "action": "skill", "resource": "*", "effect": "ask" },
+    { "action": "skill", "resource": "opencode", "effect": "allow" },
+    { "action": "skill", "resource": "report", "effect": "allow" },
+    { "action": "skill", "resource": "safe-git-workflow", "effect": "allow" },
+    { "action": "skill", "resource": "security-audit", "effect": "allow" },
+    { "action": "skill", "resource": "regression-testing", "effect": "allow" },
+    { "action": "skill", "resource": "react-design-system", "effect": "allow" },
+
+    // ── 3. Read-only investigation, no prompt ─────────────────────────────
+    // Anything not listed here falls back to the `ask` in section 1, so the
+    // allowlist is opt-in by construction.
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "glob", "resource": "*", "effect": "allow" },
+    { "action": "grep", "resource": "*", "effect": "allow" },
+    // The `read *` allow above is appended after OpenCode's base policy and so
+    // SHADOWS the base rule that asks for `*.env.*`. These two must be
+    // restated after it, or `.env.production`, `.env.local` and
+    // `.env.development.local` become readable with no prompt — and those are
+    // exactly the secret-bearing variants that `.gitignore` already excludes.
+    { "action": "read", "resource": "*.env.*", "effect": "ask" },
+    { "action": "read", "resource": "*.env", "effect": "ask" },
+    // Known limitation: `grep` cannot be path-scoped. Its permission resource
+    // is the search pattern, not the path being searched, so `read` denies on
+    // `*.pem` / `*.key` below do not stop a grep from surfacing their lines.
+    // The agent instructions carry the prose rule for that.
+
+    // ── 4. Git inspection allowlist ───────────────────────────────────────
+    // Deliberately narrow. `git branch` is absent on purpose: bare
+    // `git branch -D` deletes a ref and would match a `git branch *`
+    // pattern. `git fetch` is absent because it is a network write.
+    { "action": "shell", "resource": "git status *", "effect": "allow" },
+    { "action": "shell", "resource": "git diff *", "effect": "allow" },
+    { "action": "shell", "resource": "git log *", "effect": "allow" },
+    { "action": "shell", "resource": "git show *", "effect": "allow" },
+    { "action": "shell", "resource": "git blame *", "effect": "allow" },
+    { "action": "shell", "resource": "git rev-parse *", "effect": "allow" },
+    { "action": "shell", "resource": "git merge-base *", "effect": "allow" },
+    { "action": "shell", "resource": "git describe *", "effect": "allow" },
+    { "action": "shell", "resource": "git shortlog *", "effect": "allow" },
+    { "action": "shell", "resource": "git ls-files *", "effect": "allow" },
+    { "action": "shell", "resource": "git ls-tree *", "effect": "allow" },
+    { "action": "shell", "resource": "git grep *", "effect": "allow" },
+    { "action": "shell", "resource": "git remote -v", "effect": "allow" },
+    { "action": "shell", "resource": "git stash list *", "effect": "allow" },
+    { "action": "shell", "resource": "git worktree list *", "effect": "allow" },
+    { "action": "shell", "resource": "git branch --show-current *", "effect": "allow" },
+    { "action": "shell", "resource": "git tag --list *", "effect": "allow" },
+
+    // ── 5. Non-mutating validation gates ──────────────────────────────────
+    // `npm run *` is deliberately NOT allowed: it would also match
+    // `npm run format` (prettier --write over the tree),
+    // `npm run test:e2e` (spawns browsers) and
+    // `npm run probe:idempotency` (reaches the live backend). Each safe
+    // script is named individually instead.
+    { "action": "shell", "resource": "npm run format:check *", "effect": "allow" },
+    { "action": "shell", "resource": "npm run lint *", "effect": "allow" },
+    { "action": "shell", "resource": "npm run typecheck *", "effect": "allow" },
+    { "action": "shell", "resource": "npm run test *", "effect": "allow" },
+    { "action": "shell", "resource": "npm run test:coverage *", "effect": "allow" },
+    { "action": "shell", "resource": "npm run audit:endpoints *", "effect": "allow" },
+    { "action": "shell", "resource": "npm run check:landing-sync *", "effect": "allow" },
+
+    // ── 6. Edit hardening ─────────────────────────────────────────────────
+    // After the `ask` in section 1, so these win. `*.env` matches `.env`
+    // but not `.env.example`, so the template stays editable.
+    { "action": "edit", "resource": "*.env", "effect": "deny" },
+    { "action": "edit", "resource": "*.env.*", "effect": "deny" },
+    { "action": "edit", "resource": "*.pem", "effect": "deny" },
+    { "action": "edit", "resource": "*.key", "effect": "deny" },
+    { "action": "read", "resource": "*.pem", "effect": "deny" },
+    { "action": "read", "resource": "*.key", "effect": "deny" },
+    // Production hosts are denied rather than asked, because `ask` is not
+    // enforced in automation (see the header note). Denying the host outright
+    // is the only version of "never contact a live backend" that holds when
+    // nobody is watching.
+    { "action": "webfetch", "resource": "*api.glasspay.app*", "effect": "deny" },
+
+    // ── 7. Git: staging, commits, pushes, merges, destructive cleanup ─────
+    // The blanket staging forms are denied outright. Path-scoped
+    // `git add <path>` is not listed, so it falls through to `ask` in
+    // section 1 — staging still needs a human, but stays possible.
+    { "action": "shell", "resource": "git add .", "effect": "deny" },
+    { "action": "shell", "resource": "git add -A", "effect": "deny" },
+    { "action": "shell", "resource": "git add -A .", "effect": "deny" },
+    { "action": "shell", "resource": "git add --all", "effect": "deny" },
+    { "action": "shell", "resource": "git add -u", "effect": "deny" },
+    { "action": "shell", "resource": "git add --update", "effect": "deny" },
+    { "action": "shell", "resource": "git commit *", "effect": "deny" },
+    { "action": "shell", "resource": "git push *", "effect": "deny" },
+    { "action": "shell", "resource": "git merge *", "effect": "deny" },
+    { "action": "shell", "resource": "git rebase *", "effect": "deny" },
+    { "action": "shell", "resource": "git am *", "effect": "deny" },
+    { "action": "shell", "resource": "git cherry-pick *", "effect": "deny" },
+    { "action": "shell", "resource": "git revert *", "effect": "deny" },
+    // Denied wholesale, not just `--hard`. `--soft` and `--mixed` move HEAD and
+    // rewrite the index, and since `ask` is not enforced in automation those
+    // forms would otherwise run unattended. Unstaging is a human decision.
+    { "action": "shell", "resource": "git reset *", "effect": "deny" },
+    { "action": "shell", "resource": "git reset", "effect": "deny" },
+
+    // Destructive cleanup and history surgery.
+    { "action": "shell", "resource": "git clean *", "effect": "deny" },
+    { "action": "shell", "resource": "git checkout *", "effect": "deny" },
+    { "action": "shell", "resource": "git switch *", "effect": "deny" },
+    { "action": "shell", "resource": "git restore *", "effect": "deny" },
+    // `git stash` is denied per mutating subcommand rather than as
+    // `git stash *`, because the blanket form sat ABOVE the `git stash list *`
+    // allow and last-match-wins meant it silently killed the stash-listing
+    // that `safe-git-workflow` requires as part of its pre-flight report.
+    // `show` stays available: it reads without mutating.
+    { "action": "shell", "resource": "git stash push *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash pop *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash apply *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash store *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash save *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash clear", "effect": "deny" },
+    { "action": "shell", "resource": "git stash clear *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash drop *", "effect": "deny" },
+    { "action": "shell", "resource": "git stash create", "effect": "deny" },
+    { "action": "shell", "resource": "git stash create *", "effect": "deny" },
+    { "action": "shell", "resource": "git branch -D *", "effect": "deny" },
+    { "action": "shell", "resource": "git branch -d *", "effect": "deny" },
+    { "action": "shell", "resource": "git branch --delete *", "effect": "deny" },
+    { "action": "shell", "resource": "git branch -m *", "effect": "deny" },
+    { "action": "shell", "resource": "git worktree add *", "effect": "deny" },
+    { "action": "shell", "resource": "git worktree remove *", "effect": "deny" },
+    { "action": "shell", "resource": "git worktree prune *", "effect": "deny" },
+    { "action": "shell", "resource": "git update-ref *", "effect": "deny" },
+    { "action": "shell", "resource": "git symbolic-ref *", "effect": "deny" },
+    { "action": "shell", "resource": "git reflog expire *", "effect": "deny" },
+    { "action": "shell", "resource": "git gc *", "effect": "deny" },
+    { "action": "shell", "resource": "git pack-refs *", "effect": "deny" },
+    { "action": "shell", "resource": "git filter-branch *", "effect": "deny" },
+    { "action": "shell", "resource": "git filter-repo *", "effect": "deny" },
+    { "action": "shell", "resource": "git replace *", "effect": "deny" },
+    { "action": "shell", "resource": "git submodule *", "effect": "deny" },
+    { "action": "shell", "resource": "git init *", "effect": "deny" },
+    // Denied wholesale rather than partially: `git config --unset`,
+    // `--global` and `--replace-all` all mutate, and the read-only forms
+    // (`--get`, `--list`) are already not in the allowlist, so they ask.
+    { "action": "shell", "resource": "git config *", "effect": "deny" },
+
+    // ── 8. Non-git destructive and outward-facing operations ──────────────
+    // Windows shells in use are powershell.exe and cmd.exe, so the delete
+    // and recursive-delete families are both covered.
+    { "action": "shell", "resource": "npm publish *", "effect": "deny" },
+    { "action": "shell", "resource": "npm audit fix *", "effect": "deny" },
+    { "action": "shell", "resource": "vercel *", "effect": "deny" },
+    { "action": "shell", "resource": "netlify *", "effect": "deny" },
+    { "action": "shell", "resource": "gh pr merge *", "effect": "deny" },
+    { "action": "shell", "resource": "gh release *", "effect": "deny" },
+    // The OpenCode skill guidance is explicit that `opencode mcp auth` starts
+    // an interactive OAuth flow whose authorization link can be hidden inside
+    // background-process output. Denied so it cannot be run blind.
+    { "action": "shell", "resource": "opencode mcp auth *", "effect": "deny" },
+    { "action": "shell", "resource": "rm -rf *", "effect": "deny" },
+    { "action": "shell", "resource": "rm -fr *", "effect": "deny" },
+    { "action": "shell", "resource": "rm -r *", "effect": "deny" },
+    { "action": "shell", "resource": "rm --recursive *", "effect": "deny" },
+    { "action": "shell", "resource": "rmdir /s *", "effect": "deny" },
+    { "action": "shell", "resource": "rd /s *", "effect": "deny" },
+    { "action": "shell", "resource": "Remove-Item *", "effect": "deny" },
+    { "action": "shell", "resource": "del *", "effect": "deny" },
+    { "action": "shell", "resource": "erase *", "effect": "deny" },
+    { "action": "shell", "resource": "Clear-Content *", "effect": "deny" },
+
+    // ── 9. Subagent launch ────────────────────────────────────────────────
+    // Needed so the agent can spawn the read-only auditor below.
+    { "action": "subagent", "resource": "*", "effect": "ask" },
+    { "action": "subagent", "resource": "readonly-auditor", "effect": "allow" },
+  ],
+
+  // ── 10. Optional hard layer: denies that saved approvals cannot lift ────
+  // A `deny` in `permissions` already blocks execution, but a client can
+  // answer an `ask` with "Allow always", which persists a project-scoped
+  // allow rule. Policies are evaluated AFTER saved approvals and can only
+  // ever tighten, so these six cannot be un-blocked from inside a session.
+  // Cost: a blocked operation reports "Blocked by configuration policy"
+  // instead of prompting, so there is no override path at all — lifting one
+  // means editing this file. That is the intent.
+  // Note this is `experimental`. An invalid statement is dropped with a
+  // warning in the server log rather than failing loudly, so verify with
+  // the Stage 4 behavioural checks rather than trusting the file.
+  "experimental": {
+    "policies": [
+      { "action": "permission", "resource": "shell:git push *", "effect": "deny" },
+      { "action": "permission", "resource": "shell:git commit *", "effect": "deny" },
+      { "action": "permission", "resource": "shell:git add -A", "effect": "deny" },
+      { "action": "permission", "resource": "shell:git reset --hard *", "effect": "deny" },
+      { "action": "permission", "resource": "shell:git clean *", "effect": "deny" },
+      { "action": "permission", "resource": "edit:*.env", "effect": "deny" },
+    ],
+  },
+}
