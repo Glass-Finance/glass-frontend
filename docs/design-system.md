@@ -218,7 +218,7 @@ exception where the label drops to 12px.
 > | -------- | -------------------------- | --------------------------------------------- |
 > | Fill     | `#fafbfc` (near-white)     | every "Get Started" / "Create Your Community" |
 > | Radius   | 60 → pill (`rounded-full`) | r=60 on all instances                         |
-> | Height   | 50                         | 50 on all instances                           |
+> | Height   | 50 — **42 in the navbar**  | 50 on all instances; navbar is the exception  |
 > | Label    | Inter 500, 15px, `#000000` | text nodes                                    |
 >
 > These are **not** an inversion of Primary and must not be styled via `variant="primary"`.
@@ -236,6 +236,15 @@ exception where the label drops to 12px.
 > 2026-10-12): it was a blue `Button` (`bg-brand` + `rounded-g-1`), which read as a second
 > brand-blue CTA sitting directly beside the white pill. The **organizations-view** navbar
 > "Sign In" is deliberately unchanged and stays on the outline/text treatment.
+>
+> **Navbar height — the `compact` prop** (owner decision, 2026-10-12). At h=50 the
+> nav "Get Started Free" and the members "Sign In" read as oversized next to the
+> organizations nav's Sign In pill, which measures **42px** (`px-5 py-2.5` + a
+> 13.5px label). Both navbar instances therefore pass `compact`, which swaps
+> `h-[50px]` for `h-[42px]`. It is a **prop, not a `className` override** — Tailwind
+> does not guarantee cascade order between two arbitrary utilities such as
+> `h-[50px]` and `h-[42px]`, so the component emits exactly one height class.
+> Non-navbar instances (hero, CTA band, footer) keep h=50.
 
 ### 2.2c Mobile Back Button (Figma component `1:14109`)
 
