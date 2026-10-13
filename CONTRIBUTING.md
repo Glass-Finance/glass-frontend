@@ -16,6 +16,6 @@ Add focused Vitest/Testing Library coverage for changed logic and user-visible s
 
 ## Git workflow
 
-Create a short-lived `feature/` or `chore/` branch from `main`. Open a pull request into `main` and wait for required CI checks before merging. Do not work directly on `main`. Keep commits small and use imperative conventional-commit subjects such as `feat:`, `fix:`, `chore:`, `ci:`, and `docs:`.
+Create a short-lived `feature/*`, `fix/*`, `chore/*` or `refactor/*` branch from `main`. Open a pull request into `main` and wait for required CI checks before merging. Do not work directly on `main`. Keep commits small and use imperative conventional-commit subjects such as `feat:`, `fix:`, `chore:`, `ci:`, and `docs:`.
 
 Keep PRs focused, describe the behavior and verification steps, and call out follow-up work or known testing gaps. Use the repository pull request template and preserve the existing Dependabot workflow.

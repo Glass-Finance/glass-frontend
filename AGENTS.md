@@ -59,6 +59,6 @@ A call to a route the backend doesn't have type-checks, lints, builds and unit-t
 
 ## Workflow
 
-Short-lived `feature/` branch → PR into `main` with the repo PR template (summary, test plan, checklist, screenshots for UI). Conventional-commit subjects. Never commit directly to `main`; keep dependency updates in their own PRs.
+Short-lived `feature/*`, `fix/*`, `chore/*` or `refactor/*` branch → PR into `main` with the repo PR template (summary, test plan, checklist, screenshots for UI). Conventional-commit subjects. Never commit directly to `main`; keep dependency updates in their own PRs.
 
 **Commit messages carry no AI co-author trailers.** No `Co-Authored-By:` line for an assistant, model or agent — credit the human author only. This is a project decision, not a default to be overridden per-commit. History rewritten before this rule landed still has trailers on a handful of commits; those are left alone deliberately, because stripping them means force-pushing shared `main` and rewriting a colleague's commit for no change to any code. Don't repeat that.
