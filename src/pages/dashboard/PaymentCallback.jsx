@@ -102,6 +102,13 @@ function AdminPaymentCallback() {
     // earlier (including a session-expiry bounce) must leave them intact so
     // the dashboard's pending-ref check can finish the job after sign-in.
     function consumePendingFlags() {
+      // Tombstone the pending reference before removing it. The pending-ref hook
+      // on Home consumes that key up front, so by the time this page reaches a
+      // terminal state the reference is already gone — the tombstone has to be
+      // written unconditionally, from this page's own reference, or the hook's
+      // failure path cannot tell "already settled here" from "verification
+      // failed" and would resurrect it into a duplicate confirmation toast.
+      sessionStorage.setItem("paymentPendingRef_terminal", reference);
       sessionStorage.removeItem("paymentReturnTo");
       sessionStorage.removeItem("paymentPendingRef");
     }

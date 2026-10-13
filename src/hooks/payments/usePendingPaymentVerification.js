@@ -5,6 +5,11 @@ import { toastSuccess } from "../../utils/toast";
 import { settleLocalPaymentForReference } from "./localCache";
 import { isVerificationSuccessStatus } from "../../utils/paymentStatus";
 
+// Set by the terminal consumers of "paymentPendingRef" (PaymentCallback,
+// PaymentSuccess, SignIn) before they remove it, so this hook's failure path
+// can tell "the payment was already settled" from "verification just failed".
+const TERMINAL_TOMBSTONE_KEY = "paymentPendingRef_terminal";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Pending payment verification — covers payers who never reach the callback
 // page (back button, closed the Paystack tab). The pending reference stored
@@ -44,6 +49,21 @@ export function usePendingPaymentVerification() {
         // again: the payer saw the obligation as Due and paid a second time.
         // Restoring it keeps recovery possible on the next mount. Still
         // attempt-once per mount — this effect does not loop.
+        //
+        // Guarded by a terminal tombstone. This hook consumes the reference up
+        // front, but three terminal components consume it independently —
+        // PaymentCallback and PaymentSuccess (both via consumePendingFlags,
+        // once verification reaches a terminal state) and SignIn, which clears
+        // it at the auth boundary and routes to the callback to finish. None of
+        // them can see that this hook already took it, and a terminal component
+        // can therefore consume it while our request is still in flight. Writing
+        // it back unconditionally resurrected a reference that had already been
+        // settled, so the next Home mount re-verified a completed payment and
+        // fired a duplicate "Payment confirmed" toast. Those components now
+        // leave this tombstone behind, and this catch only restores when it is
+        // absent. Reads and writes are confined to this tab's own sessionStorage
+        // entry, so cross-tab sign-in is unaffected.
+        if (sessionStorage.getItem(TERMINAL_TOMBSTONE_KEY) === reference) return;
         try {
           sessionStorage.setItem("paymentPendingRef", reference);
         } catch {
