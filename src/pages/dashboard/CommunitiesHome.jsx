@@ -65,15 +65,15 @@ function CardSkeleton() {
           <Skeleton className="w-10 h-10 rounded flex-shrink-0" />
           <div className="flex-1">
             <Skeleton className="h-3 rounded w-3/4 mb-2" />
-            <Skeleton className="h-2.5 rounded w-1/2" />
+            <Skeleton className="h-2.5 rounded w-1/2" tone="bg-gray-100" />
           </div>
-          <Skeleton className="w-14 h-5 rounded" />
+          <Skeleton className="w-14 h-5 rounded" tone="bg-gray-100" />
         </div>
-        <Skeleton className="w-full h-28 rounded-sm" />
+        <Skeleton className="w-full h-28 rounded-sm" tone="bg-gray-100" />
       </div>
       <div className="px-5 py-3 border-t border-gray-50 bg-gray-50 flex justify-between">
         <Skeleton className="h-2.5 rounded w-1/3" />
-        <Skeleton className="h-2.5 rounded w-1/4" />
+        <Skeleton className="h-2.5 rounded w-1/4" tone="bg-gray-100" />
       </div>
     </div>
   );

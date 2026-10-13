@@ -1,6 +1,7 @@
 import { useNotificationPreferences } from "../../../../hooks/useNotifications";
 import Toggle from "../../../../components/common/Toggle";
 import { SkeletonRow } from "../../../../components/common/SkeletonUI";
+import { DASHBOARD_SKELETON_ROW } from "../../../../components/common/skeletonRowPresets";
 
 function NotifRow({ label, description, value, onChange, disabled, last = false }) {
   return (
@@ -64,9 +65,9 @@ export default function Notifications() {
       >
         {isLoading ? (
           <>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow last />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} last />
           </>
         ) : (
           <>
@@ -104,10 +105,10 @@ export default function Notifications() {
       >
         {isLoading ? (
           <>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow last />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} last />
           </>
         ) : (
           <>
@@ -152,9 +153,9 @@ export default function Notifications() {
       >
         {isLoading ? (
           <>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow last />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} />
+            <SkeletonRow {...DASHBOARD_SKELETON_ROW} last />
           </>
         ) : (
           <>

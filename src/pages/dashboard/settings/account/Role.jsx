@@ -76,20 +76,23 @@ export default function Role() {
 
   // ── Loading skeleton ───────────────────────────────────────────────────────
   if (isLoading) {
-    // Decorative placeholder. The wrapper is hidden from assistive tech and
-    // aria-busy marks the region, so a screen-reader user is told the section
-    // is loading rather than being handed a run of visual-only bars.
+    // The region is aria-busy but NOT aria-hidden: hiding the wrapper would
+    // remove it from the accessibility tree and make its own aria-busy inert,
+    // leaving a screen-reader user with no announcement at all. The decorative
+    // bars inside carry aria-hidden individually (Skeleton does this), and the
+    // two option shells are hidden explicitly below.
     return (
-      <div aria-hidden="true" aria-busy="true" className="flex flex-col gap-5 w-full">
+      <div aria-busy="true" className="flex flex-col gap-5 w-full">
         <div>
           <Skeleton className="h-4 w-24 rounded mb-2" />
-          <Skeleton className="h-3 w-56 rounded" />
+          <Skeleton className="h-3 w-56 rounded" tone="bg-gray-100" />
         </div>
         <div className="bg-surface-container rounded-2xl p-6 border border-surface-container-border">
           <div className="flex flex-col gap-3">
             {[0, 1].map((i) => (
               <div
                 key={i}
+                aria-hidden="true"
                 className="flex items-start gap-3 px-4 py-4 rounded-xl bg-gray-100 animate-pulse border-[1.5px] border-surface-container-border"
               >
                 <Skeleton className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5" />
