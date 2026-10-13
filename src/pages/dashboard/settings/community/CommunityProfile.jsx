@@ -247,12 +247,20 @@ export default function CommunityProfile() {
 
         {error && <p className="text-xs text-danger mt-3">{error}</p>}
 
+        {/* Right-aligned and content-hugging, matching the Account › Profile
+            save row. `fullWidth={false}` is required: Button defaults to
+            fullWidth, and a w-full flex item fills the line, which made
+            `justify-end` above a no-op and stretched this button across the
+            whole card. Primary variant matches the account side too — a save
+            is a primary action. mt-4 is needed here (unlike the account row)
+            because this field stack carries no bottom margin. */}
         <div className="flex justify-end mt-4">
           <Button
             onClick={handleSave}
             disabled={updateCommunity.isPending}
-            variant="outline"
+            variant="primary"
             size="sm"
+            fullWidth={false}
           >
             {saved ? "Saved!" : updateCommunity.isPending ? "Saving…" : "Save Changes"}
           </Button>

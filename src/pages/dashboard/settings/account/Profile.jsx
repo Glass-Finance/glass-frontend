@@ -452,15 +452,22 @@ export default function Profile() {
 
             {error && <p className="text-xs text-danger mb-3">{error}</p>}
 
-            <Button
-              onClick={handleSave}
-              disabled={updateProfile.isPending || !isDirty}
-              variant="primary"
-              size="sm"
-              fullWidth={false}
-            >
-              {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
-            </Button>
+            {/* Right-aligned to match the Community › Profile save row and
+                the Update Password row in Security.jsx — the house pattern
+                for a settings save action is `flex justify-end` + a
+                content-hugging button, not a full-width one. No top margin:
+                the field grid above carries mb-5. */}
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSave}
+                disabled={updateProfile.isPending || !isDirty}
+                variant="primary"
+                size="sm"
+                fullWidth={false}
+              >
+                {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </>
       )}
