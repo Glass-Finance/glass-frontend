@@ -29,18 +29,24 @@ import NotificationsPanel from "./NotificationsPanel";
 import { formatNaira, toPascalCaseName } from "../../utils/format";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import PulseImg from "../common/PulseImg";
+import { Skeleton } from "../common/SkeletonUI";
 import { getInitials } from "../../utils/getInitials";
 import { resolveIsPayingAdmin, isCommunityAdmin } from "../../utils/communityRole";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+// Formats a hydrated user only. The pre-hydration case (`user` is undefined
+// until AuthContext's GET /user/me resolves) is handled at the render site
+// with placeholder bars -- this used to return the literal string "Loading..."
+// and paint that into the header as if it were the member's name. getInitials
+// already handles the same gap by design ("?" from the email), so the two
+// halves of the account menu no longer disagree about what "no user yet" means.
 function getDisplayName(user) {
-  if (!user) return "Loading...";
-  if (user.firstName) {
+  if (user?.firstName) {
     // Pascal-cased: this is the signed-in member's own name, and whatever
     // they typed at registration isn't guaranteed to be capitalised.
     return toPascalCaseName(`${user.firstName} ${user.lastName ?? ""}`.trim());
   }
-  return user.email ?? "User";
+  return user?.email ?? "";
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -422,9 +428,22 @@ export default function Topbar({
                 initials
               )}
             </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-xs font-bold text-ink leading-tight">{displayName}</p>
-              <p className="text-[11px] text-gray-400 leading-tight">{email}</p>
+            <div aria-busy={!user || undefined} className="text-left hidden sm:block">
+              {user ? (
+                <>
+                  <p className="text-xs font-bold text-ink leading-tight">{displayName}</p>
+                  <p className="text-[11px] text-gray-400 leading-tight">{email}</p>
+                </>
+              ) : (
+                // Sized to the two lines above so the header keeps its height
+                // across the hydration gap. Decorative (Skeleton is
+                // aria-hidden), with aria-busy on this container doing the
+                // announcing.
+                <>
+                  <Skeleton className="h-3 w-[92px] rounded" />
+                  <Skeleton className="h-2.5 w-[120px] rounded mt-1" />
+                </>
+              )}
             </div>
             <ChevronDown
               size={14}
