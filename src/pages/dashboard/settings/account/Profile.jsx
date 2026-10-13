@@ -456,13 +456,16 @@ export default function Profile() {
                 the Update Password row in Security.jsx — the house pattern
                 for a settings save action is `flex justify-end` + a
                 content-hugging button, not a full-width one. No top margin:
-                the field grid above carries mb-5. */}
+                the field grid above carries mb-5.
+                `sm-tight` (h40 / 12px) rather than `sm` (h40 / 14px): the
+                box is unchanged, only the label is one notch down, so it
+                stops crowding the card's right edge. Owner-directed. */}
             <div className="flex justify-end">
               <Button
                 onClick={handleSave}
                 disabled={updateProfile.isPending || !isDirty}
                 variant="primary"
-                size="sm"
+                size="sm-tight"
                 fullWidth={false}
               >
                 {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
