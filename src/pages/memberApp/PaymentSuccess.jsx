@@ -138,6 +138,10 @@ export default function PaymentSuccess() {
     let cancelled = false;
 
     function consumePendingFlags() {
+      // See PaymentCallback's consumePendingFlags: the tombstone is written
+      // unconditionally from this page's own reference, because the Home hook
+      // will already have consumed the pending reference by the time we settle.
+      sessionStorage.setItem("paymentPendingRef_terminal", reference);
       sessionStorage.removeItem("paymentReturnTo");
       sessionStorage.removeItem("paymentPendingRef");
     }

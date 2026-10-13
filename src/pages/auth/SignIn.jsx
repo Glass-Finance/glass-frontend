@@ -226,7 +226,13 @@ export default function SignIn() {
     // page), PaymentSummary stored the reference before navigating away.
     // Re-login should land them on the callback to finish verifying.
     const pendingRef = sessionStorage.getItem("paymentPendingRef");
-    if (pendingRef) sessionStorage.removeItem("paymentPendingRef");
+    if (pendingRef) {
+      // Tombstone before removing: the Home hook may still have a verify for
+      // this reference in flight, and restoring it here would resurrect a
+      // payment this sign-in is deliberately closing the door on.
+      sessionStorage.setItem("paymentPendingRef_terminal", pendingRef);
+      sessionStorage.removeItem("paymentPendingRef");
+    }
 
     // login() has already succeeded by the time we get here -- a failure in
     // either of these two lookups must not surface as "Incorrect email or
