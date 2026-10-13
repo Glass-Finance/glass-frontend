@@ -3,7 +3,6 @@ import { ChevronRight, Menu, X } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { goToApp } from "../utils/deviceRedirect";
 import { motion, useScroll, useSpring } from "motion/react";
-import { Button } from "./ui/Button";
 import { LandingCta } from "./ui/LandingCta";
 
 const scrollTo = (id) =>
@@ -198,14 +197,12 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Button
+              <LandingCta
                 onClick={() => goToApp("/sign-in", navigate)}
-                fullWidth={false}
-                size="sm"
                 className="shadow-lg shadow-black/20"
               >
                 Sign In
-              </Button>
+              </LandingCta>
             )}
           </div>
 
@@ -261,16 +258,14 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Button
+                <LandingCta
                   onClick={() => {
                     goToApp("/sign-in", navigate);
                     setMenuOpen(false);
                   }}
-                  size="sm"
-                  className="shadow-lg shadow-black/20"
                 >
                   Sign In
-                </Button>
+                </LandingCta>
               )}
             </div>
           </div>
