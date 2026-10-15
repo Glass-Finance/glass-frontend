@@ -4,9 +4,17 @@
 // for the file's own glyphs, not approximations.
 //
 // Every path is reproduced exactly (including the stroke-width-1.5 chevrons
-// and the two masked glyphs). The hardcoded white/black strokes/fills from the
+// and the three masked glyphs). The hardcoded white/black strokes/fills from the
 // export are rewritten to `currentColor` so the icon inherits its container's
 // text colour; geometry and viewBox are untouched.
+//
+// EXCEPTION: `<mask>` content stays `#fff`, never `currentColor`. A mask does
+// not paint -- it only decides where the drawn path shows, and SVG masks are
+// luminance-based by default, so a black fill (= `currentColor` under
+// `--color-ink`) masks the glyph out entirely and the row renders with a blank
+// leading icon. The colour the user actually sees comes from the drawn path's
+// `stroke="currentColor"` outside the mask. Keep the two in sync if either
+// side is ever re-swept.
 //
 // Render at the Figma scale: 24px in a member settings row, 32px in an admin
 // settings row (DESIGN-SYSTEM.md §2.2a icon boxes, §3).
@@ -106,7 +114,7 @@ export function IconSecurity({ size = 24, className = "" }) {
       focusable="false"
       className={className}
     >
-      <mask id="stroke0_1_4403" fill="currentColor">
+      <mask id="stroke0_1_4403" fill="#fff">
         <path d="M10.854 5.85374C10.9479 5.75985 11.0006 5.63252 11.0006 5.49974C11.0006 5.36697 10.9479 5.23963 10.854 5.14574C10.7601 5.05185 10.6328 4.99911 10.5 4.99911C10.3672 4.99911 10.2399 5.05185 10.146 5.14574L6.5 8.79274L4.854 7.14574C4.80751 7.09925 4.75232 7.06238 4.69158 7.03722C4.63084 7.01206 4.56574 6.99911 4.5 6.99911C4.43426 6.99911 4.36916 7.01206 4.30842 7.03722C4.24768 7.06238 4.19249 7.09925 4.146 7.14574C4.09951 7.19223 4.06264 7.24742 4.03748 7.30816C4.01232 7.3689 3.99937 7.434 3.99937 7.49974C3.99937 7.56549 4.01232 7.63059 4.03748 7.69133C4.06264 7.75206 4.09951 7.80725 4.146 7.85374L6.146 9.85374C6.19245 9.9003 6.24762 9.93725 6.30837 9.96245C6.36911 9.98766 6.43423 10.0006 6.5 10.0006C6.56577 10.0006 6.63089 9.98766 6.69163 9.96245C6.75238 9.93725 6.80755 9.9003 6.854 9.85374L10.854 5.85374ZM7.277 0.0837417C7.19494 0.0291343 7.09857 0 7 0C6.90143 0 6.80506 0.0291343 6.723 0.0837417C4.83513 1.35644 2.68312 2.18421 0.429 2.50474C0.3099 2.52183 0.200956 2.58129 0.122155 2.67221C0.043355 2.76313 -1.6039e-05 2.87942 4.44938e-09 2.99974V7.49974C4.44938e-09 11.3907 2.307 14.2297 6.82 15.9667C6.93584 16.0114 7.06416 16.0114 7.18 15.9667C11.693 14.2297 14 11.3897 14 7.49974V2.99974C14 2.87927 13.9565 2.76286 13.8775 2.67192C13.7985 2.58097 13.6893 2.52161 13.57 2.50474C11.3162 2.18407 9.16457 1.3563 7.277 0.0837417ZM1 3.42774C2.98083 3.0915 4.88061 2.38519 6.6 1.34574L7 1.09674L7.4 1.34574C9.11939 2.38519 11.0192 3.0915 13 3.42774V7.49974C13 10.8917 11.032 13.3627 7 14.9627C2.968 13.3627 1 10.8927 1 7.49974V3.42774Z" />
       </mask>
       <path
@@ -163,7 +171,7 @@ export function IconAutopay({ size = 24, className = "" }) {
       focusable="false"
       className={className}
     >
-      <mask id="stroke0_1_4392" fill="currentColor">
+      <mask id="stroke0_1_4392" fill="#fff">
         <path d="M12 8C10.897 8 10 8.897 10 10C10 10.342 10.094 10.6585 10.246 10.94C9.30387 11.6288 8.16706 12 7 12C3.9675 12 1.5 9.5325 1.5 6.5H0.5C0.5 10.084 3.416 13 7 13C8.41629 12.9993 9.79349 12.5354 10.9215 11.679C11.2425 11.8878 11.6171 11.9993 12 12C13.103 12 14 11.103 14 10C14 8.897 13.103 8 12 8ZM12 11C11.4485 11 11 10.5515 11 10C11 9.4485 11.4485 9 12 9C12.5515 9 13 9.449 13 10C13 10.551 12.5515 11 12 11ZM7 0C5.58371 0.000650393 4.20651 0.464575 3.0785 1.321C2.75749 1.11221 2.38294 1.00073 2 1C0.897 1 0 1.897 0 3C0 4.103 0.897 5 2 5C3.103 5 4 4.103 4 3C4 2.658 3.906 2.3415 3.754 2.06C4.69613 1.37123 5.83294 0.999996 7 1C10.0325 1 12.5 3.4675 12.5 6.5H13.5C13.5 2.916 10.584 0 7 0ZM2 4C1.4485 4 1 3.5515 1 3C1 2.4485 1.4485 2 2 2C2.5515 2 3 2.449 3 3C3 3.551 2.5515 4 2 4Z" />
       </mask>
       <path
@@ -255,7 +263,7 @@ export function IconRole({ size = 24, className = "" }) {
       focusable="false"
       className={className}
     >
-      <mask id="stroke0_1_4398" fill="currentColor">
+      <mask id="stroke0_1_4398" fill="#fff">
         <path d="M4.68727 5.18615C4.11754 4.61642 3.79747 3.8437 3.79747 3.03797C3.79747 2.23225 4.11754 1.45953 4.68727 0.889802C5.257 0.320072 6.02972 0 6.83544 0C7.64116 0 8.41389 0.320072 8.98362 0.889802C9.55335 1.45953 9.87342 2.23225 9.87342 3.03797C9.87342 3.8437 9.55335 4.61642 8.98362 5.18615C8.41389 5.75588 7.64116 6.07595 6.83544 6.07595C6.02972 6.07595 5.257 5.75588 4.68727 5.18615Z" />
       </mask>
       <path
@@ -273,7 +281,7 @@ export function IconRole({ size = 24, className = "" }) {
         strokeLinejoin="round"
         stroke="currentColor"
       />
-      <mask id="stroke1_1_4398" fill="currentColor">
+      <mask id="stroke1_1_4398" fill="#fff">
         <path d="M12.9114 6.07595C12.9114 5.5388 13.1248 5.02366 13.5046 4.64383C13.8844 4.26401 14.3996 4.05063 14.9367 4.05063H17.9747C18.5118 4.05063 19.027 4.26401 19.4068 4.64383C19.7866 5.02366 20 5.5388 20 6.07595V9.11392C20 9.65107 19.7866 10.1662 19.4068 10.546C19.027 10.9259 18.5118 11.1392 17.9747 11.1392H14.9367C14.3996 11.1392 13.8844 10.9259 13.5046 10.546C13.1248 10.1662 12.9114 9.65107 12.9114 9.11392V6.07595Z" />
       </mask>
       <path
