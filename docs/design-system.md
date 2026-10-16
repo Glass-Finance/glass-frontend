@@ -97,6 +97,45 @@ These appear in the code and are **not** in Figma. Do not introduce them; retire
 | `#B0B8D8`, `#E0E0E0`, `#C5C5C5`, `#D4D4D4`                                  | Invented disabled fills.                                                                                                                                                       |
 | `#111111`, `#111827`                                                        | Off-palette text. Figma text dark is `#000000`.                                                                                                                                |
 
+### 1.7 Responsive breakpoints
+
+Tailwind's default scale, no overrides: `sm` 640 · `md` 768 · `lg` 1024 · `xl` 1280.
+The app is desktop-first for the admin shell and phone-first for the member app; the
+community-admin dashboard follows Figma section `1:13185` ("Admin Responsiveness Design"),
+which ships three frames — a phone (365×833), a drawer, and a MacBook — under one set of
+rules:
+
+| Part                  | Below `md` (phones)                                                        | `md` and up (desktop)                             |
+| --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
+| Nav rail              | `hidden`; drawer is a full-width panel (no rail behind it)                 | `hidden md:flex` rail + 220px panel               |
+| Drawer header         | 32×32 community logo + chevron switcher + ✕ close                          | Community name + Owner/role chip                  |
+| Topbar                | `h-12`, burger · Glass mark · 48×48 round bell                             | `h-14`, community switcher + search + help        |
+| Page header           | `hidden md:flex` — the shell already carries community context             | h1 + subtitle + quick actions                     |
+| Stats grid            | `grid-cols-2`, 108px min-height, `rounded-g-2`, label 12 / value 16 medium | `auto-fit minmax(190px,1fr)`, original 14/20 bold |
+| Section cards         | `rounded-g-2` (8px), `p-3`                                                 | `rounded-xl` (12px), original padding             |
+| Payment Plans card    | `bg-brand-100`                                                             | `bg-brand-mist`                                   |
+| Member Payments table | Member · Plan · Amount · Email · Status; Date and Actions hidden           | All seven columns                                 |
+| Your Payments table   | Due Date column hidden (`hidden md:table-cell`)                            | Due Date visible                                  |
+| Search inputs         | `text-base` (stops iOS zoom-on-focus)                                      | `text-xs`                                         |
+| Unpaid alert          | Stacks below `sm`; icon 16px                                               | Row layout; icon 26px                             |
+| Filter chips + pager  | Visible at every width (client-side list)                                  | Same                                              |
+
+**Why radius differs by breakpoint:** Figma draws the phone frame's cards at r=8 and the
+MacBook frame's at r=12 — both on the §1.5 scale. Use `rounded-g-2 md:rounded-xl` rather
+than picking one; do not invent an intermediate. The caution banner's node carries r=2,
+which is off-system; the phone layout uses the nearest on-system value, `rounded-g-1` (4).
+
+**Type is never scaled below the floors in §7.1.** The phone frames shrink labels to 12
+and values to 16 medium because Figma does, not as a general rule — product chrome on
+desktop keeps its 14/20 scale. Recent Activity body copy is `text-sm` (14) at every
+breakpoint; the mobile frame's 18/400 was rejected as too heavy for a dense list.
+
+**Never hide a feature solely because Figma's phone frame omits it.** Groups and
+Notifications stay in the mobile drawer (Figma draws four nav rows; the app has six).
+Pagination and the Filter dropdown render at all widths because the table is client-side
+paginated either way — the chips are the phone's affordance, not a replacement for the
+desktop Filter button.
+
 ---
 
 ## 2. Buttons
