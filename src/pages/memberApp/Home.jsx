@@ -205,8 +205,9 @@ export default function Home() {
                 />
               )}
 
-              {/* No community switcher means no horizontal contention on this
-                  row, so the pill compacts next to the menu button. */}
+              {/* No community switcher means no greeting row to attach to, so
+                  the pill compacts next to the menu button. With a community,
+                  the pill rides beside "Hi {name}," instead (see below). */}
               {showKycBadge && hasNoCommunity && (
                 <button
                   onClick={() => setKycWizardOpen(true)}
@@ -217,18 +218,6 @@ export default function Home() {
                 </button>
               )}
             </div>
-
-            {/* With a community switcher on the row above, the pill lives on
-                its own layer so a long community name never overlaps it. */}
-            {showKycBadge && !hasNoCommunity && (
-              <button
-                onClick={() => setKycWizardOpen(true)}
-                className="bg-transparent border-none cursor-pointer p-0 self-start ml-[43px] flex-shrink-0"
-                aria-label="Identity verification status"
-              >
-                <KycStatusBadge status={kycSummary.status} />
-              </button>
-            )}
           </div>
 
           {/* Profile photo sits at the far right of the header (the member's
@@ -261,7 +250,18 @@ export default function Home() {
 
         {!hasNoCommunity && !showNothingHappening && (
           <div className="pt-1 px-5 pb-5">
-            <h1 className="text-2xl font-medium text-ink m-0">Hi {firstName(data?.user)},</h1>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-2xl font-medium text-ink m-0">Hi {firstName(data?.user)},</h1>
+              {showKycBadge && (
+                <button
+                  onClick={() => setKycWizardOpen(true)}
+                  className="bg-transparent border-none cursor-pointer p-0"
+                  aria-label="Identity verification status"
+                >
+                  <KycStatusBadge status={kycSummary.status} />
+                </button>
+              )}
+            </div>
             <p className="text-[13px] text-ink-ghost mt-[3px] font-normal">
               Here's Your Community At A Glance
             </p>
