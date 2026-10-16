@@ -9,6 +9,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../ui/Button";
+import { MobileBackButton } from "../ui/MobileBackButton";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -210,7 +211,9 @@ export default function Topbar({
   }
 
   return (
-    <header className="h-14 bg-surface-container border-b border-surface-container-border flex items-center gap-6 px-4 md:px-8 sticky top-0 z-50 flex-shrink-0">
+    // 48px below md, 56px from md up. Figma's mobile topbar (node 352:19421)
+    // is exactly 48 tall; the desktop header stays at the shipped h-14.
+    <header className="h-12 md:h-14 bg-surface-container border-b border-surface-container-border flex items-center gap-6 px-4 md:px-8 sticky top-0 z-50 flex-shrink-0">
       {/* Hamburger — mobile only (sidebar is off-canvas below md) */}
       <Button
         variant="tertiary"
@@ -222,6 +225,22 @@ export default function Topbar({
       >
         <Menu size={19} />
       </Button>
+
+      {/* Glass wordmark — mobile only, centred. Figma's mobile topbar is
+      burger · mark+wordmark · round bell with the brand block sitting in the
+      middle; the desktop header carries no brand of its own because the rail
+      already does. Same 28px mark + text pairing as memberApp/SideDrawer. */}
+      <div className="flex-1 flex items-center justify-center min-w-0 md:hidden">
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/home")}
+          aria-label="Glass — your communities"
+          className="flex items-center gap-1 p-0 bg-transparent border-none cursor-pointer"
+        >
+          <img src="/Glass.webp" alt="" className="w-7 h-7 object-contain block" />
+          <span className="text-base font-normal text-ink">Glass</span>
+        </button>
+      </div>
 
       {/* Search */}
       <div
@@ -365,20 +384,47 @@ export default function Topbar({
 
       {/* Right */}
       <div className="relative ml-auto flex items-center gap-4" ref={panelRef}>
-        {/* Help — replay the first-launch dashboard tour */}
-        <Button
-          variant="tertiary"
-          size="icon-sm"
-          onClick={onOpenTour}
-          className=""
-          aria-label="Take the dashboard tour"
-          title="Take the dashboard tour"
-        >
-          <HelpCircle size={18} />
-        </Button>
+        {/* Help — replay the first-launch dashboard tour. Hidden below md:
+        Figma's mobile topbar (node 352:19421) carries only burger, brand and
+        bell, and nothing else. The tour button is the only trigger for the
+        dashboard tour, so it is not dropped on a phone -- it moves into both
+        drawers as a "Take the tour" row (Sidebar.jsx, MobileTourRow). */}
+        <div className="hidden md:block">
+          <Button
+            variant="tertiary"
+            size="icon-sm"
+            onClick={onOpenTour}
+            className=""
+            aria-label="Take the dashboard tour"
+            title="Take the dashboard tour"
+          >
+            <HelpCircle size={18} />
+          </Button>
+        </div>
 
         {/* Bell */}
-        <div className="relative flex items-center">
+        {/* Mobile: Figma's 48x48 glass circle (node 352:19429) -- an instance
+        of the MobileBackButton shell with the chevron swapped for a bell, so
+        the four geometry values stay declared once. The unread badge sits on
+        this wrapper rather than the button so the button's own classes are
+        untouched. */}
+        <div className="relative md:hidden">
+          <MobileBackButton
+            onClick={() => setPanelOpen((o) => !o)}
+            aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`}
+            title="Notifications"
+          >
+            <Bell size={16} />
+          </MobileBackButton>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-danger border-2 border-white flex items-center justify-center text-white text-[9px] font-bold px-0.5 pointer-events-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </div>
+
+        {/* Desktop bell */}
+        <div className="relative hidden md:flex md:items-center">
           <Button
             variant="tertiary"
             size="icon-md"
@@ -409,76 +455,82 @@ export default function Topbar({
           />
         )}
 
-        {/* Divider */}
-        <div className="w-px h-6 bg-[var(--color-hairline)]" />
+        {/* Divider + account menu — desktop only. Figma's mobile topbar (node
+        352:19421) ends at the bell, and below md the drawer's own labelled
+        Log Out row is the sign-out path, so the avatar menu would only
+        duplicate it. */}
+        <div className="hidden md:flex md:items-center md:gap-4">
+          {/* Divider */}
+          <div className="w-px h-6 bg-[var(--color-hairline)]" />
 
-        {/* User menu — Settings + Log out (POST /auth/logout lives in AuthContext) */}
-        <div className="relative" ref={userMenuRef}>
-          <button
-            onClick={() => setUserMenuOpen((o) => !o)}
-            aria-haspopup="menu"
-            aria-expanded={userMenuOpen}
-            aria-label="Account menu"
-            className="flex items-center gap-2 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity p-0"
-          >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-accent-indigo flex items-center justify-center text-white font-bold text-xs flex-shrink-0 select-none overflow-hidden">
-              {user?.profileImage?.url ? (
-                <PulseImg src={user.profileImage.url} alt="" className="w-full h-full" />
-              ) : (
-                initials
-              )}
-            </div>
-            <div aria-busy={!user || undefined} className="text-left hidden sm:block">
-              {user ? (
-                <>
-                  <p className="text-xs font-bold text-ink leading-tight">{displayName}</p>
-                  <p className="text-[11px] text-gray-400 leading-tight">{email}</p>
-                </>
-              ) : (
-                // Sized to the two lines above so the header keeps its height
-                // across the hydration gap. Decorative (Skeleton is
-                // aria-hidden), with aria-busy on this container doing the
-                // announcing.
-                <>
-                  <Skeleton className="h-3 w-[92px] rounded" />
-                  <Skeleton className="h-2.5 w-[120px] rounded mt-1" />
-                </>
-              )}
-            </div>
-            <ChevronDown
-              size={14}
-              className={`text-gray-400 hidden sm:block transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-
-          {userMenuOpen && (
-            <div
-              role="menu"
-              className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-100 bg-white shadow-lg py-1.5 z-50"
+          {/* User menu — Settings + Log out (POST /auth/logout lives in AuthContext) */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setUserMenuOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={userMenuOpen}
+              aria-label="Account menu"
+              className="flex items-center gap-2 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity p-0"
             >
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setUserMenuOpen(false);
-                  navigate("/dashboard/settings");
-                }}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-transparent border-none cursor-pointer hover:bg-gray-50 text-left"
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-accent-indigo flex items-center justify-center text-white font-bold text-xs flex-shrink-0 select-none overflow-hidden">
+                {user?.profileImage?.url ? (
+                  <PulseImg src={user.profileImage.url} alt="" className="w-full h-full" />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div aria-busy={!user || undefined} className="text-left hidden sm:block">
+                {user ? (
+                  <>
+                    <p className="text-xs font-bold text-ink leading-tight">{displayName}</p>
+                    <p className="text-[11px] text-gray-400 leading-tight">{email}</p>
+                  </>
+                ) : (
+                  // Sized to the two lines above so the header keeps its height
+                  // across the hydration gap. Decorative (Skeleton is
+                  // aria-hidden), with aria-busy on this container doing the
+                  // announcing.
+                  <>
+                    <Skeleton className="h-3 w-[92px] rounded" />
+                    <Skeleton className="h-2.5 w-[120px] rounded mt-1" />
+                  </>
+                )}
+              </div>
+              <ChevronDown
+                size={14}
+                className={`text-gray-400 hidden sm:block transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {userMenuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-100 bg-white shadow-lg py-1.5 z-50"
               >
-                <Settings size={14} className="text-gray-400" />
-                Settings
-              </button>
-              <div className="h-px bg-gray-100 my-1" />
-              <button
-                role="menuitem"
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-danger bg-transparent border-none cursor-pointer hover:bg-danger-wash text-left disabled:opacity-50"
-              >
-                <LogOut size={14} />
-                {loggingOut ? "Signing out…" : "Log out"}
-              </button>
-            </div>
-          )}
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    navigate("/dashboard/settings");
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-transparent border-none cursor-pointer hover:bg-gray-50 text-left"
+                >
+                  <Settings size={14} className="text-gray-400" />
+                  Settings
+                </button>
+                <div className="h-px bg-gray-100 my-1" />
+                <button
+                  role="menuitem"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-danger bg-transparent border-none cursor-pointer hover:bg-danger-wash text-left disabled:opacity-50"
+                >
+                  <LogOut size={14} />
+                  {loggingOut ? "Signing out…" : "Log out"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
