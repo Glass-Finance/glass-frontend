@@ -15,7 +15,7 @@ export default function YourPaymentsSection({
   onPayNow,
 }) {
   return (
-    <div className="bg-surface-container rounded-xl border border-surface-container-border p-5 mb-5">
+    <div className="bg-surface-container rounded-g-2 md:rounded-xl border border-surface-container-border p-3 md:p-5 mb-5">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-medium text-black">Your Payments</span>
         <div className="flex items-center gap-2">
@@ -64,9 +64,22 @@ export default function YourPaymentsSection({
         <table className="w-full text-sm border-collapse text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-stacked-container">
-              {["Plan", "Frequency", "Amount", "Due Date", "Status", "Action"].map((h) => (
-                <th key={h} className="p-2 text-left text-xs font-normal text-gray-400">
-                  {h}
+              {[
+                { label: "Plan" },
+                { label: "Frequency" },
+                { label: "Amount" },
+                // Figma's mobile table (node 371:20116) drops Due Date and
+                // keeps Plan/Frequency/Amount/Status/Action, so the column
+                // gives a narrow phone back ~90px instead of scrolling.
+                { label: "Due Date", className: "hidden md:table-cell" },
+                { label: "Status" },
+                { label: "Action" },
+              ].map((h) => (
+                <th
+                  key={h.label}
+                  className={`p-2 text-left text-xs font-normal text-gray-400 ${h.className ?? ""}`}
+                >
+                  {h.label}
                 </th>
               ))}
             </tr>
@@ -95,8 +108,10 @@ export default function YourPaymentsSection({
                         {f.label}
                       </span>
                     </td>
-                    <td className="py-3 px-2 text-xs text-black">{formatNaira(row.amount)}</td>
-                    <td className="py-3 px-2 text-xs text-gray-500">
+                    <td className="py-3 px-2 text-xs font-medium text-black">
+                      {formatNaira(row.amount)}
+                    </td>
+                    <td className="hidden md:table-cell py-3 px-2 text-xs text-gray-500">
                       {row.dueDate ? formatDate(row.dueDate) : "—"}
                     </td>
                     <td className="py-3 px-2">

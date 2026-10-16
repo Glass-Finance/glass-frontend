@@ -41,12 +41,30 @@ import MemberPaymentsSection from "./admin-dashboard/sections/MemberPaymentsSect
 // and recompute every render even though there's nothing to recompute).
 const EMPTY_UPCOMING = [];
 
+// Rows per "Member Payments" page. 8 keeps the table to roughly one phone
+// screen once the mobile header is gone; the control is client-side, so this
+// is a presentation knob rather than a fetch size.
+const MEMBER_PAYMENTS_PAGE_SIZE = 8;
+
+// A transaction does not reliably carry a payment-link id, so the plan filter
+// matches on the same three title fields the table already displays and the
+// search already reads.
+const transactionPlanName = (t) =>
+  toTitleCase(t.planName ?? t.paymentLink?.title ?? t.description ?? "");
+
 function DashboardContent({ isPaying, communityId }) {
   usePageTitle("Community Dashboard");
   const navigate = useNavigate();
   const { run: runExport, isExporting } = useExportJob();
   const [search, setSearch] = useState("");
   const [sortDir, setSortDir] = useState("desc");
+  // "Member Payments" filters + pagination -- client-side, same as the search
+  // and sort beside them. Figma's mobile table (node 393:19990) carries plan
+  // and status chips over the rows and a Previous · 1 2 3 4 · Next control
+  // under them, so both are view state over the list this page already has.
+  const [planFilter, setPlanFilter] = useState(null); // null | plan title
+  const [statusFilter, setStatusFilter] = useState(null); // null | "PAID" | "UNPAID"
+  const [memberPage, setMemberPage] = useState(0);
   const [alertVisible, setAlertVisible] = useState(true);
   const [payingItem, setPayingItem] = useState(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -243,7 +261,7 @@ function DashboardContent({ isPaying, communityId }) {
     [memberNameMap],
   );
 
-  // ── Filter payments by search ─────────────────────────────────────────────
+  // ── Filter payments by search + the plan/status filters ────────────────────
   const filteredTransactions = useMemo(() => {
     let list = transactions;
     if (search.trim()) {
@@ -262,12 +280,35 @@ function DashboardContent({ isPaying, communityId }) {
         return name.includes(q) || plan.includes(q) || email.includes(q);
       });
     }
+    if (planFilter) {
+      const wanted = planFilter.toLowerCase();
+      list = list.filter((t) => transactionPlanName(t).toLowerCase() === wanted);
+    }
+    if (statusFilter) {
+      list = list.filter((t) => {
+        const paid = ["success", "successful", "paid"].includes((t.status ?? "").toLowerCase());
+        return statusFilter === "PAID" ? paid : !paid;
+      });
+    }
     return [...list].sort((a, b) => {
       const ta = new Date(a.createdAt ?? a.date ?? 0).getTime();
       const tb = new Date(b.createdAt ?? b.date ?? 0).getTime();
       return sortDir === "desc" ? tb - ta : ta - tb;
     });
-  }, [transactions, search, sortDir, resolveMemberName]);
+  }, [transactions, search, sortDir, planFilter, statusFilter, resolveMemberName]);
+
+  // Clamped rather than reset in an effect: shrinking the list can leave
+  // `memberPage` past the end, and rendering the clamped index keeps the
+  // control inside the new range without a second render.
+  const memberPageCount = Math.max(
+    1,
+    Math.ceil(filteredTransactions.length / MEMBER_PAYMENTS_PAGE_SIZE),
+  );
+  const memberPageSafe = Math.min(memberPage, memberPageCount - 1);
+  const pagedTransactions = filteredTransactions.slice(
+    memberPageSafe * MEMBER_PAYMENTS_PAGE_SIZE,
+    (memberPageSafe + 1) * MEMBER_PAYMENTS_PAGE_SIZE,
+  );
 
   // ── Recent activity — real audit-log feed (event/description/actor/result) ──
   const recentActivity = activity.list;
@@ -316,8 +357,11 @@ function DashboardContent({ isPaying, communityId }) {
   return (
     <>
       <main className="flex-1 px-4 md:px-6 py-5 overflow-y-auto">
-        {/* Page header */}
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+        {/* Page header — desktop only. Figma's mobile page (node 326:17777)
+            carries no h1, subtitle or quick actions below md: the topbar's
+            community context is the only heading a phone gets, and both
+            actions stay reachable from the Payments and Members pages. */}
+        <div className="hidden md:flex flex-wrap items-start justify-between gap-3 mb-5">
           <div>
             <h1 className="text-xl font-bold text-black">Dashboard</h1>
             <p className="text-sm text-gray-400 mt-0.5">
@@ -422,11 +466,34 @@ function DashboardContent({ isPaying, communityId }) {
 
         {/* Member Payments table */}
         <MemberPaymentsSection
-          transactions={filteredTransactions}
+          transactions={pagedTransactions}
+          total={filteredTransactions.length}
+          page={memberPageSafe}
+          pageCount={memberPageCount}
+          onPageChange={setMemberPage}
+          planOptions={visiblePlans.map((p) => toTitleCase(p.name))}
+          planFilter={planFilter}
+          onPlanFilterChange={(v) => {
+            setPlanFilter(v);
+            setMemberPage(0);
+          }}
+          statusFilter={statusFilter}
+          onStatusFilterChange={(v) => {
+            setStatusFilter(v);
+            setMemberPage(0);
+          }}
+          onClearFilters={() => {
+            setPlanFilter(null);
+            setStatusFilter(null);
+            setMemberPage(0);
+          }}
           isLoading={isLoading}
           error={error}
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={(v) => {
+            setSearch(v);
+            setMemberPage(0);
+          }}
           sortDir={sortDir}
           onToggleSort={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
           onExport={() => runExport(() => exportCommunityTransactions(communityId, {}, "CSV"))}

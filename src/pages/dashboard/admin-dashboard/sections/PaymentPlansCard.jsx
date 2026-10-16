@@ -14,7 +14,7 @@ const BAR_COLOR_CLASSES = [
 
 export default function PaymentPlansCard({ plans, plansLoading, onManageAll, error = null }) {
   return (
-    <div className="rounded-xl border border-surface-container-border p-4 bg-brand-mist">
+    <div className="rounded-g-2 md:rounded-xl border border-surface-container-border p-3 md:p-4 bg-brand-100">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-medium text-black">Payment Plans</span>
         <Button variant="tertiary" size="xs" fullWidth={false} onClick={onManageAll}>
@@ -57,31 +57,34 @@ export default function PaymentPlansCard({ plans, plansLoading, onManageAll, err
             return (
               <div
                 key={p.id}
-                className="bg-surface-container rounded-xl p-4 border border-blue-100/60"
+                className="bg-surface-container rounded-xl p-3 border border-blue-100/60"
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2 gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-medium text-black truncate">
+                    <span className="text-sm font-medium text-black truncate">
                       {toTitleCase(p.name)}
                     </span>
-                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-full flex-shrink-0 text-accent-purple bg-accent-purple-wash">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 text-accent-purple bg-accent-purple-wash">
                       {p.frequency ?? p.type ?? "—"}
                     </span>
                   </div>
-                  <span className="text-xs font-semibold text-gray-800 flex-shrink-0 ml-2">
+                  <span className="text-xs font-medium text-gray-800 flex-shrink-0 ml-2">
                     {formatNaira(p.amount)}
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400 mb-2">
+                <p className="text-xs text-ink/60 mb-2 mt-0">
                   {paidCount} / {totalCount} members paid
                 </p>
-                <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                {/* Figma's track is #000 @10% (node 381:17418) rather than a
+                    grey ramp step, so it reads as a tint of the page ink at
+                    every card background. */}
+                <div className="h-2 rounded-full bg-ink/10 overflow-hidden">
                   <div
                     className={`h-full rounded-full ${barColorCls}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                <p className="text-[11px] text-gray-400 text-right mt-1">{pct}% Collected</p>
+                <p className="text-xs text-ink/60 text-right mt-1 mb-0">{pct}% Collected</p>
               </div>
             );
           })}
