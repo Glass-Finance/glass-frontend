@@ -102,7 +102,11 @@ export default function DashboardLayout() {
     <KeyboardShortcutsProvider>
       <div className="h-dvh w-screen flex overflow-hidden bg-surface-bg">
         {/* ── Sidebar ── */}
-        <Sidebar mobileOpen={mobileNavOpen} onCloseMobile={() => setMobileNavOpen(false)} />
+        <Sidebar
+          mobileOpen={mobileNavOpen}
+          onCloseMobile={() => setMobileNavOpen(false)}
+          onOpenTour={() => setTourOpen(true)}
+        />
 
         {/* ── Main ──
             Background lives on this inner wrapper (the area right of the

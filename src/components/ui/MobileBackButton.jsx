@@ -9,6 +9,12 @@ import { forwardRef } from "react";
 // This is a *mobile* component. The dashboard's back affordances are text
 // buttons in the breadcrumb and do not use it.
 //
+// `children` swaps the glyph. Figma reuses this same component for the
+// dashboard's mobile notifications button (node 352:19429 is literally an
+// instance of it with a bell inside), so the shell stays shared rather than
+// being re-declared with its four geometry values a second time. Omit it and
+// you get the back chevron.
+//
 // Radius 999 here is the fourth `rounded-full` exception recorded in
 // DESIGN-SYSTEM.md §1.5 alongside toggle tracks, badges and landing CTAs --
 // Figma draws the circle deliberately, so it is not a violation of the 4px
@@ -37,7 +43,7 @@ function BackGlyph() {
 }
 
 export const MobileBackButton = forwardRef(function MobileBackButton(
-  { onClick, className = "", "aria-label": ariaLabel = "Back", ...rest },
+  { onClick, className = "", "aria-label": ariaLabel = "Back", children, ...rest },
   ref,
 ) {
   return (
@@ -61,7 +67,7 @@ export const MobileBackButton = forwardRef(function MobileBackButton(
         .join(" ")}
       {...rest}
     >
-      <BackGlyph />
+      {children ?? <BackGlyph />}
     </button>
   );
 });

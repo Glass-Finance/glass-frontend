@@ -72,9 +72,18 @@ export function UserIdentity({ user, initials, displayName }) {
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold m-0 whitespace-nowrap overflow-hidden text-ellipsis">
+        {/* Figma's mobile drawer (node 391:18319) shows name 14/500 over an
+        email at 14/400 @60%. The desktop rail keeps its tighter 11px name
+        and has never carried an email -- so the second line is mobile-only,
+        and the first only widens at the mobile breakpoint. */}
+        <p className="text-sm md:text-[11px] font-medium md:font-semibold m-0 whitespace-nowrap overflow-hidden text-ellipsis">
           {displayName}
         </p>
+        {user?.email && (
+          <p className="md:hidden text-sm font-normal text-ink/60 m-0 whitespace-nowrap overflow-hidden text-ellipsis">
+            {user.email}
+          </p>
+        )}
       </div>
     </div>
   );

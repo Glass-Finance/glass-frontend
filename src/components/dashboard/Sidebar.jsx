@@ -16,7 +16,7 @@
  * panel shows generic labels.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "../ui/Button";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useInvites } from "../../hooks/useInvites";
@@ -31,6 +31,11 @@ import {
   LogOut,
   ShieldCheck,
   Smartphone,
+  X,
+  Check,
+  ChevronDown,
+  Home,
+  HelpCircle,
 } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useAuth } from "../../store/AuthContext";
@@ -132,8 +137,31 @@ function communityPath(slug, path, isPaying = false) {
   return `/dashboard/${resolvedPath}?community=${slug}`;
 }
 
+// The topbar's Help button is the only trigger for the first-launch tour, and
+// it hides below md so the mobile topbar stays Figma's three-item bar (node
+// 352:19421: burger, brand, bell). This row is where it lands instead, in both
+// drawers, so a phone user can still replay it. Deliberately not a Figma row:
+// it exists to keep an existing feature reachable, not to match a design.
+function MobileTourRow({ onOpenTour, onDismiss }) {
+  if (!onOpenTour) return null;
+  return (
+    <div className="px-2 pb-2 md:hidden">
+      <button
+        onClick={() => {
+          onOpenTour();
+          onDismiss?.();
+        }}
+        className="w-full flex items-center gap-2 p-2.5 rounded-g-1 tracking-normal text-sm border-none bg-transparent cursor-pointer text-ink-muted hover:bg-surface-sunken"
+      >
+        <HelpCircle size={20} className="flex-shrink-0" />
+        <span className="text-left">Take the tour</span>
+      </button>
+    </div>
+  );
+}
+
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
-export default function Sidebar({ mobileOpen, onCloseMobile }) {
+export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -155,6 +183,20 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
   const { invites } = useInvites();
   const [loggingOut, setLoggingOut] = useState(false);
   const [memberViewHint, setMemberViewHint] = useState(false);
+  // Mobile-only community switcher. The blue rail below carries the switcher
+  // on desktop, but Figma's mobile drawer (node 326:18701) has no rail at all
+  // -- its community row carries a dropdown chevron (node 393:20237) that
+  // stands in for the rail's avatar tiles. Without this, hiding the rail on
+  // mobile would strand every community but the active one.
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  // Every dismissal path -- nav click, scrim, the close ✕, a completed
+  // switch, a keyboard shortcut -- goes through here, so the mobile switcher
+  // never outlives the drawer it belongs to. Memoised only because it feeds
+  // navShortcuts' dep array; the rest of the file doesn't care.
+  const closeDrawer = useCallback(() => {
+    setSwitcherOpen(false);
+    onCloseMobile?.();
+  }, [onCloseMobile]);
 
   // Active route segment: /dashboard/admin → "home", /dashboard/payments →
   // "payments", etc. (matches the flat ?community= convention, not slugs-in-path)
@@ -276,12 +318,24 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
         description: `Go to ${label}`,
         handler: () => {
           navigate(href);
-          onCloseMobile?.();
+          closeDrawer();
         },
       };
     }).filter(Boolean);
-  }, [isPlatformAdmin, activeCommunity, activeCommunityIsPaying, navigate, onCloseMobile]);
+  }, [isPlatformAdmin, activeCommunity, activeCommunityIsPaying, navigate, closeDrawer]);
   useRegisterShortcutGroup(navShortcuts, "Navigation");
+
+  // ── Switch the active community ────────────────────────────────────────────
+  // One handler for both switchers: the desktop rail's avatar tiles and the
+  // mobile drawer's chevron dropdown. Persisting first is what the rest of the
+  // app reads back through useActiveCommunityId(), so it has to happen before
+  // the navigation that the new community's pages will scope themselves to.
+  const switchToCommunity = async (c) => {
+    localStorage.setItem("glass_community", JSON.stringify(c));
+    const isPaying = await resolveIsPayingAdmin(c.slug);
+    navigate(communityPath(c.slug, "admin", isPaying));
+    closeDrawer();
+  };
 
   // ── Handle logout ──────────────────────────────────────────────────────────
   const handleLogout = async () => {
@@ -299,7 +353,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
   if (isPlatformAdmin) {
     return (
       <>
-        <MobileOverlay mobileOpen={mobileOpen} onClose={onCloseMobile} />
+        <MobileOverlay mobileOpen={mobileOpen} onClose={closeDrawer} />
         <div
           className={`fixed md:sticky top-0 left-0 h-dvh z-[60] flex-shrink-0 flex transition-transform duration-300 ${
             mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -311,7 +365,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               title="Platform Admin"
               onClick={() => {
                 navigate("/dashboard/admin-panel");
-                onCloseMobile?.();
+                closeDrawer();
               }}
             />
 
@@ -321,7 +375,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               aria-label="Platform Admin"
               onClick={() => {
                 navigate("/dashboard/admin-panel");
-                onCloseMobile?.();
+                closeDrawer();
               }}
               title="Platform Admin"
               className="text-white"
@@ -373,7 +427,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                     key={path}
                     onClick={() => {
                       navigate(path);
-                      onCloseMobile?.();
+                      closeDrawer();
                     }}
                     className={`w-full flex items-center gap-2 py-2.5 px-2.5 rounded-lg border-none cursor-pointer tracking-normal text-xs whitespace-nowrap mb-1.5 transition-all duration-150 ${
                       isActive
@@ -393,6 +447,8 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               })}
             </nav>
 
+            <MobileTourRow onOpenTour={onOpenTour} onDismiss={closeDrawer} />
+
             <div className="py-2.5 px-3 border-t border-[var(--color-hairline)] flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-[linear-gradient(135deg,var(--color-accent-purple),var(--color-brand))] flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
                 SA
@@ -411,24 +467,30 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
 
   return (
     <>
-      <MobileOverlay mobileOpen={mobileOpen} onClose={onCloseMobile} />
+      <MobileOverlay mobileOpen={mobileOpen} onClose={closeDrawer} />
       {/* h-dvh, not h-screen -- see DashboardLayout.jsx for why: 100vh on iOS
           Safari sits behind the address bar, so this fixed drawer rendered
           taller than the real visible viewport and cut off Member View /
           the user info strip pinned to its bottom. */}
       <div
-        className={`fixed md:sticky top-0 left-0 h-dvh z-[60] flex-shrink-0 flex transition-transform duration-300 ${
+        className={`fixed md:sticky top-0 left-0 h-dvh z-[60] w-full md:w-auto flex-shrink-0 flex transition-transform duration-300 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        {/* ── Blue rail ─────────────────────────────────────────────────────── */}
-        <div className="flex-shrink-0 bg-brand flex flex-col items-center pt-3.5 pb-5 w-14">
+        {/* ── Blue rail ───────────────────────────────────────────────────────
+            Desktop only. Figma's mobile drawer (node 326:18701) is a single
+            full-width panel with no rail: its nav pills start at x=18, which
+            the rail's 56px would swallow whole, and the community row's own
+            chevron (node 393:20237) is what carries the switcher down here.
+            `hidden md:flex`, never `flex hidden` -- both set display, and
+            Tailwind v4 gives same-property utilities no guaranteed order. */}
+        <div className="hidden md:flex flex-shrink-0 bg-brand flex-col items-center pt-3.5 pb-5 w-14">
           {/* Logo — goes to communities overview */}
           <SidebarLogo
             title="Your Communities"
             onClick={() => {
               navigate("/dashboard/home");
-              onCloseMobile?.();
+              closeDrawer();
             }}
           />
 
@@ -445,7 +507,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
             <button
               onClick={() => {
                 navigate("/dashboard/home");
-                onCloseMobile?.();
+                closeDrawer();
               }}
               title="Your Communities"
               className="w-9 h-9 rounded-lg border-none cursor-pointer flex items-center justify-center transition-all bg-transparent text-white hover:bg-white/15"
@@ -526,12 +588,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                         />
                       )}
                       <button
-                        onClick={async () => {
-                          localStorage.setItem("glass_community", JSON.stringify(c));
-                          const isPaying = await resolveIsPayingAdmin(c.slug);
-                          navigate(communityPath(c.slug, "admin", isPaying));
-                          onCloseMobile?.();
-                        }}
+                        onClick={() => switchToCommunity(c)}
                         title={c.name}
                         className="w-9 h-9 rounded-sm border-none cursor-pointer flex items-center justify-center font-bold text-[11px] transition-all select-none overflow-hidden flex-shrink-0 bg-white"
                       >
@@ -562,7 +619,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               aria-label="Platform Admin"
               onClick={() => {
                 navigate("/dashboard/admin-panel");
-                onCloseMobile?.();
+                closeDrawer();
               }}
               title="Platform Admin"
               className="mt-2 text-white"
@@ -579,12 +636,37 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
 
         {/* ── White nav panel ────────────────────────────────────────────────── */}
         {!onCommunitiesOverview && (
-          <div className="bg-white md:bg-surface-container w-[220px] border-r border-surface-container-border flex flex-col overflow-hidden transition-[width] duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]">
-            {/* Org header */}
-            <div className="py-3.5 px-3 pb-[13px] border-b border-[var(--color-hairline)] flex items-center justify-between gap-2 min-h-14">
+          <div className="bg-white md:bg-surface-container md:w-[220px] w-full md:border-r md:border-surface-container-border flex flex-col overflow-hidden transition-[width] duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]">
+            {/* Org header
+            Mobile geometry comes straight from Figma's drawer (node
+            326:18669): a 44px row -- 6px vertical padding against a 32px
+            community logo -- with 18px insets, closed by a full-bleed
+            hairline at y=92. Desktop keeps py-3.5/min-h-14/px-3 exactly as
+            they were; only the paddings carry a md: variant here. */}
+            <div className="relative py-1.5 md:py-3.5 md:pb-[13px] px-4 md:px-3 border-b border-[var(--color-hairline)] flex items-center justify-between gap-2 min-h-11 md:min-h-14">
               {activeCommunity ? (
                 <div className="min-w-0 flex-1 flex items-center gap-2">
-                  <div className="text-xs font-medium text-black leading-[1.3] break-words">
+                  {/* Community logo -- 32x32, radius 4 (node 326:18711). The
+                  desktop panel never had one, so this stays mobile-only. */}
+                  <span className="md:hidden flex-shrink-0 w-8 h-8 rounded-g-1 overflow-hidden bg-surface-sunken">
+                    <PulseImg
+                      src={activeCommunity.logo?.url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      skeletonClassName="bg-black/5"
+                      fallback={
+                        <span className="w-full h-full flex items-center justify-center text-brand text-xs font-bold">
+                          {getInitials(activeCommunity.name)}
+                        </span>
+                      }
+                    />
+                  </span>
+                  {/* Figma's mobile drawer reads the community name at 14/500
+                  and the role badge at 12/500 (nodes 326:18712 / I354:19439).
+                  The desktop rail keeps the original 12px -- the comment below
+                  records why that was scaled back from the inspector's literal
+                  reading. */}
+                  <div className="text-sm md:text-xs font-medium text-black leading-[1.3] break-words">
                     {activeCommunity.name}
                   </div>
                   {/* The Figma inspector's literal 69x32/text-sm reading was
@@ -594,7 +676,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                   "by eye". Scaled back down; kept the radius-4px/#FFF1D6 fix
                   from that same spec, since neither of those was in question. */}
                   <span
-                    className={`flex-shrink-0 text-[10px] font-bold rounded py-0.5 px-2 ${isCommunityAdmin(activeCommunity) ? "text-[#e85d04] bg-[#FFF1D6]" : "text-success-strong bg-success-wash"}`}
+                    className={`flex-shrink-0 text-xs md:text-[10px] font-bold rounded-g-1 py-0.5 px-2 ${isCommunityAdmin(activeCommunity) ? "text-[#e85d04] bg-[#FFF1D6]" : "text-success-strong bg-success-wash"}`}
                   >
                     {activeCommunity.owned
                       ? "Owner"
@@ -602,11 +684,107 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                         ? "Admin"
                         : "Member"}
                   </span>
+                  {/* Figma's header chevron (node 393:20237). With the rail
+                  hidden below md this -- not the rail's avatar tiles -- is how
+                  a mobile admin reaches any community other than the active
+                  one, so it opens the switcher dropdown below. */}
+                  <Button
+                    variant="tertiary"
+                    size="icon-sm"
+                    aria-label="Switch community"
+                    title="Switch community"
+                    aria-expanded={switcherOpen}
+                    onClick={() => setSwitcherOpen((v) => !v)}
+                    className="flex-shrink-0 md:hidden text-ink/60"
+                  >
+                    <ChevronDown size={18} />
+                  </Button>
                 </div>
               ) : (
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-black leading-[1.3]">Your Communities</div>
+                  <div className="text-sm md:text-xs font-bold text-black leading-[1.3]">
+                    Your Communities
+                  </div>
                 </div>
+              )}
+              {/* Figma's mobile drawer carries its own close affordance (node
+              326:18673) because the scrim alone is a small target. Desktop
+              has no drawer to close, so the control is mobile-only. */}
+              <Button
+                variant="tertiary"
+                size="icon-sm"
+                aria-label="Close menu"
+                title="Close menu"
+                onClick={closeDrawer}
+                className="flex-shrink-0 md:hidden text-ink/60"
+              >
+                <X size={16} />
+              </Button>
+
+              {/* Mobile community switcher. Anchored inside the header rather
+              than the panel so the panel's overflow-hidden can't clip it, and
+              z-20 so the nav below doesn't paint over it. */}
+              {switcherOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-[59] md:hidden"
+                    aria-hidden="true"
+                    onClick={() => setSwitcherOpen(false)}
+                  />
+                  <div
+                    role="menu"
+                    aria-label="Communities"
+                    className="absolute left-2 right-2 top-full z-20 mt-1 rounded-g-2 border border-surface-container-border bg-white p-1.5 shadow-lg md:hidden"
+                  >
+                    <button
+                      onClick={() => {
+                        setSwitcherOpen(false);
+                        navigate("/dashboard/home");
+                        closeDrawer();
+                      }}
+                      className="w-full flex items-center gap-2 p-2 rounded-g-1 border-none bg-transparent cursor-pointer text-sm font-medium text-black text-left hover:bg-surface-sunken"
+                    >
+                      <Home size={16} className="flex-shrink-0" />
+                      Your Communities
+                    </button>
+                    <div className="h-px bg-[var(--color-hairline)] my-1" />
+                    {adminCommunities.length === 0 ? (
+                      <div className="px-2 py-2 text-sm text-ink-faint">No communities yet</div>
+                    ) : (
+                      adminCommunities.map((c) => {
+                        const isActive = c.slug === urlSlug || String(c.id) === String(urlSlug);
+                        return (
+                          <button
+                            key={c.id}
+                            role="menuitem"
+                            onClick={() => {
+                              setSwitcherOpen(false);
+                              switchToCommunity(c);
+                            }}
+                            title={c.name}
+                            className={`w-full flex items-center gap-2 p-2 rounded-g-1 border-none cursor-pointer text-sm text-left ${isActive ? "bg-brand-tint text-brand font-medium" : "bg-transparent text-black hover:bg-surface-sunken"}`}
+                          >
+                            <span className="flex-shrink-0 w-6 h-6 rounded-g-1 overflow-hidden bg-surface-sunken">
+                              <PulseImg
+                                src={c.logo?.url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                skeletonClassName="bg-black/5"
+                                fallback={
+                                  <span className="w-full h-full flex items-center justify-center text-brand text-[10px] font-bold">
+                                    {getInitials(c.name)}
+                                  </span>
+                                }
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{c.name}</span>
+                            {isActive && <Check size={15} className="flex-shrink-0" />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
               )}
             </div>
 
@@ -638,7 +816,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                       onClick={() => {
                         if (href) {
                           navigate(href);
-                          onCloseMobile?.();
+                          closeDrawer();
                         }
                       }}
                       disabled={isDisabled}
@@ -651,7 +829,14 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                       // roughly 70% of the row when active, not edge to edge (an
                       // earlier "Fill" reading of an isolated inspector panel) and
                       // not content-hugging either (an even earlier attempt).
-                      className={`flex items-center gap-3.5 p-2.5 rounded tracking-normal text-xs mb-1.5 transition-all duration-150 whitespace-nowrap font-medium border-none ${isActive ? "w-[70%]" : "w-full"} ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${
+                      //
+                      // Mobile reads Figma's drawer pills (node 326:18652): r4,
+                      // an 8px icon/label gap, a 14/500 label and a 20px glyph,
+                      // sitting on a 48px pitch (mb-3 against Figma's 24px pill).
+                      // The row keeps p-2.5 rather than Figma's 2px so the tap
+                      // target stays ~40px. Desktop is untouched: 14px gap,
+                      // 13px glyph, 12/500.
+                      className={`flex items-center gap-2 md:gap-3.5 p-2.5 rounded-g-1 tracking-normal text-sm md:text-xs mb-3 md:mb-1.5 transition-all duration-150 whitespace-nowrap font-medium border-none ${isActive ? "w-[70%]" : "w-full"} ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${
                         isDisabled
                           ? "bg-transparent text-ink-faint"
                           : isActive
@@ -659,7 +844,10 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                             : "bg-transparent text-ink-muted hover:bg-surface-sunken"
                       }`}
                     >
-                      <Icon size={13} className="flex-shrink-0" />
+                      {/* lucide's size prop writes width/height *attributes*,
+                          which every CSS declaration outranks -- so one glyph
+                          scales with the breakpoint instead of needing two. */}
+                      <Icon size={13} className="flex-shrink-0 w-5 h-5 md:w-[13px] md:h-[13px]" />
                       <span className="text-left">{label}</span>
                       {badge > 0 && (
                         <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-danger-bright text-white text-[10px] font-bold flex items-center justify-center px-1 flex-shrink-0">
@@ -671,6 +859,8 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                 })}
               </div>
             </nav>
+
+            <MobileTourRow onOpenTour={onOpenTour} onDismiss={closeDrawer} />
 
             {/* Member View switch */}
             <div className="px-2 pb-2 relative">
@@ -697,7 +887,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                       /* ignore */
                     }
                     navigate("/member/home");
-                    onCloseMobile?.();
+                    closeDrawer();
                     return;
                   }
                   const memberCommunity = communities.find((c) => !c.owned);
@@ -716,7 +906,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                       /* ignore */
                     }
                     navigate("/member/home");
-                    onCloseMobile?.();
+                    closeDrawer();
                     return;
                   }
                   const pendingInvites = invites.filter(
@@ -724,7 +914,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                   );
                   if (pendingInvites.length > 0) {
                     navigate("/member/invites");
-                    onCloseMobile?.();
+                    closeDrawer();
                     return;
                   }
                   // Nothing actionable — show hint
@@ -747,6 +937,27 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
 
             {/* Bottom — user info strip */}
             <UserIdentity user={user} initials={userInitials} displayName={userDisplayName} />
+
+            {/* Figma's mobile drawer ends on a labelled red Log Out row
+            (node 326:18675: #db0000, 14/500, no stroke). The desktop rail has
+            always been icon-only here and the topbar account menu carries its
+            own text entry, so this row exists only under the drawer. Tertiary
+            with a danger label is a documented §2.1 label colour, not a
+            bespoke button. */}
+            <div className="px-2 pb-3 md:hidden">
+              <Button
+                variant="tertiary"
+                size="sm"
+                fullWidth={false}
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="text-danger"
+                title="Log out"
+              >
+                <LogOut size={18} className="flex-shrink-0" />
+                Log Out
+              </Button>
+            </div>
           </div>
         )}
       </div>
