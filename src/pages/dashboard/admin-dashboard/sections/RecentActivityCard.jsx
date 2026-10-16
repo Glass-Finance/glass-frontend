@@ -5,7 +5,7 @@ import { timeAgo } from "../helpers";
 
 export default function RecentActivityCard({ isLoading, items, error = null }) {
   return (
-    <div className="bg-surface-container rounded-xl border border-surface-container-border p-4">
+    <div className="bg-surface-container rounded-g-2 md:rounded-xl border border-surface-container-border p-3 md:p-4">
       <span className="text-sm font-medium text-black block mb-4">Recent Activity</span>
 
       {isLoading ? (
@@ -62,7 +62,7 @@ export default function RecentActivityCard({ isLoading, items, error = null }) {
                 <ActivityIcon type={type} color={aColor} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-700 leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed m-0">
                   {actorName && !a.description?.startsWith(actorName) && (
                     <strong className="text-brand font-semibold">{actorName} </strong>
                   )}
