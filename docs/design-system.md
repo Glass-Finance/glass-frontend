@@ -827,13 +827,14 @@ not draw it** — the footer node `1:1374` ("Frame 1000003394", 1280×883) is fl
 with no watermark at all. It came in from a `Glass _ Landing Footer` HTML mock and was kept
 on instruction (2026-10-12) as an owner-approved extension, like §2.2b.
 
-| Property       | Value                                                |
-| -------------- | ---------------------------------------------------- |
-| Geometry       | `viewBox="26 18 204 182"`, stepped-line `mask` cut   |
-| Gradient stops | `#002fa7` → `#001f6e` (**both sanctioned** — §1.1)   |
-| Placement      | `absolute` on `<footer>`, `h-[104%]`, centred, `z-0` |
-| Clipping       | `overflow-hidden` on `<footer>` (the 4% overhang)    |
-| Strength       | `opacity-[0.55]`                                     |
+| Property       | Value                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Geometry       | `viewBox="26 18 204 182"`, stepped-line `mask` cut                                                                                             |
+| Gradient stops | `#002fa7` → `#001f6e` (**both sanctioned** — §1.1)                                                                                             |
+| Placement      | `absolute` on `<footer>`, `h-[104%]`, centred, `z-0`                                                                                           |
+| Clipping       | `overflow-hidden` on `<footer>` (the 4% overhang)                                                                                              |
+| Strength       | `opacity-[0.55]`                                                                                                                               |
+| Visibility     | `hidden md:block` — off below 768px (owner, 2026-10-17); on phones the mark outgrows the footer and its cut line collides with the nav columns |
 
 The mock's own stops were `#06185f` → `#020b3a` — off-palette, the same class of invented
 near-black navy as the six in §1.6 — and its background was a three-stop radial

@@ -51,11 +51,13 @@ export default function Footer() {
       {/* Decorative Glass mark, centred on the whole footer. Not a Figma node
           (1:1374 draws no watermark) — owner-approved extension, see
           DESIGN-SYSTEM.md §9.8. Stops are the sanctioned brand blue and deep
-          navy; the mask is what cuts the stepped line through the plate. */}
+          navy; the mask is what cuts the stepped line through the plate.
+          Hidden below md: on a phone the mark outgrows the footer and its cut
+          line collides with the nav columns, so the footer stays flat there. */}
       <svg
         aria-hidden="true"
         viewBox="26 18 204 182"
-        className="pointer-events-none select-none absolute left-1/2 top-1/2 z-0 h-[104%] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.55]"
+        className="hidden md:block pointer-events-none select-none absolute left-1/2 top-1/2 z-0 h-[104%] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.55]"
       >
         <defs>
           <linearGradient id="footerMarkGrad" x1="0" y1="0" x2="1" y2="1">
