@@ -11,6 +11,7 @@ export default function ConfirmDialog({
   title,
   subtitle,
   description,
+  children,
   confirmLabel = "Confirm",
   confirmingLabel,
   danger = true,
@@ -23,6 +24,10 @@ export default function ConfirmDialog({
     <ModalShell title={title} subtitle={subtitle} onClose={onClose}>
       <div className="px-6 py-5 flex flex-col gap-4">
         {description && <p className="text-xs text-gray-600 leading-relaxed">{description}</p>}
+        {/* Optional extra content (e.g. a reason field) between the
+            description and the buttons; callers that don't need it pass
+            nothing and render exactly as before. */}
+        {children}
         {/* Rejection surfaced by onConfirm's onError (e.g. a reactive KYC
             block) — renders inside the dialog so the reason lands where the
             user just clicked, and the dialog stays open to retry. */}
