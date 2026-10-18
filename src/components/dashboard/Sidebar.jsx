@@ -24,6 +24,7 @@ import { useRegisterShortcutGroup } from "../../hooks/useKeyboardShortcuts";
 import {
   LayoutDashboard,
   CreditCard,
+  BookOpen,
   Users,
   UsersRound,
   Bell,
@@ -70,6 +71,7 @@ const NAV = [
     path: "payments",
     shortcut: "p",
   },
+  { icon: BookOpen, label: "Records", segment: "records", path: "records" },
   {
     icon: Users,
     label: "Members",

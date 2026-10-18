@@ -15,6 +15,13 @@ export function notificationTarget(n, { memberApp = false } = {}) {
   // instead of whatever localStorage last held.
   const communityRef = n.community?.slug ?? n.communityId ?? n.community?.id ?? null;
 
+  if (type === "RECORD_IMPORT_STATUS") {
+    if (memberApp || !communityRef) return null;
+    const jobId =
+      n.content?.jobId ?? (n.relatedEntityType === "RecordImportJob" ? n.relatedEntityId : null);
+    return `/dashboard/records/imports${jobId ? `/${encodeURIComponent(jobId)}` : ""}?community=${encodeURIComponent(communityRef)}`;
+  }
+
   const exact = notificationTypeTarget(type, { memberApp, communityRef });
   if (exact) return exact;
 
@@ -100,5 +107,10 @@ export function notificationAction(n, opts = {}) {
   const to = notificationTarget(n, opts);
   if (!to) return null;
   const labels = opts.memberApp ? MEMBER_ACTION_LABELS : ADMIN_ACTION_LABELS;
-  return { to, label: labels[to.split("?")[0]] ?? "Open related page" };
+  return {
+    to,
+    label: to.startsWith("/dashboard/records/imports/")
+      ? "View record import"
+      : (labels[to.split("?")[0]] ?? "Open related page"),
+  };
 }
