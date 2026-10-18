@@ -13,7 +13,7 @@ export default function InstallPrompt() {
     <div
       role="dialog"
       aria-label="Install Glasspay app"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 bg-white rounded-g-1 shadow-lg border border-hairline-soft p-4 flex items-center gap-3"
+      className="fixed left-4 right-4 top-1/2 -translate-y-1/2 mx-auto max-w-sm z-50 bg-white rounded-g-1 shadow-lg border border-hairline-soft p-4 flex items-center gap-3"
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-ink">Install Glasspay</p>
