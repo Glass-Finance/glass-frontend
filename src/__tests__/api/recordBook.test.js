@@ -55,3 +55,33 @@ describe("record book contract", () => {
     expect(single[2]?.headers?.["Content-Type"]).toBe(false);
   });
 });
+
+describe("spreadsheet file-part MIME metadata", () => {
+  it.each([
+    ["dues.csv", "", "text/csv"],
+    ["dues.csv", "application/octet-stream", "text/csv"],
+    ["dues.xlsx", "", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+    [
+      "dues.xlsx",
+      "application/zip",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ],
+    ["dues.xls", "application/octet-stream", "application/vnd.ms-excel"],
+    ["dues.tsv", "", "text/tab-separated-values"],
+  ])("sends the category's declared MIME for %s (%s)", (name, type, expected) => {
+    const file = new File(["unchanged bytes"], name, { type, lastModified: 123 });
+    uploadFile(file, "RECORD_IMPORT_SOURCE");
+    const part = client.post.mock.calls[0][1].get("file");
+    expect(part.type).toBe(expected);
+    expect(part.name).toBe(name);
+    expect(part.size).toBe(file.size);
+    expect(part.lastModified).toBe(file.lastModified);
+  });
+  it("normalizes multiple sources but leaves other categories unchanged", () => {
+    const csv = new File(["data"], "dues.csv", { type: "application/octet-stream" });
+    uploadFiles([csv], "RECORD_IMPORT_SOURCE");
+    expect(client.post.mock.calls[0][1].getAll("files")[0].type).toBe("text/csv");
+    uploadFile(csv, "SUPPORT_ATTACHMENT");
+    expect(client.post.mock.calls[1][1].get("file").type).toBe("application/octet-stream");
+  });
+});
