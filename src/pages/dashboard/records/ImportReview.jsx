@@ -24,9 +24,13 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [bulkDraftOpen, setBulkDraftOpen] = useState(false);
-  const debounced = useDebounce(filters.search ?? "", 300);
+  const [search, setSearch] = useState("");
+  const debounceSearch = useDebounce((value) => {
+    setSearch(value);
+    setPage(1);
+  }, 300);
   const params = Object.fromEntries(
-    Object.entries({ ...filters, search: debounced, pageNumber: page, pageSize: 20 }).filter(
+    Object.entries({ ...filters, search, pageNumber: page, pageSize: 20 }).filter(
       ([, value]) => value !== "" && value != null,
     ),
   );
@@ -45,6 +49,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
   }
   const changeFilters = (next) => {
     setFilters(next);
+    debounceSearch(next.search ?? "");
     setPage(1);
   };
   const editedRowMissing =
@@ -57,17 +62,17 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
     opened && !!query.data && !query.isFetching && !rows.some((r) => r.id === opened.id);
   if (frozen && !editing && !opened && !bulkDraftOpen) return null;
   return (
-    <section className="space-y-5">
+    <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Review your records</h2>
-          <p className="text-sm text-ink-muted mt-1">
+          <h2 className="text-base font-semibold">Review your records</h2>
+          <p className="text-xs text-ink-ghost mt-0.5">
             {counts.ready} ready · {counts.invalid + counts.review} need attention ·{" "}
             {counts.skipped} skipped
           </p>
         </div>
         <Button
-          size="md"
+          size="sm-tight"
           fullWidth={false}
           variant="outline"
           disabled={frozen}
@@ -76,15 +81,28 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
           Add missing record
         </Button>
       </div>
-      <div className="rounded-g-2 md:rounded-g-3 border border-black/10 bg-white p-3 md:p-5 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="space-y-4">
+        <RecordFilters
+          communityId={communityId}
+          review
+          filters={filters}
+          onChange={changeFilters}
+          leading={
+            <div className="w-48">
+              <Select
+                compact
+                hideLabel
+                label="Review status"
+                empty="All review states"
+                value={filters.reviewStatus}
+                options={REVIEW_LABELS}
+                onChange={(reviewStatus) => changeFilters({ ...filters, reviewStatus })}
+              />
+            </div>
+          }
+        >
           <Select
-            label="Review status"
-            value={filters.reviewStatus}
-            options={REVIEW_LABELS}
-            onChange={(reviewStatus) => changeFilters({ ...filters, reviewStatus })}
-          />
-          <Select
+            compact
             label="Issue"
             value={filters.issueCode}
             options={Object.fromEntries(
@@ -93,6 +111,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
             onChange={(issueCode) => changeFilters({ ...filters, issueCode })}
           />
           <Select
+            compact
             label="Sheet"
             value={filters.sheetName}
             options={Object.fromEntries(
@@ -100,13 +119,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
             )}
             onChange={(sheetName) => changeFilters({ ...filters, sheetName })}
           />
-        </div>
-        <RecordFilters
-          communityId={communityId}
-          review
-          filters={filters}
-          onChange={changeFilters}
-        />
+        </RecordFilters>
         <ImportBulkActions
           communityId={communityId}
           selected={selected}

@@ -65,13 +65,13 @@ export default function RecordDetailPanel({
               ) : (
                 <div className="flex gap-3">
                   {canEdit && (
-                    <Button size="md" fullWidth={false} onClick={() => onEdit(row)}>
+                    <Button size="sm-tight" fullWidth={false} onClick={() => onEdit(row)}>
                       Edit record
                     </Button>
                   )}
                   {canDelete && (
                     <Button
-                      size="md"
+                      size="sm-tight"
                       fullWidth={false}
                       variant="outline-caution"
                       onClick={() => onDelete(row)}

@@ -3,27 +3,31 @@ import { describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({
   page: 1,
   hidden: false,
+  requests: [],
   mutation: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("../../../../hooks/useRecordImportRows", () => ({
-  useRecordImportRows: (_c, _j, params) => ({
-    data: {
-      content: state.hidden
-        ? []
-        : [
-            {
-              id: `r${params.pageNumber}`,
-              payerName: `Payer ${params.pageNumber}`,
-              amount: 25,
-              currency: "NGN",
-              reviewStatus: "VALID",
-            },
-          ],
-      totalPages: 2,
-      totalElements: 2,
-    },
-    refetch: vi.fn(),
-  }),
+  useRecordImportRows: (_c, _j, params) => {
+    state.requests.push(params);
+    return {
+      data: {
+        content: state.hidden
+          ? []
+          : [
+              {
+                id: `r${params.pageNumber}`,
+                payerName: `Payer ${params.pageNumber}`,
+                amount: 25,
+                currency: "NGN",
+                reviewStatus: "VALID",
+              },
+            ],
+        totalPages: 2,
+        totalElements: 2,
+      },
+      refetch: vi.fn(),
+    };
+  },
   useImportRowMutation: () => ({ mutateAsync: state.mutation }),
 }));
 vi.mock("../../../../hooks/useCommunityMembers", () => ({
@@ -49,7 +53,7 @@ describe("explicit review selection", () => {
         payload: { rowIds: ["r1", "r2"], patch: { skip: true } },
       }),
     );
-    expect(screen.getByText(/0 selected/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Skip selected" })).toBeNull();
   });
 });
 
@@ -78,4 +82,33 @@ it("blocks a dirty editor when its row disappears from the refreshed filtered pa
   expect(screen.getByRole("button", { name: "Save changes" }).disabled).toBe(true);
   expect(screen.getByLabelText("Amount").value).toBe("35");
   state.hidden = false;
+});
+
+it("keeps bulk actions out of the way until rows are selected", () => {
+  render(
+    <ImportReview
+      communityId="c"
+      job={{ id: "j", status: "READY_FOR_REVIEW", reviewTotals: { VALID: 2 } }}
+    />,
+  );
+  expect(screen.queryByRole("button", { name: "Skip selected" })).toBeNull();
+  fireEvent.click(screen.getAllByLabelText("Select record Payer 1")[0]);
+  expect(screen.getByRole("button", { name: "Skip selected" })).toBeTruthy();
+});
+
+it("omits default search and only submits the debounced literal text", async () => {
+  state.requests = [];
+  render(
+    <ImportReview
+      communityId="c"
+      job={{ id: "j", status: "READY_FOR_REVIEW", reviewTotals: { VALID: 2 } }}
+    />,
+  );
+  expect(Object.hasOwn(state.requests.at(-1), "search")).toBe(false);
+  fireEvent.change(screen.getByLabelText("Review status"), { target: { value: "INVALID" } });
+  expect(state.requests.at(-1).reviewStatus).toBe("INVALID");
+  fireEvent.change(screen.getByLabelText("Search records"), { target: { value: "%_! dues" } });
+  await waitFor(() => expect(state.requests.at(-1).search).toBe("%_! dues"));
+  fireEvent.change(screen.getByLabelText("Search records"), { target: { value: "" } });
+  await waitFor(() => expect(Object.hasOwn(state.requests.at(-1), "search")).toBe(false));
 });

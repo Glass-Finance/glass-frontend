@@ -1,11 +1,13 @@
+import EmptyState from "../../../components/common/EmptyState";
+import { BookOpen, Search } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { TextInput } from "../../../components/ui/TextInput";
 import { errorDescription } from "../../../utils/recordBook";
 
-export function Field({ label, error, children }) {
+export function Field({ label, error, children, hideLabel = false }) {
   return (
-    <label className="flex min-w-0 flex-col gap-1.5 text-sm text-ink-muted">
-      <span>{label}</span>
+    <label className="flex min-w-0 flex-col gap-1.5 text-xs text-ink-muted">
+      <span className={hideLabel ? "sr-only" : undefined}>{label}</span>
       {children}
       {error && <span className="text-danger text-xs">{error}</span>}
     </label>
@@ -18,16 +20,18 @@ export function Select({
   options,
   disabled = false,
   empty = "All",
+  compact = false,
+  hideLabel = false,
   ...rest
 }) {
   return (
-    <Field label={label}>
+    <Field label={label} hideLabel={hideLabel}>
       <select
         aria-label={label}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full min-h-12 rounded-g-1 border border-outline-input/40 bg-white px-3 text-base md:text-sm focus:border-brand outline-none disabled:opacity-50"
+        className={`w-full rounded-g-1 border border-surface-container-border bg-white px-3 text-base md:text-xs focus:border-brand outline-none disabled:opacity-50 ${compact ? "h-11 md:h-9" : "h-12"}`}
         {...rest}
       >
         {empty !== null && <option value="">{empty}</option>}
@@ -40,18 +44,26 @@ export function Select({
     </Field>
   );
 }
-export function SearchField({ value, onChange, placeholder = "Search records" }) {
+export function SearchField({ value, onChange, placeholder = "Search records…" }) {
   return (
-    <Field label="Search">
+    <label className="relative block w-full md:w-72">
+      <span className="sr-only">Search records</span>
+      <Search
+        size={13}
+        aria-hidden="true"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-ghost z-1"
+      />
       <TextInput
         aria-label="Search records"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        className="h-11 md:h-9 pl-8! py-2! md:text-xs border-surface-container-border"
       />
-    </Field>
+    </label>
   );
 }
+
 export function ErrorNotice({ error, message, onRetry }) {
   if (!error && !message) return null;
   const status = error?.response?.status;
@@ -72,7 +84,7 @@ export function ErrorNotice({ error, message, onRetry }) {
         <Button
           onClick={onRetry}
           variant="outline-caution"
-          size="sm"
+          size="xs"
           fullWidth={false}
           className="mt-2"
         >
@@ -82,7 +94,14 @@ export function ErrorNotice({ error, message, onRetry }) {
     </div>
   );
 }
-export function QueryState({ query, empty, children }) {
+export function QueryState({
+  query,
+  empty,
+  children,
+  emptyTitle = "No records found",
+  emptyDescription = "Add a record, import a spreadsheet, or adjust your filters.",
+  emptyIcon = BookOpen,
+}) {
   if (query.isPending)
     return (
       <p role="status" className="p-6 text-sm text-ink-muted">
@@ -90,28 +109,41 @@ export function QueryState({ query, empty, children }) {
       </p>
     );
   if (query.error) return <ErrorNotice error={query.error} onRetry={() => query.refetch()} />;
-  if (empty) return <p className="p-6 text-sm text-ink-muted">No records match this view.</p>;
+  if (empty)
+    return (
+      <div className="rounded-g-3 border border-surface-container-border bg-surface-container">
+        <EmptyState
+          icon={emptyIcon}
+          title={emptyTitle}
+          subtitle={emptyDescription}
+          className="py-16"
+        />
+      </div>
+    );
   return children;
 }
-export function Pager({ data, page, onChange, disabled = false }) {
+export function Pager({ data, page, onChange, disabled = false, noun = "records" }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-4 text-sm text-ink-muted">
+    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 text-xs text-ink-ghost">
       <span>
-        {data?.totalElements ?? 0} records · Page {page} of {Math.max(1, data?.totalPages ?? 1)}
+        {data?.totalElements ?? 0} {data?.totalElements === 1 ? noun.replace(/s$/, "") : noun}
       </span>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <Button
           variant="outline-neutral"
-          size="sm"
+          size="xs"
           fullWidth={false}
           disabled={disabled || page <= 1}
           onClick={() => onChange(page - 1)}
         >
           Previous
         </Button>
+        <span>
+          Page {page} of {Math.max(1, data?.totalPages ?? 1)}
+        </span>
         <Button
           variant="outline-neutral"
-          size="sm"
+          size="xs"
           fullWidth={false}
           disabled={disabled || page >= (data?.totalPages ?? 1)}
           onClick={() => onChange(page + 1)}

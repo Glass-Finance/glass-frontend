@@ -97,11 +97,11 @@ export default function ImportRowPanel({
           </details>
         ))}
         <div className="flex flex-wrap gap-3">
-          <Button size="md" fullWidth={false} disabled={frozen || busy} onClick={onEdit}>
+          <Button size="sm-tight" fullWidth={false} disabled={frozen || busy} onClick={onEdit}>
             Edit record
           </Button>
           <Button
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             variant="outline-neutral"
             disabled={frozen || busy}
@@ -111,7 +111,7 @@ export default function ImportRowPanel({
           </Button>
           {row.rowAssistanceAcceptanceRequired && (
             <Button
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               variant="outline"
               disabled={frozen || busy}
@@ -122,7 +122,7 @@ export default function ImportRowPanel({
           )}
           {duplicates.length > 0 && !row.duplicateAccepted && (
             <Button
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               variant="outline"
               disabled={frozen || busy}
@@ -133,7 +133,7 @@ export default function ImportRowPanel({
           )}
           {row.duplicateAccepted && (
             <Button
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               variant="outline-neutral"
               disabled={frozen || busy}
@@ -144,7 +144,7 @@ export default function ImportRowPanel({
           )}
           {row.source === "MANUAL" && (
             <Button
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               variant="outline-caution"
               disabled={frozen || busy}

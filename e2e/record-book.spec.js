@@ -86,7 +86,14 @@ async function seed(page) {
         return true;
       }
       if (path === "/file/upload" && method === "POST") {
-        state.calls.push({ path, contentType: request.headers()["content-type"] });
+        state.calls.push({
+          path,
+          contentType: request.headers()["content-type"],
+          fileContentType: request
+            .postDataBuffer()
+            ?.toString("latin1")
+            .match(/\r\nContent-Type: ([^\r\n]+)/i)?.[1],
+        });
         await json(route, 201, {
           success: true,
           data: { id: "file-1", success: true, originalFileName: "dues.csv" },
@@ -95,7 +102,18 @@ async function seed(page) {
       }
       const base = `/communities/${COMMUNITY.id}/records`;
       if (path === base && method === "GET") {
-        await ok(route, pageOf(state.records));
+        state.calls.push({ path, params: Object.fromEntries(url.searchParams) });
+        const search = url.searchParams.get("search")?.toLowerCase();
+        await ok(
+          route,
+          pageOf(
+            search
+              ? state.records.filter((row) =>
+                  `${row.payerName ?? ""} ${row.description ?? ""}`.toLowerCase().includes(search),
+                )
+              : state.records,
+          ),
+        );
         return true;
       }
       if (path === base && method === "POST") {
@@ -137,7 +155,18 @@ async function seed(page) {
         return true;
       }
       if (path === `${base}/imports/job-1/rows` && method === "GET") {
-        await ok(route, pageOf(state.rows));
+        state.calls.push({ path, params: Object.fromEntries(url.searchParams) });
+        const search = url.searchParams.get("search")?.toLowerCase();
+        await ok(
+          route,
+          pageOf(
+            search
+              ? state.rows.filter((row) =>
+                  `${row.payerName ?? ""} ${row.description ?? ""}`.toLowerCase().includes(search),
+                )
+              : state.rows,
+          ),
+        );
         return true;
       }
       if (path === `${base}/imports/job-1/rows/bulk` && method === "PATCH") {
@@ -201,22 +230,66 @@ test("manual record and SSE-driven spreadsheet review/save journey", async ({ pa
   await page.getByLabel("Payer name (optional)", { exact: true }).fill("Ada Example");
   await page.getByRole("button", { name: "Add record", exact: true }).last().click();
   await expect(page.getByRole("table")).toContainText("Ada Example");
-  expect(state.calls[0].payload.amount).toBe(1250.5);
+  expect(state.calls.find((call) => call.payload?.payerName === "Ada Example").payload.amount).toBe(
+    1250.5,
+  );
+  expect(state.calls.find((call) => call.params)?.params).not.toHaveProperty("search");
+  const recordsPath = `/communities/${COMMUNITY.id}/records`;
+  await page.getByLabel("Search records", { exact: true }).fill("%_! manual");
+  await expect
+    .poll(
+      () =>
+        state.calls.filter((call) => call.path === recordsPath && call.params).at(-1)?.params
+          .search,
+    )
+    .toBe("%_! manual");
+  await page.getByLabel("Search records", { exact: true }).fill("");
+  await expect(page.getByRole("table")).toContainText("Ada Example");
+  // Clearing can reuse the fresh unfiltered cache. Change sort to force a
+  // new request and verify its serialized parameters also omit search.
+  await page.getByLabel("Sort by", { exact: true }).selectOption("occurredOn");
+  await expect
+    .poll(
+      () =>
+        state.calls.filter((call) => call.path === recordsPath && call.params).at(-1)?.params
+          .sortBy,
+    )
+    .toBe("occurredOn");
+  expect(
+    state.calls.filter((call) => call.path === recordsPath && call.params).at(-1).params,
+  ).not.toHaveProperty("search");
   await page.getByRole("button", { name: "Import spreadsheet", exact: true }).click();
   await page.getByLabel("Spreadsheets", { exact: true }).setInputFiles({
     name: "dues.csv",
-    mimeType: "text/csv",
+    mimeType: "application/octet-stream",
     buffer: Buffer.from("name,amount\nAda,1250.50"),
   });
+  await page.screenshot({ path: testInfo.outputPath("record-upload-dialog.png"), fullPage: true });
   await page.getByRole("button", { name: "Upload and start imports" }).click();
   await expect(page).toHaveURL(/imports\/job-1/);
   await expect(page.getByRole("heading", { name: "Waiting to start" })).toBeVisible();
   expect(state.calls.find((call) => call.path === "/file/upload").contentType).toMatch(
     /multipart\/form-data; boundary=/,
   );
+  expect(state.calls.find((call) => call.path === "/file/upload").fileContentType).toBe("text/csv");
   state.job.status = "READY_FOR_REVIEW";
   await event("READY_FOR_REVIEW", 2);
   await expect(page.getByRole("heading", { name: "Review your records" })).toBeVisible();
+  const rowsPath = `/communities/${COMMUNITY.id}/records/imports/job-1/rows`;
+  expect(state.calls.find((call) => call.path === rowsPath).params).not.toHaveProperty("search");
+  await page.getByLabel("Search records", { exact: true }).fill("%_! dues");
+  await expect
+    .poll(() => state.calls.filter((call) => call.path === rowsPath).at(-1)?.params.search)
+    .toBe("%_! dues");
+  await page.getByLabel("Search records", { exact: true }).fill("");
+  await expect(page.getByRole("table")).toContainText("Imported payer");
+  await page.getByLabel("Sort by", { exact: true }).selectOption("sourceRowNumber");
+  await expect
+    .poll(() => state.calls.filter((call) => call.path === rowsPath).at(-1)?.params.sortBy)
+    .toBe("sourceRowNumber");
+  expect(state.calls.filter((call) => call.path === rowsPath).at(-1).params).not.toHaveProperty(
+    "search",
+  );
   await page.getByLabel("Select record Imported payer", { exact: true }).first().check();
   await page.getByRole("button", { name: "Edit selected", exact: true }).click();
   await page.getByLabel("New value", { exact: true }).fill("Imported January dues");
@@ -241,6 +314,9 @@ test("manual record and SSE-driven spreadsheet review/save journey", async ({ pa
   await expect(page.getByRole("heading", { name: "Your records have been saved" })).toBeVisible();
   await page.getByRole("link", { name: "View saved records" }).click();
   await expect(page.getByRole("table")).toContainText("Imported January dues");
+  await page.getByRole("link", { name: "Imports", exact: true }).click();
+  await expect(page.getByText("CSV import", { exact: false }).first()).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("record-import-history.png"), fullPage: true });
 });
 
 for (const width of [375, 768, 1440])
@@ -267,4 +343,56 @@ for (const width of [375, 768, 1440])
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
       .toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`records-${width}.png`), fullPage: true });
+  });
+
+for (const [name, mimeType, expected] of [
+  ["dues.csv", "application/octet-stream", "text/csv"],
+  [
+    "dues.xlsx",
+    "application/zip",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ],
+])
+  test(`normalizes the browser's multipart file type for ${name}`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium", "multipart contract checked once");
+    const { state } = await seed(page);
+    await page.goto(`/dashboard/records/imports?community=${COMMUNITY.slug}&upload=1`);
+    await page
+      .getByLabel("Spreadsheets", { exact: true })
+      .setInputFiles({ name, mimeType, buffer: Buffer.from("synthetic request metadata fixture") });
+    await page.getByRole("button", { name: "Upload and start imports" }).click();
+    await expect
+      .poll(() => state.calls.find((call) => call.path === "/file/upload")?.fileContentType)
+      .toBe(expected);
+  });
+
+for (const width of [375, 768, 1440])
+  test(`review workspace and filters fit ${width}px`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium", "explicit admin viewports");
+    const { state } = await seed(page);
+    state.job = {
+      id: "job-1",
+      communityId: COMMUNITY.id,
+      fileFormat: "XLSX",
+      status: "READY_FOR_REVIEW",
+      createdAt: "2026-10-18T10:00:00Z",
+      reviewTotals: { VALID: 1 },
+      timeline: [],
+    };
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/dashboard/records/imports/job-1?community=${COMMUNITY.slug}`);
+    await expect(page.getByRole("heading", { name: "Review your records" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Skip selected" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Filter", exact: true }).click();
+    const panel = page.getByRole("group", { name: "Record filters" });
+    await expect(panel).toBeVisible();
+    const bounds = await panel.boundingBox();
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    await panel.getByRole("button", { name: "Done", exact: true }).click();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    await page.getByRole("heading", { name: "Records", exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: testInfo.outputPath(`review-${width}.png`), fullPage: true });
   });

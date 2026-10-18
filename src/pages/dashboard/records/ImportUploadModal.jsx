@@ -1,3 +1,4 @@
+import { Upload, FileSpreadsheet } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ModalShell from "../../../components/dashboard/ModalShell";
@@ -14,6 +15,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const locked = useRef(false);
+  const inputRef = useRef(null);
   const destination = (jobId) =>
     `/dashboard/records/imports${jobId ? `/${jobId}` : ""}?community=${encodeURIComponent(identifier)}`;
   const update = (index, patch) =>
@@ -121,7 +123,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
         <div className="flex flex-wrap gap-3 justify-end">
           <Button
             variant="outline-neutral"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             disabled={busy}
             onClick={onClose}
@@ -130,7 +132,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
           </Button>
           {!items.length ? (
             <Button
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               disabled={!files.length}
               loading={busy}
@@ -140,7 +142,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
             </Button>
           ) : (
             <Button
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               disabled={busy}
               onClick={() => {
@@ -156,33 +158,59 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
     >
       <div className="p-5 max-h-[65vh] overflow-y-auto space-y-4">
         <p className="text-sm text-ink-muted">
-          Choose CSV, TSV, XLSX, or XLS files, up to 25 MiB each. Each file becomes its own import,
-          with records reviewed before saving. ZIP archives are not supported.
+          Each spreadsheet creates a separate import. Review the records before saving them.
         </p>
         <ErrorNotice message={error} />
         {!items.length && (
-          <label className="flex flex-col gap-3 text-sm">
-            Spreadsheets
-            <input
-              type="file"
-              multiple
-              accept=".csv,.tsv,.xlsx,.xls"
-              disabled={busy}
-              className="w-full min-w-0 rounded-g-1 border border-outline-input/40 p-3 text-sm focus:border-brand"
-              onChange={(e) => {
-                const chosen = Array.from(e.target.files ?? []);
-                const invalid = chosen.find(
-                  (f) => !/\.(csv|tsv|xlsx|xls)$/i.test(f.name) || f.size > 25 * 1024 * 1024,
-                );
-                setError(
-                  invalid
-                    ? `${invalid.name}: choose a supported spreadsheet no larger than 25 MiB.`
-                    : "",
-                );
-                setFiles(invalid ? [] : chosen);
-              }}
-            />
-          </label>
+          <div className="space-y-3">
+            <div className="rounded-g-2 border border-dashed border-surface-container-border bg-stacked-container/30 px-4 py-6 text-center">
+              <Upload size={24} className="mx-auto text-brand mb-3" />
+              <p className="text-sm font-medium">Choose your spreadsheets</p>
+              <p className="text-xs text-ink-ghost mt-1 mb-4">
+                CSV, TSV, XLSX, or XLS · Up to 25 MiB each
+              </p>
+              <Button
+                size="sm-tight"
+                fullWidth={false}
+                variant="outline-neutral"
+                disabled={busy}
+                onClick={() => inputRef.current?.click()}
+              >
+                Choose files
+              </Button>
+              <input
+                ref={inputRef}
+                aria-label="Spreadsheets"
+                type="file"
+                multiple
+                accept=".csv,.tsv,.xlsx,.xls"
+                disabled={busy}
+                className="sr-only"
+                onChange={(e) => {
+                  const chosen = Array.from(e.target.files ?? []);
+                  const invalid = chosen.find(
+                    (f) => !/\.(csv|tsv|xlsx|xls)$/i.test(f.name) || f.size > 25 * 1024 * 1024,
+                  );
+                  setError(
+                    invalid
+                      ? `${invalid.name}: choose a supported spreadsheet no larger than 25 MiB.`
+                      : "",
+                  );
+                  setFiles(invalid ? [] : chosen);
+                }}
+              />
+            </div>
+            {files.map((file, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-g-1 border border-surface-container-border px-3 py-2"
+              >
+                <FileSpreadsheet size={16} className="shrink-0 text-ink-ghost" />
+                <p className="text-xs min-w-0 flex-1 truncate">{file.name}</p>
+                <span className="text-xs text-ink-ghost">{(file.size / 1024).toFixed(1)} KB</span>
+              </div>
+            ))}
+          </div>
         )}
         {items.map((item, index) => (
           <div key={index} className="rounded-g-1 border border-black/10 p-3 space-y-2">
@@ -193,7 +221,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
             {item.message && <p className="text-sm text-ink-muted break-words">{item.message}</p>}
             {item.state === "Duplicate file" && (
               <Button
-                size="md"
+                size="sm-tight"
                 variant="outline"
                 fullWidth={false}
                 disabled={busy}
@@ -204,7 +232,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
             )}
             {["Not submitted", "Check history"].includes(item.state) && (
               <Button
-                size="md"
+                size="sm-tight"
                 variant="outline-neutral"
                 fullWidth={false}
                 disabled={busy}
@@ -222,7 +250,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
             )}
             {item.jobId && (
               <Button
-                size="md"
+                size="sm-tight"
                 variant="outline"
                 fullWidth={false}
                 disabled={busy}

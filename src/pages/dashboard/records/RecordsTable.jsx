@@ -18,12 +18,12 @@ export default function RecordsTable({
 }) {
   return (
     <>
-      <div className="hidden lg:block">
-        <table className="w-full text-left text-sm">
-          <thead className="text-ink-muted border-b border-black/10">
+      <div className="hidden xl:block rounded-g-3 border border-surface-container-border bg-surface-container overflow-hidden">
+        <table className="w-full text-left text-xs">
+          <thead className="text-ink-ghost bg-stacked-container/60 border-b border-surface-container-border">
             <tr>
               {review && (
-                <th className="p-3 w-12">
+                <th className="px-4 py-3 w-12">
                   <input
                     type="checkbox"
                     aria-label="Select this page"
@@ -34,21 +34,24 @@ export default function RecordsTable({
                   />
                 </th>
               )}
-              <th className="p-3 font-medium">Date</th>
-              <th className="p-3 font-medium">Payer / description</th>
-              <th className="p-3 font-medium">Type / direction</th>
-              <th className="p-3 font-medium">Amount</th>
-              <th className="p-3 font-medium">{review ? "Review" : "Source"}</th>
-              <th className="p-3">
+              <th className="px-4 py-3 font-medium">Date</th>
+              <th className="px-4 py-3 font-medium">Payer / description</th>
+              <th className="px-4 py-3 font-medium">Type / direction</th>
+              <th className="px-4 py-3 font-medium">Amount</th>
+              <th className="px-4 py-3 font-medium">{review ? "Review" : "Source"}</th>
+              <th className="px-4 py-3">
                 <span className="sr-only">Details</span>
               </th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b border-black/10">
+              <tr
+                key={row.id}
+                className="border-b last:border-b-0 border-surface-container-border hover:bg-stacked-container/30"
+              >
                 {review && (
-                  <td className="p-3">
+                  <td className="px-4 py-3">
                     <input
                       aria-label={`Select record ${row.payerName || row.id}`}
                       type="checkbox"
@@ -59,32 +62,38 @@ export default function RecordsTable({
                     />
                   </td>
                 )}
-                <td className="p-3 whitespace-nowrap">{formatRecordDate(row.occurredOn)}</td>
-                <td className="p-3 max-w-64">
+                <td className="px-4 py-3 whitespace-nowrap">{formatRecordDate(row.occurredOn)}</td>
+                <td className="px-4 py-3 max-w-64">
                   <p className="font-medium break-words">
                     {row.payerName || row.payerReference || "Unlinked payer"}
                   </p>
-                  <p className="text-ink-muted line-clamp-2 break-words">
+                  <p className="text-ink-ghost mt-1 line-clamp-1 break-words">
                     {row.description || "No description"}
                   </p>
                 </td>
-                <td className="p-3">
+                <td className="px-4 py-3">
                   <p>{RECORD_TYPES[row.recordType] || "Type missing"}</p>
                   <p className="text-ink-muted">
                     {DIRECTIONS[row.direction] || "Direction missing"}
                   </p>
                 </td>
-                <td className="p-3 font-medium whitespace-nowrap">
+                <td className="px-4 py-3 font-medium whitespace-nowrap">
                   {formatRecordAmount(row.amount, row.currency)}
                 </td>
-                <td className="p-3">
-                  {review
-                    ? REVIEW_LABELS[row.reviewStatus] || "Check record"
-                    : RECORD_SOURCES[row.source] || "Unknown source"}
+                <td className="px-4 py-3">
+                  {review ? (
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-xs ${row.reviewStatus === "VALID" ? "bg-success-wash text-success" : row.reviewStatus === "INVALID" ? "bg-danger-wash text-danger" : row.reviewStatus === "REVIEW_REQUIRED" ? "bg-warning-wash text-warning" : "bg-stacked-container text-ink-muted"}`}
+                    >
+                      {REVIEW_LABELS[row.reviewStatus] || "Check record"}
+                    </span>
+                  ) : (
+                    RECORD_SOURCES[row.source] || "Unknown source"
+                  )}
                 </td>
-                <td className="p-3">
+                <td className="px-4 py-3">
                   <Button
-                    size="sm"
+                    size="xs"
                     variant="outline-neutral"
                     fullWidth={false}
                     onClick={() => onOpen(row)}
@@ -97,7 +106,7 @@ export default function RecordsTable({
           </tbody>
         </table>
       </div>
-      <div className="lg:hidden divide-y divide-black/10">
+      <div className="xl:hidden divide-y divide-surface-container-border rounded-g-3 border border-surface-container-border bg-surface-container px-4">
         {review && (
           <label className="flex items-center gap-3 py-3 text-sm">
             <input
@@ -114,7 +123,7 @@ export default function RecordsTable({
         {rows.map((row) => (
           <div key={row.id} className="py-4 space-y-2">
             {review && (
-              <label className="flex items-center gap-3 text-sm">
+              <label className="flex min-h-11 items-center gap-3 text-sm">
                 <input
                   aria-label={`Select record ${row.payerName || row.id}`}
                   type="checkbox"

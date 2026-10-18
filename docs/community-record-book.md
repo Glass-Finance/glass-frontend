@@ -4,17 +4,23 @@
 
 Owners and community admins open **Records** beside Payments. **All records** combines backend-projected successful Glass transactions, manual historical entries, and committed spreadsheet records. Record changes do not move money, alter balances, or reverse payments. Glass records are read-only; permitted manual/imported entries can be edited or deleted.
 
-Lists use server pagination, filters, literal substring search, and community-scoped React Query caches. Dates remain business dates; amounts are major currency units with currency-specific precision. No aggregate financial totals are inferred from a page.
+Lists use server pagination, filters, literal substring search (omitted by default and after clearing; the existing debounce hook receives a setter, never a value), and community-scoped React Query caches. Dates remain business dates; amounts are major currency units with currency-specific precision. No aggregate financial totals are inferred from a page.
 
 ### Access and navigation
 
 Routes live inside `CommunityAdminGuard` and retain the existing `?community=` context. Feature hooks resolve canonical community UUIDs before fetching, matching SSE payload identifiers. Controls use the returned role permission codes for read/create/update/delete/import and AI usage independently. Backend authorization remains authoritative; unresolved permissions fail closed. The session system is unchanged.
+
+### Presentation
+
+Records follows the existing Payments header and segmented navigation, Settlements-style compact filters/tables/pagination, and matching Figma dashboard components. Bulk tools appear only after explicit selection. Source evidence and processing history remain available on demand. Phone/tablet views retain the full workflow.
 
 ### Spreadsheet import
 
 Upload CSV, TSV, XLSX, or XLS, at most 25 MiB per file, as private `RECORD_IMPORT_SOURCE` files. A single selection uses the single upload endpoint; multiple selections use repeated `files` parts. Each successful upload is submitted independently. A single import opens directly; multiple successful imports return to the Imports list. Partial failures retain per-file recovery controls. Uncertain submissions remain uncertain after an empty history read because the original request may still commit; they offer repeated history checks rather than a resubmit action. Definitively rejected submissions can be explicitly retried.
 
 Job responses do not include original filenames. Returning admins see labels derived from format, creation time, and a shortened job ID. Private source downloads come from authorized job detail and can be refreshed when their signed link expires.
+
+For RECORD_IMPORT_SOURCE only, upload wrappers normalize the multipart file part to the canonical MIME for CSV/TSV/XLS/XLSX when browser/OS metadata differs. Bytes, filename, and last-modified time remain unchanged. Backend content/signature checks still apply.
 
 The job page shows the server timeline by sequence. `RECORD_IMPORT_PROGRESS` events on the existing SSE connection invalidate the affected community's data. Authoritative job responses automatically reveal review and completion. Polling, reconnect, and focus refresh recover missed events, including for reviewers who are not the requester. Other jobs never replace the active workspace.
 

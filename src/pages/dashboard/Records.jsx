@@ -1,3 +1,4 @@
+import { Plus, Upload } from "lucide-react";
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageTitle";
@@ -6,7 +7,7 @@ import { useCommunityRecords, useRecordMutation } from "../../hooks/useCommunity
 import { useDebounce } from "../../hooks/useDebounce";
 import { Button } from "../../components/ui/Button";
 import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
-import RecordsTabs from "./records/RecordsTabs";
+import RecordsHeader from "./records/RecordsHeader";
 import RecordFilters from "./records/RecordFilters";
 import RecordsTable from "./records/RecordsTable";
 import RecordDetailPanel from "./records/RecordDetailPanel";
@@ -17,12 +18,10 @@ export default function Records() {
   usePageTitle("Records");
   const access = useRecordBookAccess();
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Records</h1>
-      <p className="text-sm text-ink-muted">
-        Your community's historical payments, expenses, and other activity.
-      </p>
-      <RecordsTabs identifier={access.identifier} />
+    <div className="px-4 md:px-6 py-6 h-full overflow-y-auto">
+      {(access.loading || access.error || !access.read) && (
+        <RecordsHeader identifier={access.identifier} />
+      )}
       {access.loading ? (
         <p role="status">Loading access…</p>
       ) : access.error ? (
@@ -43,11 +42,15 @@ function RecordsContent({ access }) {
   const [detail, setDetail] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
-  const debounced = useDebounce(filters.search ?? "", 300);
+  const [search, setSearch] = useState("");
+  const debounceSearch = useDebounce((value) => {
+    setSearch(value);
+    setPage(1);
+  }, 300);
   const params = Object.fromEntries(
     Object.entries({
       ...filters,
-      search: debounced,
+      search,
       importJobId: searchParams.get("importJobId"),
       pageNumber: page,
       pageSize: 20,
@@ -58,17 +61,18 @@ function RecordsContent({ access }) {
   const update = useRecordMutation(access.id, "update");
   const remove = useRecordMutation(access.id, "delete");
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap gap-3">
+    <div>
+      <RecordsHeader identifier={access.identifier}>
         {access.create && (
-          <Button size="md" fullWidth={false} onClick={() => setEditing("new")}>
+          <Button size="sm-tight" fullWidth={false} onClick={() => setEditing("new")}>
+            <Plus size={13} />
             Add record
           </Button>
         )}
         {access.import && (
           <Button
             variant="outline"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             onClick={() =>
               navigate(
@@ -76,19 +80,21 @@ function RecordsContent({ access }) {
               )
             }
           >
+            <Upload size={13} />
             Import spreadsheet
           </Button>
         )}
-      </div>
+      </RecordsHeader>
       {searchParams.get("importJobId") && (
         <p className="text-sm text-ink-muted">Showing records saved from this import.</p>
       )}
-      <section className="rounded-g-2 md:rounded-g-3 border border-black/10 bg-white p-3 md:p-5 space-y-5">
+      <section className="space-y-4">
         <RecordFilters
           communityId={access.id}
           filters={filters}
           onChange={(next) => {
             setFilters(next);
+            debounceSearch(next.search ?? "");
             setPage(1);
           }}
         />

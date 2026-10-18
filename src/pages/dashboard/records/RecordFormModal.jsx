@@ -75,7 +75,7 @@ export default function RecordFormModal({
         <div className="flex justify-end gap-3">
           <Button
             variant="outline-neutral"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             onClick={close}
             disabled={busy}
@@ -85,7 +85,7 @@ export default function RecordFormModal({
           <Button
             type="submit"
             form="record-book-form"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             loading={busy}
             disabled={readOnly || changedOnServer}

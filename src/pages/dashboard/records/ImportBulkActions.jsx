@@ -53,12 +53,12 @@ export default function ImportBulkActions({
       setBusy(false);
     }
   }
+  if (!selected.length && !patch && !editing) return null;
   return (
-    <div className="rounded-g-1 border border-black/10 p-3 space-y-3">
-      <p className="text-sm font-medium">{selected.length} selected across pages (maximum 500)</p>
-      <p className="text-xs text-ink-muted">
-        Only explicitly selected records are affected. Some selections may be outside your current
-        page or filters.
+    <div className="rounded-g-1 border border-surface-container-border bg-stacked-container/40 p-3 space-y-2">
+      <p className="text-xs font-medium">{selected.length} selected across pages (maximum 500)</p>
+      <p className="text-xs text-ink-ghost">
+        Selection includes other pages. Only these records will change.
       </p>
       <div className="flex flex-wrap gap-2">
         {[
@@ -70,7 +70,7 @@ export default function ImportBulkActions({
         ].map(([label, value]) => (
           <Button
             key={String(label)}
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             variant="outline-neutral"
             disabled={frozen || !selected.length}
@@ -84,7 +84,7 @@ export default function ImportBulkActions({
           </Button>
         ))}
         <Button
-          size="md"
+          size="sm-tight"
           fullWidth={false}
           variant="outline"
           disabled={frozen || !selected.length}
@@ -96,7 +96,7 @@ export default function ImportBulkActions({
           Edit selected
         </Button>
         <Button
-          size="md"
+          size="sm-tight"
           fullWidth={false}
           variant="tertiary"
           disabled={frozen || busy || !selected.length}
@@ -214,7 +214,7 @@ function BulkEditor({ communityId, onClose, onContinue, frozen }) {
       onClose={onClose}
       footer={
         <Button
-          size="md"
+          size="sm-tight"
           disabled={frozen || !Object.keys(changes).length}
           onClick={() => onContinue(changes)}
         >
@@ -277,7 +277,7 @@ function BulkEditor({ communityId, onClose, onContinue, frozen }) {
           </label>
         )}
         <ErrorNotice message={error} />
-        <Button size="md" fullWidth={false} variant="outline" onClick={add} disabled={frozen}>
+        <Button size="sm-tight" fullWidth={false} variant="outline" onClick={add} disabled={frozen}>
           Add field change
         </Button>
         {Object.entries(changes).map(([name, next]) => (

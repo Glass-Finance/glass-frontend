@@ -24,8 +24,8 @@ export default function RecordImportDetail() {
   const access = useRecordBookAccess();
   const { jobId } = useParams();
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Records</h1>
+    <div className="px-4 md:px-6 py-6 h-full overflow-y-auto space-y-4">
+      <h1 className="text-xl font-bold">Records</h1>
       <RecordsTabs identifier={access.identifier} />
       {access.loading ? (
         <p role="status">Loading access…</p>
@@ -101,7 +101,7 @@ function JobContent({ access, jobId }) {
       </Link>
       <div className="flex flex-wrap justify-between items-start gap-4">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold break-words">{jobLabel(job)}</h2>
+          <h2 className="text-base font-semibold break-words">{jobLabel(job)}</h2>
           <p className="text-sm text-ink-muted mt-1" role="status" aria-live="polite">
             {JOB_LABELS[job.status] ?? "Unknown status"}
           </p>
@@ -109,7 +109,7 @@ function JobContent({ access, jobId }) {
         <div className="flex flex-wrap gap-3">
           <Button
             variant="outline-neutral"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             onClick={() => query.refetch()}
             disabled={query.isFetching}
@@ -118,7 +118,7 @@ function JobContent({ access, jobId }) {
           </Button>
           {job.fileData?.url && !expired && (
             <a
-              className="inline-flex items-center min-h-12 text-sm text-brand underline"
+              className="inline-flex items-center min-h-10 text-xs text-brand underline"
               href={job.fileData.url}
               target="_blank"
               rel="noopener noreferrer"
@@ -129,7 +129,7 @@ function JobContent({ access, jobId }) {
           {expired && (
             <Button
               variant="outline"
-              size="md"
+              size="sm-tight"
               fullWidth={false}
               loading={query.isFetching}
               onClick={() => query.refetch()}
@@ -158,7 +158,7 @@ function JobContent({ access, jobId }) {
       {["COMMITTED", "DISCARDED"].includes(job.status) ? (
         <ImportResult job={job} identifier={access.identifier} />
       ) : (
-        <ImportProgress job={job} />
+        <ImportProgress job={job} compact={job.status === "READY_FOR_REVIEW"} />
       )}
       {job.unmappedRegions?.length > 0 && (
         <details className="rounded-g-1 border border-warning/30 bg-warning-wash p-4">
@@ -188,7 +188,7 @@ function JobContent({ access, jobId }) {
       <div className="flex flex-wrap gap-3">
         {actions.commit && (
           <Button
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             disabled={busy || blocked || counts.included === 0}
             onClick={() => {
@@ -201,7 +201,7 @@ function JobContent({ access, jobId }) {
         )}
         {actions.retry && (
           <Button
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             disabled={busy}
             onClick={() => {
@@ -215,7 +215,7 @@ function JobContent({ access, jobId }) {
         {actions.rerun && (
           <Button
             variant="outline-neutral"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             disabled={busy}
             onClick={() => {
@@ -229,7 +229,7 @@ function JobContent({ access, jobId }) {
         {actions.discard && (
           <Button
             variant="outline-caution"
-            size="md"
+            size="sm-tight"
             fullWidth={false}
             disabled={busy}
             onClick={() => {
