@@ -3,7 +3,7 @@ import { RECORD_TYPES, DIRECTIONS, RECORD_SOURCES } from "../../../utils/recordB
 import { useCommunityMembers } from "../../../hooks/useCommunityMembers";
 import { Field, Select, SearchField } from "./RecordBookUI";
 export default function RecordFilters({ communityId, filters, onChange, review = false }) {
-  const members = useCommunityMembers(communityId);
+  const members = useCommunityMembers(communityId, { includeHistorical: true });
   const change = (name) => (value) => onChange({ ...filters, [name]: value });
   return (
     <div className="space-y-3">

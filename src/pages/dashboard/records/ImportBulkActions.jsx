@@ -26,7 +26,14 @@ const LABELS = {
   categoryLabel: "Category",
   externalReference: "External reference",
 };
-export default function ImportBulkActions({ communityId, selected, onClear, onApply, frozen }) {
+export default function ImportBulkActions({
+  communityId,
+  selected,
+  onClear,
+  onApply,
+  frozen,
+  onDraftChange = () => {},
+}) {
   const [patch, setPatch] = useState(null);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,6 +45,7 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
     try {
       await onApply(patch);
       setPatch(null);
+      onDraftChange(false);
       onClear();
     } catch (err) {
       setError(errorDescription(err));
@@ -69,6 +77,7 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
             onClick={() => {
               setError("");
               setPatch(value);
+              onDraftChange(true);
             }}
           >
             {label}
@@ -79,7 +88,10 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
           fullWidth={false}
           variant="outline"
           disabled={frozen || !selected.length}
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            setEditing(true);
+            onDraftChange(true);
+          }}
         >
           Edit selected
         </Button>
@@ -87,7 +99,7 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
           size="md"
           fullWidth={false}
           variant="tertiary"
-          disabled={busy || !selected.length}
+          disabled={frozen || busy || !selected.length}
           onClick={onClear}
         >
           Clear selection
@@ -100,9 +112,13 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
           description={`Apply these changes only to ${selected.length} selected records. Acceptance confirms you have reviewed their current values. Other validation issues may still need correction.`}
           confirmLabel={`Apply to ${selected.length} selected records`}
           confirming={busy}
+          confirmDisabled={frozen}
           error={error}
           onClose={() => {
-            if (!busy) setPatch(null);
+            if (!busy) {
+              setPatch(null);
+              onDraftChange(false);
+            }
           }}
           onConfirm={apply}
         >
@@ -135,7 +151,11 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
       {editing && (
         <BulkEditor
           communityId={communityId}
-          onClose={() => setEditing(false)}
+          frozen={frozen}
+          onClose={() => {
+            setEditing(false);
+            onDraftChange(false);
+          }}
           onContinue={(next) => {
             setEditing(false);
             setPatch(next);
@@ -145,14 +165,15 @@ export default function ImportBulkActions({ communityId, selected, onClear, onAp
     </div>
   );
 }
-function BulkEditor({ communityId, onClose, onContinue }) {
-  const members = useCommunityMembers(communityId);
+function BulkEditor({ communityId, onClose, onContinue, frozen }) {
+  const members = useCommunityMembers(communityId, { includeHistorical: true });
   const [field, setField] = useState("description");
   const [value, setValue] = useState("");
   const [clear, setClear] = useState(false);
   const [changes, setChanges] = useState({});
   const [error, setError] = useState("");
   function add() {
+    if (frozen) return;
     setError("");
     if (clear && OPTIONAL_FIELDS.includes(field)) {
       setChanges((old) => ({ ...old, [field]: null }));
@@ -194,7 +215,7 @@ function BulkEditor({ communityId, onClose, onContinue }) {
       footer={
         <Button
           size="md"
-          disabled={!Object.keys(changes).length}
+          disabled={frozen || !Object.keys(changes).length}
           onClick={() => onContinue(changes)}
         >
           Review changes
@@ -202,11 +223,15 @@ function BulkEditor({ communityId, onClose, onContinue }) {
       }
     >
       <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
+        {frozen && (
+          <ErrorNotice message="Review is paused because the import changed state. Your staged field changes are retained until you close this editor." />
+        )}
         <p className="text-sm text-ink-muted">
           Add only the fields to change. Other fields remain unchanged. Changing a member can also
           update payer snapshots where they are not explicitly included.
         </p>
         <Select
+          disabled={frozen}
           label="Field to change"
           value={field}
           empty={null}
@@ -224,7 +249,7 @@ function BulkEditor({ communityId, onClose, onContinue }) {
             options={options}
             empty="Choose value"
             onChange={setValue}
-            disabled={clear}
+            disabled={frozen || clear}
           />
         ) : (
           <Field label="New value">
@@ -232,7 +257,7 @@ function BulkEditor({ communityId, onClose, onContinue }) {
               aria-label="New value"
               type={field === "occurredOn" ? "date" : "text"}
               value={value}
-              disabled={clear}
+              disabled={frozen || clear}
               onChange={(e) =>
                 setValue(field === "currency" ? e.target.value.toUpperCase() : e.target.value)
               }
@@ -244,6 +269,7 @@ function BulkEditor({ communityId, onClose, onContinue }) {
             <input
               type="checkbox"
               checked={clear}
+              disabled={frozen}
               onChange={(e) => setClear(e.target.checked)}
               className="accent-brand"
             />
@@ -251,7 +277,7 @@ function BulkEditor({ communityId, onClose, onContinue }) {
           </label>
         )}
         <ErrorNotice message={error} />
-        <Button size="md" fullWidth={false} variant="outline" onClick={add}>
+        <Button size="md" fullWidth={false} variant="outline" onClick={add} disabled={frozen}>
           Add field change
         </Button>
         {Object.entries(changes).map(([name, next]) => (
@@ -263,6 +289,7 @@ function BulkEditor({ communityId, onClose, onContinue }) {
               size="sm"
               fullWidth={false}
               variant="tertiary"
+              disabled={frozen}
               onClick={() =>
                 setChanges((old) =>
                   Object.fromEntries(Object.entries(old).filter(([key]) => key !== name)),

@@ -137,6 +137,14 @@ export function makeRecordPatch(original, values) {
     if (field === "amount" && value !== "" && value != null) value = Number(value);
     if ((original?.[field] ?? null) !== (value ?? null)) result[field] = value;
   }
+  // A non-null member link defaults omitted payer snapshots on the server.
+  // Preserve fields the form explicitly supplied, even when null matched the
+  // old snapshot, so clearing an autofill is never silently undone.
+  if (result.memberId != null) {
+    for (const field of ["payerName", "payerReference"]) {
+      if (Object.hasOwn(values, field)) result[field] = values[field] === "" ? null : values[field];
+    }
+  }
   return result;
 }
 export function validateRecord(values, allowIncomplete = false) {
@@ -189,8 +197,12 @@ export function validateRecord(values, allowIncomplete = false) {
       // tolerance that would silently accept an altered amount.
       const [whole, fraction = ""] = text.split(".");
       const minor = BigInt(whole + fraction.padEnd(digits, "0"));
-      const returned = amount.toFixed(digits).replace(".", "");
-      if (minor > BigInt(Number.MAX_SAFE_INTEGER) || BigInt(returned) !== minor)
+      const serialized = JSON.stringify(amount);
+      const normalized = text
+        .replace(/^0+(?=\d)/, "")
+        .replace(/(\.\d*?)0+$/, "$1")
+        .replace(/\.$/, "");
+      if (minor > BigInt(Number.MAX_SAFE_INTEGER) || serialized !== normalized)
         errors.amount = "This amount is too large to represent safely.";
     }
   }

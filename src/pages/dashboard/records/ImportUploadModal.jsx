@@ -96,8 +96,9 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
           return;
         }
         update(index, {
-          state: "Not submitted",
-          message: "No matching job was found. You can explicitly try submission again.",
+          state: "Check history",
+          message:
+            "The original request may still be processing. No matching job is visible yet. Check again later; do not upload or submit this file again while its outcome is unknown.",
         });
         return;
       }

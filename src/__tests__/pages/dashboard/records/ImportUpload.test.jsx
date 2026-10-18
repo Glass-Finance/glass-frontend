@@ -93,3 +93,19 @@ describe("independent file upload jobs", () => {
     });
   });
 });
+
+it("keeps an empty reconciliation uncertain while the original POST might still commit", async () => {
+  uploadFiles.mockResolvedValue(
+    env([
+      { id: "f1", success: true },
+      { success: false, message: "Bad file" },
+    ]),
+  );
+  submitRecordImport.mockRejectedValue(new Error("Request timed out"));
+  getRecordImports.mockResolvedValue(env({ content: [] }));
+  setup();
+  fireEvent.click(await screen.findByRole("button", { name: "Check for an existing import" }));
+  await screen.findByText(/The original request may still be processing/);
+  expect(screen.queryByRole("button", { name: "Try submitting this file again" })).toBeNull();
+  expect(submitRecordImport).toHaveBeenCalledTimes(1);
+});

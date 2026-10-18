@@ -10,7 +10,7 @@ export default function RecordFields({
   errors = {},
   disabled = false,
 }) {
-  const members = useCommunityMembers(communityId);
+  const members = useCommunityMembers(communityId, { includeHistorical: true });
   function chooseMember(memberId) {
     const member = members.members.find((m) => m.id === memberId);
     onChange({

@@ -23,6 +23,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
   const [opened, setOpened] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [bulkDraftOpen, setBulkDraftOpen] = useState(false);
   const debounced = useDebounce(filters.search ?? "", 300);
   const params = Object.fromEntries(
     Object.entries({ ...filters, search: debounced, pageNumber: page, pageSize: 20 }).filter(
@@ -46,7 +47,15 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
     setFilters(next);
     setPage(1);
   };
-  if (frozen && !editing && !opened) return null;
+  const editedRowMissing =
+    editing &&
+    editing !== "new" &&
+    !!query.data &&
+    !query.isFetching &&
+    !rows.some((r) => r.id === editing.id);
+  const openedRowMissing =
+    opened && !!query.data && !query.isFetching && !rows.some((r) => r.id === opened.id);
+  if (frozen && !editing && !opened && !bulkDraftOpen) return null;
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -101,6 +110,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
         <ImportBulkActions
           communityId={communityId}
           selected={selected}
+          onDraftChange={setBulkDraftOpen}
           frozen={frozen || bulk.isPending}
           onClear={() => setSelected([])}
           onApply={(patch) => bulk.mutateAsync({ payload: { rowIds: selected, patch } })}
@@ -122,7 +132,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
         <ImportRowPanel
           row={row}
           communityId={communityId}
-          frozen={frozen}
+          frozen={frozen || !!query.error || !!openedRowMissing}
           busy={update.isPending}
           error={update.error}
           onClose={() => {
@@ -150,7 +160,12 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
           }
           defaultCurrency={defaultCurrency}
           draft
-          readOnly={frozen}
+          readOnly={frozen || !!query.error || !!editedRowMissing}
+          readOnlyMessage={
+            editedRowMissing
+              ? "This record is no longer in the refreshed view. Your corrections are preserved. Close the editor, refresh, and find the record in All statuses before reconciling changes."
+              : undefined
+          }
           onClose={() => setEditing(null)}
           onSave={async (payload) => {
             if (editing === "new") await create.mutateAsync({ payload });
@@ -167,12 +182,13 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
           description="This removes this pending manual row. Generated spreadsheet rows can only be skipped."
           confirmLabel="Delete manual addition"
           confirming={remove.isPending}
+          confirmDisabled={frozen || !!openedRowMissing || !!query.error}
           error={remove.error ? errorDescription(remove.error) : ""}
           onClose={() => {
             if (!remove.isPending) setDeleting(false);
           }}
           onConfirm={() => {
-            if (!frozen)
+            if (!frozen && !openedRowMissing && !query.error)
               remove
                 .mutateAsync({ rowId: row.id })
                 .then(() => {

@@ -16,6 +16,7 @@ export default function ConfirmDialog({
   confirmingLabel,
   danger = true,
   confirming = false,
+  confirmDisabled = false,
   error = "",
   onConfirm,
   onClose,
@@ -57,6 +58,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             loading={confirming}
+            disabled={confirmDisabled}
             fullWidth={false}
             variant={danger ? "critical" : "primary"}
             size="sm"

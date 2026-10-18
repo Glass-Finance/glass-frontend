@@ -66,3 +66,21 @@ it("turns blank draft numeric and date fields into explicit nulls", () => {
     makeRecordPatch({ amount: 25, occurredOn: "2026-01-01" }, { amount: "", occurredOn: "" }),
   ).toEqual({ amount: null, occurredOn: null });
 });
+
+it("rejects a decimal that changes in the actual JSON payload", () => {
+  expect(
+    validateRecord({ amount: "90071992547409.91", currency: "NGN" }, true).amount,
+  ).toBeTruthy();
+  expect(validateRecord({ amount: "1250.50", currency: "NGN" }, true)).toEqual({});
+});
+it("preserves explicit cleared payer fields when creating or changing a member link", () => {
+  expect(makeRecordPatch(undefined, { memberId: "m1", payerName: "", payerReference: "" })).toEqual(
+    { memberId: "m1", payerName: null, payerReference: null },
+  );
+  expect(
+    makeRecordPatch(
+      { memberId: null, payerName: null, payerReference: null },
+      { memberId: "m1", payerName: "", payerReference: "" },
+    ),
+  ).toEqual({ memberId: "m1", payerName: null, payerReference: null });
+});

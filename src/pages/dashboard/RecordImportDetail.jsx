@@ -268,6 +268,7 @@ function JobContent({ access, jobId }) {
             }[confirm]
           }
           confirming={busy}
+          confirmDisabled={!actions[confirm] || !!query.error}
           error={error}
           onClose={() => {
             if (!busy) setConfirm(null);

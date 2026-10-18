@@ -11,6 +11,7 @@ export default function RecordFormModal({
   record,
   draft = false,
   readOnly = false,
+  readOnlyMessage,
   onSave,
   onClose,
 }) {
@@ -108,7 +109,8 @@ export default function RecordFormModal({
             message={
               changedOnServer
                 ? "This record changed while you were editing. Your values are preserved. Close and reopen the record to compare the latest version before saving."
-                : "This import is no longer editable. Your unsaved values remain here for reference."
+                : readOnlyMessage ||
+                  "This import is no longer editable. Your unsaved values remain here for reference."
             }
           />
         )}

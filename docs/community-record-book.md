@@ -12,7 +12,7 @@ Routes live inside `CommunityAdminGuard` and retain the existing `?community=` c
 
 ### Spreadsheet import
 
-Upload CSV, TSV, XLSX, or XLS, at most 25 MiB per file, as private `RECORD_IMPORT_SOURCE` files. A single selection uses the single upload endpoint; multiple selections use repeated `files` parts. Each successful upload is submitted independently. A single import opens directly; multiple successful imports return to the Imports list. Partial failures retain per-file recovery controls. Uncertain submissions require history reconciliation before an explicit retry.
+Upload CSV, TSV, XLSX, or XLS, at most 25 MiB per file, as private `RECORD_IMPORT_SOURCE` files. A single selection uses the single upload endpoint; multiple selections use repeated `files` parts. Each successful upload is submitted independently. A single import opens directly; multiple successful imports return to the Imports list. Partial failures retain per-file recovery controls. Uncertain submissions remain uncertain after an empty history read because the original request may still commit; they offer repeated history checks rather than a resubmit action. Definitively rejected submissions can be explicitly retried.
 
 Job responses do not include original filenames. Returning admins see labels derived from format, creation time, and a shortened job ID. Private source downloads come from authorized job detail and can be refreshed when their signed link expires.
 
@@ -24,7 +24,7 @@ Admins can correct fields, optionally link historical members, inspect source ev
 
 Selections persist across pages and filters for one community/job, up to 500 explicitly selected rows. Page selection affects only the displayed page. Bulk actions apply a shared patch; untouched fields are omitted and explicitly cleared fields become null. The server remains responsible for final validation and atomic bulk writes.
 
-**Save records** shows included/skipped counts and queues commit. `COMMIT_QUEUED` freezes edits; HTTP 202 is not success. `COMMITTED` reveals historical result counts and refreshes visible records, including when completion was discovered through polling. Commit recovery reopens review with refreshed issues. Dirty correction forms remain available for reference when another reviewer changes the job state.
+**Save records** shows included/skipped counts and queues commit. `COMMIT_QUEUED` freezes edits; HTTP 202 is not success. `COMMITTED` reveals historical result counts and refreshes visible records, including when completion was discovered through polling. Commit recovery reopens review with refreshed issues. Dirty individual and bulk correction forms remain available for reference when another reviewer changes the job state. An edited row disappearing from a refreshed filtered page freezes saving until its latest values can be reconciled.
 
 Retry continues an eligible failed job. Start fresh import creates a new job and AI operation without copying corrections or consent. Discard removes pending rows only in allowed states, retaining job history.
 
