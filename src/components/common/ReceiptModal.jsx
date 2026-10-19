@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
 import { createPortal } from "react-dom";
 import { X, FileText, Image as ImageIcon, Share2, Check, Copy, CheckCheck } from "lucide-react";
-import html2canvas from "html2canvas";
 import ctaLogoUrl from "../../assets/cta/ctalogo.webp";
 import { toTitleCase } from "../../utils/format";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
@@ -488,6 +487,11 @@ export default function ReceiptModal({ tx, payerName, payerEmail, onClose }) {
 
   async function captureCard(scale = 3) {
     if (!cardRef.current) return null;
+    // Dynamically imported rather than at module scope, matching the jspdf
+    // pattern in generateReceipt.js: html2canvas is ~200 kB and only needed
+    // when the member actually taps Save Image or Share — not on every render
+    // of the receipt modal.
+    const { default: html2canvas } = await import("html2canvas");
     return html2canvas(cardRef.current, {
       scale,
       backgroundColor: "var(--color-white)",
