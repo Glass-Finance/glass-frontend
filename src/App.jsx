@@ -61,6 +61,7 @@ const PayingAdminDashboard = lazy(() =>
 const Payments = lazy(() => import("./pages/dashboard/Payments"));
 const Members = lazy(() => import("./pages/dashboard/Members"));
 const Groups = lazy(() => import("./pages/dashboard/Groups"));
+const Records = lazy(() => import("./pages/dashboard/Records"));
 const MemberDetail = lazy(() => import("./pages/dashboard/MemberDetail"));
 const AdminTransactionDetail = lazy(() => import("./pages/dashboard/TransactionDetail"));
 const AdminNotifications = lazy(() => import("./pages/dashboard/Notifications"));
@@ -239,6 +240,10 @@ function App() {
                 <Route path="members" element={<Members />} />
                 <Route path="members/:memberId" element={<MemberDetail />} />
                 <Route path="groups" element={<Groups />} />
+                {/* Record book — visible records for the active community.
+                    Community-scoped, so it sits inside CommunityAdminGuard
+                    like the rest of the ?community= pages. */}
+                <Route path="records" element={<Records />} />
                 <Route path="transactions/:transactionId" element={<AdminTransactionDetail />} />
                 <Route path="join-requests" element={<JoinRequests />} />
               </Route>

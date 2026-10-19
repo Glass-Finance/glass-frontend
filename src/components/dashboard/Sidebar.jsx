@@ -36,6 +36,7 @@ import {
   ChevronDown,
   Home,
   HelpCircle,
+  BookOpen,
 } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useAuth } from "../../store/AuthContext";
@@ -87,6 +88,15 @@ const NAV = [
     label: "Groups",
     segment: "groups",
     path: "groups",
+  },
+  {
+    // NO `shortcut`, like Groups below. "r" is free but the item is expected
+    // to grow (create + import actions land here next), so the binding is left
+    // for that rather than claimed speculatively now.
+    icon: BookOpen,
+    label: "Records",
+    segment: "records",
+    path: "records",
   },
   {
     icon: Bell,
