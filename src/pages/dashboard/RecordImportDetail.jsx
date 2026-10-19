@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useRecordBookAccess } from "../../hooks/useRecordBookAccess";
@@ -15,6 +15,7 @@ import {
 } from "../../utils/recordBook";
 import { recordKeys } from "../../utils/recordBookQueryKeys";
 import RecordsTabs from "./records/RecordsTabs";
+import ImportActionsMenu from "./records/ImportActionsMenu";
 import ImportProgress from "./records/ImportProgress";
 import ImportReview from "./records/ImportReview";
 import ImportResult from "./records/ImportResult";
@@ -93,12 +94,16 @@ function JobContent({ access, jobId }) {
   const expired = job.fileData?.urlExpiresAt && Date.parse(job.fileData.urlExpiresAt) <= now;
   return (
     <div className="space-y-5">
-      <Link
-        className="text-sm text-brand underline"
-        to={`/dashboard/records/imports?community=${encodeURIComponent(access.identifier)}`}
+      <Button
+        variant="tertiary"
+        size="sm-tight"
+        fullWidth={false}
+        onClick={() =>
+          navigate(`/dashboard/records/imports?community=${encodeURIComponent(access.identifier)}`)
+        }
       >
         Back to imports
-      </Link>
+      </Button>
       <div className="flex flex-wrap justify-between items-start gap-4">
         <div className="min-w-0">
           <h2 className="text-base font-semibold break-words">{jobLabel(job)}</h2>
@@ -107,24 +112,15 @@ function JobContent({ access, jobId }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button
-            variant="outline-neutral"
-            size="sm-tight"
-            fullWidth={false}
-            onClick={() => query.refetch()}
-            disabled={query.isFetching}
-          >
-            Refresh
-          </Button>
           {job.fileData?.url && !expired && (
-            <a
-              className="inline-flex items-center min-h-10 text-xs text-brand underline"
-              href={job.fileData.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Button
+              variant="outline"
+              size="sm-tight"
+              fullWidth={false}
+              onClick={() => window.open(job.fileData.url, "_blank", "noopener,noreferrer")}
             >
               Download source
-            </a>
+            </Button>
           )}
           {expired && (
             <Button
@@ -137,6 +133,29 @@ function JobContent({ access, jobId }) {
               Refresh source link
             </Button>
           )}
+          {actions.retry && (
+            <Button
+              size="sm-tight"
+              fullWidth={false}
+              disabled={busy}
+              onClick={() => {
+                setError("");
+                setConfirm("retry");
+              }}
+            >
+              Retry processing
+            </Button>
+          )}
+          <ImportActionsMenu
+            actions={actions}
+            busy={busy}
+            fetching={query.isFetching}
+            onRefresh={() => query.refetch()}
+            onAction={(action) => {
+              setError("");
+              setConfirm(action);
+            }}
+          />
         </div>
       </div>
       <ErrorNotice error={query.error} />
@@ -148,7 +167,7 @@ function JobContent({ access, jobId }) {
               : job.failureCode === "IMPORT_COMMIT_RETRIES_EXHAUSTED"
                 ? "Saving could not finish after several attempts. Your review work is retained. You can try saving again when the service is available."
                 : job.failureMessage ||
-                  "This import could not be processed. Check the recovery actions below."
+                  "This import could not be processed. Use Import actions above to start fresh, or retry processing when available."
           }
         />
       )}
@@ -185,12 +204,28 @@ function JobContent({ access, jobId }) {
         defaultCurrency={access.community.defaultCurrency}
         frozen={!actions.edit || busy || !!query.error}
       />
-      <div className="flex flex-wrap gap-3">
-        {actions.commit && (
+      {actions.commit && (
+        <div
+          className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-g-1 border border-surface-container-border bg-white px-4 py-3"
+          aria-label="Save reviewed records"
+        >
+          <div role="status" className="min-w-0 text-sm">
+            <p className="font-medium">
+              {counts.included} included · {counts.skipped} skipped
+            </p>
+            <p id="import-save-help" className="mt-1 text-xs text-ink-muted">
+              {blocked
+                ? `Correct, accept, or skip the ${counts.invalid + counts.review} records needing attention before saving.`
+                : counts.included === 0
+                  ? "Include at least one record to save this import."
+                  : "Your reviewed records are ready to save."}
+            </p>
+          </div>
           <Button
             size="sm-tight"
             fullWidth={false}
-            disabled={busy || blocked || counts.included === 0}
+            disabled={busy || !!query.error || blocked || counts.included === 0}
+            aria-describedby="import-save-help"
             onClick={() => {
               setError("");
               setConfirm("commit");
@@ -198,57 +233,11 @@ function JobContent({ access, jobId }) {
           >
             Save records
           </Button>
-        )}
-        {actions.retry && (
-          <Button
-            size="sm-tight"
-            fullWidth={false}
-            disabled={busy}
-            onClick={() => {
-              setError("");
-              setConfirm("retry");
-            }}
-          >
-            Retry processing
-          </Button>
-        )}
-        {actions.rerun && (
-          <Button
-            variant="outline-neutral"
-            size="sm-tight"
-            fullWidth={false}
-            disabled={busy}
-            onClick={() => {
-              setError("");
-              setConfirm("rerun");
-            }}
-          >
-            Start fresh import
-          </Button>
-        )}
-        {actions.discard && (
-          <Button
-            variant="outline-caution"
-            size="sm-tight"
-            fullWidth={false}
-            disabled={busy}
-            onClick={() => {
-              setError("");
-              setConfirm("discard");
-            }}
-          >
-            Discard import
-          </Button>
-        )}
-      </div>
-      {actions.commit && blocked && (
-        <p className="text-sm text-ink-muted">
-          Correct, accept, or skip the {counts.invalid + counts.review} records needing attention
-          before saving.
-        </p>
+        </div>
       )}
       {confirm && (
         <ConfirmDialog
+          presentation="record"
           title={
             {
               commit: "Save reviewed records?",

@@ -15,17 +15,20 @@ const files = [
   new File(["one"], "one.csv", { type: "text/csv" }),
   new File(["two"], "two.csv", { type: "text/csv" }),
 ];
-function setup() {
+function renderUpload(props = {}) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   render(
     <QueryClientProvider client={client}>
       <MemoryRouter>
-        <ImportUploadModal communityId="c" identifier="crew" onClose={() => {}} />
+        <ImportUploadModal communityId="c" identifier="crew" onClose={() => {}} {...props} />
       </MemoryRouter>
     </QueryClientProvider>,
   );
+}
+function setup() {
+  renderUpload();
   fireEvent.change(screen.getByLabelText("Spreadsheets"), { target: { files } });
   fireEvent.click(screen.getByRole("button", { name: "Upload and start imports" }));
 }
@@ -108,4 +111,82 @@ it("keeps an empty reconciliation uncertain while the original POST might still 
   await screen.findByText(/The original request may still be processing/);
   expect(screen.queryByRole("button", { name: "Try submitting this file again" })).toBeNull();
   expect(submitRecordImport).toHaveBeenCalledTimes(1);
+});
+
+const transfer = (droppedFiles) => ({ files: droppedFiles, types: ["Files"], dropEffect: "none" });
+
+it("accepts multiple dropped spreadsheets without starting an upload automatically", () => {
+  renderUpload();
+  const zone = screen.getByRole("group", { name: "Spreadsheet drop zone" });
+  fireEvent.dragEnter(zone, { dataTransfer: transfer(files) });
+  expect(screen.getByText("Drop your spreadsheets here")).toBeTruthy();
+  fireEvent.drop(zone, { dataTransfer: transfer(files) });
+  expect(screen.getByText("one.csv")).toBeTruthy();
+  expect(screen.getByText("two.csv")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Upload and start imports" }).disabled).toBe(false);
+  expect(uploadFiles).not.toHaveBeenCalled();
+});
+
+it("keeps the drag highlight while crossing child elements and clears it on leaving", () => {
+  renderUpload();
+  const zone = screen.getByRole("group", { name: "Spreadsheet drop zone" });
+  const choose = screen.getByRole("button", { name: "Choose files" });
+  fireEvent.dragEnter(zone, { dataTransfer: transfer(files) });
+  fireEvent.dragEnter(choose, { dataTransfer: transfer(files) });
+  fireEvent.dragLeave(choose, { dataTransfer: transfer(files) });
+  expect(screen.getByText("Drop your spreadsheets here")).toBeTruthy();
+  fireEvent.dragLeave(zone, { dataTransfer: transfer(files) });
+  expect(screen.queryByText("Drop your spreadsheets here")).toBeNull();
+});
+
+it.each([
+  ["unsupported.txt", 10],
+  ["oversized.xlsx", 25 * 1024 * 1024 + 1],
+])("rejects dropped %s using the picker validation", (name, size) => {
+  renderUpload();
+  const invalid = new File(["invalid"], name);
+  Object.defineProperty(invalid, "size", { value: size });
+  fireEvent.drop(screen.getByRole("group", { name: "Spreadsheet drop zone" }), {
+    dataTransfer: transfer([files[0], invalid]),
+  });
+  expect(screen.getByRole("alert").textContent).toContain(name);
+  expect(screen.getByRole("button", { name: "Upload and start imports" }).disabled).toBe(true);
+});
+
+it("prevents browser file navigation outside the drop zone without changing the selection", () => {
+  renderUpload();
+  const event = new Event("drop", { bubbles: true, cancelable: true });
+  Object.defineProperty(event, "dataTransfer", { value: transfer(files) });
+  window.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+  expect(screen.queryByText("one.csv")).toBeNull();
+});
+
+it("ignores dropped replacements while an upload is in flight", async () => {
+  uploadFiles.mockImplementation(() => new Promise(() => {}));
+  renderUpload();
+  fireEvent.drop(screen.getByRole("group", { name: "Spreadsheet drop zone" }), {
+    dataTransfer: transfer(files),
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Upload and start imports" }));
+  await waitFor(() => expect(uploadFiles).toHaveBeenCalledTimes(1));
+  fireEvent.drop(screen.getAllByText("Uploading")[0].parentElement, {
+    dataTransfer: transfer([new File(["new"], "replacement.csv")]),
+  });
+  expect(screen.queryByText("replacement.csv")).toBeNull();
+  expect(uploadFiles.mock.calls[0][0].map((file) => file.name)).toEqual(["one.csv", "two.csv"]);
+});
+
+it("validates and previews files handed off by the Imports page without uploading", () => {
+  renderUpload({ initialFiles: files });
+  expect(screen.getByText("one.csv")).toBeTruthy();
+  expect(screen.getByText("two.csv")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Upload and start imports" }).disabled).toBe(false);
+  expect(uploadFiles).not.toHaveBeenCalled();
+});
+
+it("shows validation errors for invalid files handed off by the Imports page", () => {
+  renderUpload({ initialFiles: [new File(["bad"], "notes.txt")] });
+  expect(screen.getByRole("alert").textContent).toContain("notes.txt");
+  expect(screen.getByRole("button", { name: "Upload and start imports" }).disabled).toBe(true);
 });

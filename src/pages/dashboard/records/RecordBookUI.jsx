@@ -111,7 +111,7 @@ export function QueryState({
   if (query.error) return <ErrorNotice error={query.error} onRetry={() => query.refetch()} />;
   if (empty)
     return (
-      <div className="rounded-g-3 border border-surface-container-border bg-surface-container">
+      <div className="rounded-g-3 border border-surface-container-border bg-white">
         <EmptyState
           icon={emptyIcon}
           title={emptyTitle}

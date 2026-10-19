@@ -10,6 +10,7 @@ import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
 import RecordsHeader from "./records/RecordsHeader";
 import RecordFilters from "./records/RecordFilters";
 import RecordsTable from "./records/RecordsTable";
+import RecordDeleteSummary from "./records/RecordDeleteSummary";
 import RecordDetailPanel from "./records/RecordDetailPanel";
 import RecordFormModal from "./records/RecordFormModal";
 import { ErrorNotice, QueryState, Pager } from "./records/RecordBookUI";
@@ -71,7 +72,7 @@ function RecordsContent({ access }) {
         )}
         {access.import && (
           <Button
-            variant="outline"
+            variant={access.create ? "outline" : "primary"}
             size="sm-tight"
             fullWidth={false}
             onClick={() =>
@@ -141,6 +142,7 @@ function RecordsContent({ access }) {
       )}
       {deleting && (
         <ConfirmDialog
+          presentation="record"
           title="Delete record?"
           description="This removes the historical record. It does not reverse a payment or change any balance."
           confirmLabel="Delete record"
@@ -152,10 +154,13 @@ function RecordsContent({ access }) {
               remove.reset();
             }
           }}
-          onConfirm={() =>
-            remove.mutate({ recordId: deleting.id }, { onSuccess: () => setDeleting(null) })
-          }
-        />
+          onConfirm={() => {
+            if (!remove.isPending)
+              remove.mutate({ recordId: deleting.id }, { onSuccess: () => setDeleting(null) });
+          }}
+        >
+          <RecordDeleteSummary row={deleting} />
+        </ConfirmDialog>
       )}
     </div>
   );

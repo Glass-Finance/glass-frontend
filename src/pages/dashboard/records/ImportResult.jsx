@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Button } from "../../../components/ui/Button";
 export default function ImportResult({ job, identifier }) {
+  const navigate = useNavigate();
   return (
     <section
       className="rounded-g-2 md:rounded-g-3 border border-black/10 bg-white p-5 space-y-4"
@@ -14,12 +16,18 @@ export default function ImportResult({ job, identifier }) {
           : "Pending rows were removed. No records from this import were added to the record book."}
       </p>
       {job.status === "COMMITTED" && (
-        <Link
-          className="text-brand underline text-sm"
-          to={`/dashboard/records?community=${encodeURIComponent(identifier)}&importJobId=${job.id}`}
+        <Button
+          variant="primary"
+          size="sm-tight"
+          fullWidth={false}
+          onClick={() =>
+            navigate(
+              `/dashboard/records?community=${encodeURIComponent(identifier)}&importJobId=${job.id}`,
+            )
+          }
         >
           View saved records
-        </Link>
+        </Button>
       )}
     </section>
   );

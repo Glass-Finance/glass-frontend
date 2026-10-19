@@ -37,6 +37,7 @@ it("automatically shows review, freezes on 202, and shows results only after fin
     fileFormat: "CSV",
     reviewTotals: { VALID: 1 },
     timeline: [],
+    fileData: { url: "https://example.com/source.csv" },
   };
   getRecordImport.mockImplementation(async () => env(job));
   getImportRows.mockResolvedValue(
@@ -64,6 +65,15 @@ it("automatically shows review, freezes on 202, and shows results only after fin
   );
   await waitFor(() => expect(screen.getAllByText("Waiting to start").length).toBeGreaterThan(0));
   expect(screen.queryByText("Review your records")).toBeNull();
+  expect(screen.getByRole("button", { name: "Back to imports" })).toBeTruthy();
+  const openSource = vi.spyOn(window, "open").mockImplementation(() => null);
+  fireEvent.click(screen.getByRole("button", { name: "Download source" }));
+  expect(openSource).toHaveBeenCalledWith(
+    "https://example.com/source.csv",
+    "_blank",
+    "noopener,noreferrer",
+  );
+  openSource.mockRestore();
   job = { ...job, status: "READY_FOR_REVIEW" };
   await act(async () =>
     refreshRecordImportEvent(
@@ -87,4 +97,30 @@ it("automatically shows review, freezes on 202, and shows results only after fin
   );
   await screen.findByText("Your records have been saved");
   expect(client.getQueryData(recordKeys.job("c", "j")).status).toBe("COMMITTED");
+});
+
+it("groups import actions in the header and retains confirmation", async () => {
+  getRecordImport.mockResolvedValue(
+    env({ id: "j", status: "READY_FOR_REVIEW", reviewTotals: { VALID: 1 }, timeline: [] }),
+  );
+  getImportRows.mockResolvedValue(env({ content: [], totalPages: 1 }));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={["/dashboard/records/imports/j?community=crew"]}>
+        <Routes>
+          <Route path="/dashboard/records/imports/:jobId" element={<RecordImportDetail />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  const actions = await screen.findByRole("button", { name: "Import actions" });
+  expect(screen.queryByRole("menuitem", { name: "Discard import" })).toBeNull();
+  fireEvent.click(actions);
+  expect(screen.getByRole("menuitem", { name: "Start fresh import" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("menuitem", { name: "Discard import" }));
+  expect(screen.queryByRole("menu")).toBeNull();
+  expect(screen.getByRole("dialog", { name: "Discard import?" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

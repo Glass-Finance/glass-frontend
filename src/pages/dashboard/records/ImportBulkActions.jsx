@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { TextInput } from "../../../components/ui/TextInput";
 import ConfirmDialog from "../../../components/dashboard/ConfirmDialog";
-import ModalShell from "../../../components/dashboard/ModalShell";
+import DashboardDialog from "../../../components/dashboard/DashboardDialog";
 import { useCommunityMembers } from "../../../hooks/useCommunityMembers";
 import {
   RECORD_FIELDS,
@@ -86,7 +86,7 @@ export default function ImportBulkActions({
         <Button
           size="sm-tight"
           fullWidth={false}
-          variant="outline"
+          variant="primary"
           disabled={frozen || !selected.length}
           onClick={() => {
             setEditing(true);
@@ -107,6 +107,7 @@ export default function ImportBulkActions({
       </div>
       {patch && (
         <ConfirmDialog
+          presentation="record"
           title="Apply bulk changes?"
           danger={false}
           description={`Apply these changes only to ${selected.length} selected records. Acceptance confirms you have reviewed their current values. Other validation issues may still need correction.`}
@@ -209,7 +210,7 @@ function BulkEditor({ communityId, onClose, onContinue, frozen }) {
             )
           : null;
   return (
-    <ModalShell
+    <DashboardDialog
       title="Edit selected records"
       onClose={onClose}
       footer={
@@ -222,7 +223,7 @@ function BulkEditor({ communityId, onClose, onContinue, frozen }) {
         </Button>
       }
     >
-      <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
+      <div className="space-y-4">
         {frozen && (
           <ErrorNotice message="Review is paused because the import changed state. Your staged field changes are retained until you close this editor." />
         )}
@@ -301,6 +302,6 @@ function BulkEditor({ communityId, onClose, onContinue, frozen }) {
           </div>
         ))}
       </div>
-    </ModalShell>
+    </DashboardDialog>
   );
 }

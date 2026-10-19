@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import ModalShell from "../../../components/dashboard/ModalShell";
+import { Link, useNavigate } from "react-router-dom";
+import DashboardDialog from "../../../components/dashboard/DashboardDialog";
 import { Button } from "../../../components/ui/Button";
 import { useCommunityRecord } from "../../../hooks/useCommunityRecords";
 import {
@@ -21,65 +21,65 @@ export default function RecordDetailPanel({
   onDelete,
   onClose,
 }) {
+  const navigate = useNavigate();
   const query = useCommunityRecord(communityId, recordId);
   const row = query.data;
   return (
-    <ModalShell title="Record details" onClose={onClose}>
-      <div className="p-5 max-h-[70vh] overflow-y-auto">
+    <DashboardDialog
+      title="Record details"
+      size="detail"
+      onClose={onClose}
+      footer={
+        row && !query.error ? (
+          row.source === "PLATFORM" ? (
+            <div className="flex justify-end">
+              {row.transactionId && (
+                <Button
+                  variant="primary"
+                  size="sm-tight"
+                  fullWidth={false}
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/transactions/${encodeURIComponent(row.transactionId)}?community=${encodeURIComponent(identifier)}`,
+                    )
+                  }
+                >
+                  View original transaction
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-end gap-3">
+              {canDelete && (
+                <Button
+                  size="sm-tight"
+                  fullWidth={false}
+                  variant="outline-caution"
+                  onClick={() => onDelete(row)}
+                >
+                  Delete record
+                </Button>
+              )}
+              {canEdit && (
+                <Button size="sm-tight" fullWidth={false} onClick={() => onEdit(row)}>
+                  Edit record
+                </Button>
+              )}
+            </div>
+          )
+        ) : undefined
+      }
+    >
+      <div className="space-y-4">
         <QueryState query={query}>
           {row && (
             <div className="space-y-5">
               <p className="text-xl font-semibold">
                 {formatRecordAmount(row.amount, row.currency)}
               </p>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                {[
-                  ["Date", formatRecordDate(row.occurredOn)],
-                  ["Source", RECORD_SOURCES[row.source]],
-                  ["Type", RECORD_TYPES[row.recordType]],
-                  ["Direction", DIRECTIONS[row.direction]],
-                  ["Payer", row.payerName],
-                  ["Payer reference", row.payerReference],
-                  ["Description", row.description],
-                  ["Category", row.categoryLabel],
-                  ["External reference", row.externalReference],
-                ].map(([label, value]) => (
-                  <div key={label} className="min-w-0">
-                    <dt className="text-ink-muted">{label}</dt>
-                    <dd className="break-words mt-1">{value || "Not provided"}</dd>
-                  </div>
-                ))}
-              </dl>
-              {row.source === "PLATFORM" ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-ink-muted">Glass transaction records are read-only.</p>
-                  {row.transactionId && (
-                    <Link
-                      className="text-brand text-sm underline"
-                      to={`/dashboard/transactions/${encodeURIComponent(row.transactionId)}?community=${encodeURIComponent(identifier)}`}
-                    >
-                      View original transaction
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <div className="flex gap-3">
-                  {canEdit && (
-                    <Button size="sm-tight" fullWidth={false} onClick={() => onEdit(row)}>
-                      Edit record
-                    </Button>
-                  )}
-                  {canDelete && (
-                    <Button
-                      size="sm-tight"
-                      fullWidth={false}
-                      variant="outline-caution"
-                      onClick={() => onDelete(row)}
-                    >
-                      Delete record
-                    </Button>
-                  )}
-                </div>
+              <RecordFacts row={row} />
+              {row.source === "PLATFORM" && (
+                <p className="text-sm text-ink-muted">Glass transaction records are read-only.</p>
               )}
               {row.importJobId && (
                 <Link
@@ -94,7 +94,7 @@ export default function RecordDetailPanel({
           )}
         </QueryState>
       </div>
-    </ModalShell>
+    </DashboardDialog>
   );
 }
 
@@ -102,7 +102,7 @@ export function SourceEvidence({ cells = [] }) {
   if (!cells?.length) return null;
   return (
     <details className="rounded-g-1 border border-black/10 p-3">
-      <summary className="cursor-pointer text-sm font-medium">
+      <summary className="cursor-pointer min-h-11 content-center text-sm font-medium">
         Original spreadsheet evidence ({cells.length})
       </summary>
       <div className="space-y-3 mt-3">
@@ -125,5 +125,28 @@ export function SourceEvidence({ cells = [] }) {
         ))}
       </div>
     </details>
+  );
+}
+
+export function RecordFacts({ row }) {
+  return (
+    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+      {[
+        ["Date", formatRecordDate(row.occurredOn)],
+        ["Source", RECORD_SOURCES[row.source]],
+        ["Type", RECORD_TYPES[row.recordType]],
+        ["Direction", DIRECTIONS[row.direction]],
+        ["Payer", row.payerName],
+        ["Payer reference", row.payerReference],
+        ["Description", row.description],
+        ["Category", row.categoryLabel],
+        ["External reference", row.externalReference],
+      ].map(([label, value]) => (
+        <div key={label} className={`min-w-0 ${label === "Description" ? "sm:col-span-2" : ""}`}>
+          <dt className="text-ink-muted">{label}</dt>
+          <dd className="break-words mt-1">{value || "Not provided"}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

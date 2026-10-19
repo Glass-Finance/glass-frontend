@@ -3,19 +3,30 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import { Button } from "../../../components/ui/Button";
+import { useFileDrop } from "../../../hooks/useFileDrop";
+import { validateRecordImportFiles } from "../../../utils/recordImportFiles";
 import { useImportUpload } from "../../../hooks/useRecordImports";
 import { errorDescription } from "../../../utils/recordBook";
 import { ErrorNotice } from "./RecordBookUI";
 
-export default function ImportUploadModal({ communityId, identifier, onClose }) {
+export default function ImportUploadModal({ communityId, identifier, onClose, initialFiles = [] }) {
   const navigate = useNavigate();
   const { upload, submit, reconcile } = useImportUpload(communityId);
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() =>
+    validateRecordImportFiles(initialFiles) ? [] : initialFiles,
+  );
   const [items, setItems] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => validateRecordImportFiles(initialFiles));
   const [busy, setBusy] = useState(false);
   const locked = useRef(false);
   const inputRef = useRef(null);
+  const { dragging, dropHandlers, resetDrag } = useFileDrop(chooseFiles, busy || items.length > 0);
+  function chooseFiles(chosen) {
+    if (locked.current || busy || items.length || !chosen.length) return;
+    const validation = validateRecordImportFiles(chosen);
+    setError(validation);
+    setFiles(validation ? [] : chosen);
+  }
   const destination = (jobId) =>
     `/dashboard/records/imports${jobId ? `/${jobId}` : ""}?community=${encodeURIComponent(identifier)}`;
   const update = (index, patch) =>
@@ -43,6 +54,7 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
   async function start() {
     if (locked.current || !files.length || items.length) return;
     locked.current = true;
+    resetDrag();
     setBusy(true);
     setError("");
     setItems(files.map((file) => ({ name: file.name, state: "Uploading" })));
@@ -163,21 +175,33 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
         <ErrorNotice message={error} />
         {!items.length && (
           <div className="space-y-3">
-            <div className="rounded-g-2 border border-dashed border-surface-container-border bg-stacked-container/30 px-4 py-6 text-center">
-              <Upload size={24} className="mx-auto text-brand mb-3" />
-              <p className="text-sm font-medium">Choose your spreadsheets</p>
+            <div
+              role="group"
+              aria-label="Spreadsheet drop zone"
+              {...dropHandlers}
+              className={`rounded-g-2 border border-dashed bg-white px-4 py-6 text-center transition-colors ${dragging ? "border-brand" : "border-surface-container-border"}`}
+            >
+              <Upload aria-hidden="true" size={24} className="mx-auto text-brand mb-3" />
+              <p className="text-sm font-medium" role="status">
+                {dragging ? "Drop your spreadsheets here" : "Drag and drop spreadsheets here"}
+              </p>
               <p className="text-xs text-ink-ghost mt-1 mb-4">
                 CSV, TSV, XLSX, or XLS · Up to 25 MiB each
               </p>
               <Button
                 size="sm-tight"
                 fullWidth={false}
-                variant="outline-neutral"
+                variant={files.length ? "outline-neutral" : "primary"}
                 disabled={busy}
                 onClick={() => inputRef.current?.click()}
               >
                 Choose files
               </Button>
+              {files.length > 0 && (
+                <p className="text-xs text-ink-muted mt-3">
+                  New selections replace the files below.
+                </p>
+              )}
               <input
                 ref={inputRef}
                 aria-label="Spreadsheets"
@@ -186,20 +210,18 @@ export default function ImportUploadModal({ communityId, identifier, onClose }) 
                 accept=".csv,.tsv,.xlsx,.xls"
                 disabled={busy}
                 className="sr-only"
-                onChange={(e) => {
-                  const chosen = Array.from(e.target.files ?? []);
-                  const invalid = chosen.find(
-                    (f) => !/\.(csv|tsv|xlsx|xls)$/i.test(f.name) || f.size > 25 * 1024 * 1024,
-                  );
-                  setError(
-                    invalid
-                      ? `${invalid.name}: choose a supported spreadsheet no larger than 25 MiB.`
-                      : "",
-                  );
-                  setFiles(invalid ? [] : chosen);
+                onChange={(event) => {
+                  chooseFiles(Array.from(event.target.files ?? []));
+                  event.target.value = "";
                 }}
               />
             </div>
+            {files.length > 0 && (
+              <p className="text-xs text-ink-muted" role="status">
+                {files.length} {files.length === 1 ? "spreadsheet" : "spreadsheets"} selected.
+                Upload when you're ready.
+              </p>
+            )}
             {files.map((file, i) => (
               <div
                 key={i}

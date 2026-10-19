@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import ModalShell from "../../../components/dashboard/ModalShell";
+import { useEffect, useRef, useState } from "react";
+import DashboardDialog from "../../../components/dashboard/DashboardDialog";
 import { Button } from "../../../components/ui/Button";
 import { makeRecordPatch, validateRecord } from "../../../utils/recordBook";
 import RecordFields from "./RecordFields";
@@ -15,6 +15,9 @@ export default function RecordFormModal({
   onSave,
   onClose,
 }) {
+  const formRef = useRef(null);
+  const keepEditingRef = useRef(null);
+  const wasConfirmingClose = useRef(false);
   const [original] = useState(record);
   const [values, setValues] = useState(() =>
     record
@@ -33,6 +36,11 @@ export default function RecordFormModal({
   const [duplicate, setDuplicate] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  useEffect(() => {
+    if (confirmClose) keepEditingRef.current?.focus();
+    else if (wasConfirmingClose.current) formRef.current?.querySelector("input, select")?.focus();
+    wasConfirmingClose.current = confirmClose;
+  }, [confirmClose]);
   const changedOnServer = !!original?.updatedAt && record?.updatedAt !== original.updatedAt;
   useEffect(() => {
     if (!dirty) return;
@@ -50,8 +58,13 @@ export default function RecordFormModal({
   }
   async function save(e) {
     e.preventDefault();
+    if (confirmClose) return;
     const validation = validateRecord(values, draft);
     setErrors(validation);
+    if (Object.keys(validation).length) {
+      const first = Object.keys(validation)[0];
+      requestAnimationFrame(() => formRef.current?.querySelector(`[name="${first}"]`)?.focus());
+    }
     if (Object.keys(validation).length || readOnly || changedOnServer || busy) return;
     setBusy(true);
     setError(null);
@@ -68,38 +81,61 @@ export default function RecordFormModal({
   }
   const label = original ? "Save changes" : "Add record";
   return (
-    <ModalShell
+    <DashboardDialog
+      size="wide"
       title={original ? "Edit record" : "Add record"}
       onClose={close}
+      closeDisabled={busy}
+      subtitle={
+        draft
+          ? "Pending import record · not saved to the record book yet"
+          : "Historical record · no money is moved"
+      }
       footer={
-        <div className="flex justify-end gap-3">
-          <Button
-            variant="outline-neutral"
-            size="sm-tight"
-            fullWidth={false}
-            onClick={close}
-            disabled={busy}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="record-book-form"
-            size="sm-tight"
-            fullWidth={false}
-            loading={busy}
-            disabled={readOnly || changedOnServer}
-          >
-            {label}
-          </Button>
-        </div>
+        confirmClose ? (
+          <div className="space-y-3" role="alert">
+            <p className="text-sm font-medium">Discard your unsaved changes?</p>
+            <div className="flex flex-wrap justify-end gap-3">
+              <Button
+                size="sm-tight"
+                fullWidth={false}
+                variant="outline-neutral"
+                ref={keepEditingRef}
+                onClick={() => setConfirmClose(false)}
+              >
+                Keep editing
+              </Button>
+              <Button size="sm-tight" fullWidth={false} variant="critical" onClick={onClose}>
+                Discard changes
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              variant="outline-neutral"
+              size="sm-tight"
+              fullWidth={false}
+              onClick={close}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="record-book-form"
+              size="sm-tight"
+              fullWidth={false}
+              loading={busy}
+              disabled={readOnly || changedOnServer}
+            >
+              {label}
+            </Button>
+          </div>
+        )
       }
     >
-      <form
-        id="record-book-form"
-        onSubmit={save}
-        className="p-5 max-h-[65vh] overflow-y-auto space-y-4"
-      >
+      <form ref={formRef} id="record-book-form" onSubmit={save} className="space-y-4">
         <p className="text-sm text-ink-muted">
           This records historical activity. It does not move money.
         </p>
@@ -133,7 +169,7 @@ export default function RecordFormModal({
               setDuplicate(e.target.checked);
               setDirty(true);
             }}
-            disabled={busy || readOnly}
+            disabled={busy || readOnly || changedOnServer}
             className="mt-1 accent-brand"
           />
           <span>
@@ -141,25 +177,7 @@ export default function RecordFormModal({
             another.
           </span>
         </label>
-        {confirmClose && (
-          <div className="rounded-g-1 border border-black/10 p-3 space-y-3">
-            <p className="text-sm">Discard your unsaved changes?</p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                fullWidth={false}
-                variant="outline-neutral"
-                onClick={() => setConfirmClose(false)}
-              >
-                Keep editing
-              </Button>
-              <Button size="sm" fullWidth={false} variant="outline-caution" onClick={onClose}>
-                Discard changes
-              </Button>
-            </div>
-          </div>
-        )}
       </form>
-    </ModalShell>
+    </DashboardDialog>
   );
 }

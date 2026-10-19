@@ -13,6 +13,7 @@ import {
 import RecordsTable from "./RecordsTable";
 import RecordFilters from "./RecordFilters";
 import RecordFormModal from "./RecordFormModal";
+import RecordDeleteSummary from "./RecordDeleteSummary";
 import ImportRowPanel from "./ImportRowPanel";
 import ImportBulkActions from "./ImportBulkActions";
 import { Pager, QueryState, Select } from "./RecordBookUI";
@@ -141,7 +142,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
         </QueryState>
         <Pager data={query.data} page={page} onChange={setPage} disabled={query.isFetching} />
       </div>
-      {opened && !editing && (
+      {opened && !editing && !deleting && (
         <ImportRowPanel
           row={row}
           communityId={communityId}
@@ -153,7 +154,10 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
             update.reset?.();
           }}
           onEdit={() => setEditing(row)}
-          onDelete={() => setDeleting(true)}
+          onDelete={() => {
+            remove.reset?.();
+            setDeleting(true);
+          }}
           onPatch={(payload) =>
             update
               .mutateAsync({ rowId: row.id, payload })
@@ -191,6 +195,7 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
       )}
       {deleting && (
         <ConfirmDialog
+          presentation="record"
           title="Delete manual addition?"
           description="This removes this pending manual row. Generated spreadsheet rows can only be skipped."
           confirmLabel="Delete manual addition"
@@ -198,10 +203,19 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
           confirmDisabled={frozen || !!openedRowMissing || !!query.error}
           error={remove.error ? errorDescription(remove.error) : ""}
           onClose={() => {
-            if (!remove.isPending) setDeleting(false);
+            if (!remove.isPending) {
+              setDeleting(false);
+              remove.reset?.();
+            }
           }}
           onConfirm={() => {
-            if (!frozen && !openedRowMissing && !query.error)
+            if (
+              !remove.isPending &&
+              row.source === "MANUAL" &&
+              !frozen &&
+              !openedRowMissing &&
+              !query.error
+            )
               remove
                 .mutateAsync({ rowId: row.id })
                 .then(() => {
@@ -211,7 +225,9 @@ export default function ImportReview({ communityId, job, defaultCurrency, frozen
                 })
                 .catch(() => {});
           }}
-        />
+        >
+          <RecordDeleteSummary row={row} />
+        </ConfirmDialog>
       )}
     </section>
   );

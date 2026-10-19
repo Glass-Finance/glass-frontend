@@ -16,9 +16,24 @@ export default function RecordsTable({
   onSelectPage,
   frozen = false,
 }) {
+  function openRow(event, row) {
+    if (event.target.closest("button, input, label, a")) return;
+    onOpen(row);
+  }
+  function openRowWithKeyboard(event, row) {
+    if (event.target !== event.currentTarget || !["Enter", " "].includes(event.key)) return;
+    event.preventDefault();
+    onOpen(row);
+  }
+  const rowActions = (row) => ({
+    tabIndex: 0,
+    "aria-label": `Open record for ${row.payerName || row.payerReference || row.id}`,
+    onClick: (event) => openRow(event, row),
+    onKeyDown: (event) => openRowWithKeyboard(event, row),
+  });
   return (
     <>
-      <div className="hidden xl:block rounded-g-3 border border-surface-container-border bg-surface-container overflow-hidden">
+      <div className="hidden xl:block rounded-g-3 border border-surface-container-border bg-white overflow-hidden">
         <table className="w-full text-left text-xs">
           <thead className="text-ink-ghost bg-stacked-container/60 border-b border-surface-container-border">
             <tr>
@@ -48,7 +63,8 @@ export default function RecordsTable({
             {rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b last:border-b-0 border-surface-container-border hover:bg-stacked-container/30"
+                {...rowActions(row)}
+                className={`cursor-pointer border-b last:border-b-0 border-surface-container-border ${review && selected.includes(row.id) ? "bg-brand/5 hover:bg-brand/10" : "hover:bg-stacked-container/30"}`}
               >
                 {review && (
                   <td className="px-4 py-3">
@@ -106,7 +122,7 @@ export default function RecordsTable({
           </tbody>
         </table>
       </div>
-      <div className="xl:hidden divide-y divide-surface-container-border rounded-g-3 border border-surface-container-border bg-surface-container px-4">
+      <div className="xl:hidden divide-y divide-surface-container-border rounded-g-3 border border-surface-container-border bg-white px-4">
         {review && (
           <label className="flex items-center gap-3 py-3 text-sm">
             <input
@@ -121,7 +137,11 @@ export default function RecordsTable({
           </label>
         )}
         {rows.map((row) => (
-          <div key={row.id} className="py-4 space-y-2">
+          <div
+            key={row.id}
+            {...rowActions(row)}
+            className={`cursor-pointer py-4 space-y-2 ${review && selected.includes(row.id) ? "bg-brand/5" : ""}`}
+          >
             {review && (
               <label className="flex min-h-11 items-center gap-3 text-sm">
                 <input

@@ -101,7 +101,7 @@ export function formatRecordAmount(amount, currency = "NGN") {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
-      currencyDisplay: "code",
+      currencyDisplay: "narrowSymbol",
     }).format(Number(amount));
   } catch {
     return `${currency} ${amount}`;

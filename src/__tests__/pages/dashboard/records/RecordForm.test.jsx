@@ -62,3 +62,21 @@ describe("record form", () => {
     expect(screen.getByLabelText("Amount").value).toBe("1250.50");
   });
 });
+
+it("provides a labelled dialog and puts discard confirmation in the fixed footer", () => {
+  const close = vi.fn();
+  render(<RecordFormModal communityId="c" onSave={vi.fn()} onClose={close} />);
+  const dialog = screen.getByRole("dialog", { name: "Add record" });
+  expect(document.activeElement).toBe(dialog);
+  fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "25" } });
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).not.toHaveBeenCalled();
+  const discard = screen.getByRole("button", { name: "Discard changes" });
+  expect(dialog.querySelector("form").contains(discard)).toBe(false);
+  expect(screen.queryByRole("button", { name: "Add record" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Keep editing" }));
+  expect(screen.getByLabelText("Amount").value).toBe("25");
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  fireEvent.click(screen.getByRole("button", { name: "Discard changes" }));
+  expect(close).toHaveBeenCalledTimes(1);
+});

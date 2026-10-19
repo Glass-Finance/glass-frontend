@@ -29,6 +29,7 @@ export default function RecordFields({
     <Field label={label} error={errors[field]}>
       <TextInput
         aria-label={label}
+        name={field}
         value={values[field] ?? ""}
         onChange={(e) =>
           onChange({
@@ -45,6 +46,7 @@ export default function RecordFields({
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select
+          name="recordType"
           label="Record type"
           value={values.recordType}
           options={RECORD_TYPES}
@@ -53,6 +55,7 @@ export default function RecordFields({
           disabled={disabled}
         />
         <Select
+          name="direction"
           label="Direction"
           value={values.direction}
           options={DIRECTIONS}

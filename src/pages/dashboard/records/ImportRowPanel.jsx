@@ -1,15 +1,13 @@
-import ModalShell from "../../../components/dashboard/ModalShell";
+import DashboardDialog from "../../../components/dashboard/DashboardDialog";
 import { Button } from "../../../components/ui/Button";
 import { useCommunityRecord } from "../../../hooks/useCommunityRecords";
 import {
-  RECORD_TYPES,
-  DIRECTIONS,
   REVIEW_LABELS,
   ISSUE_LABELS,
   formatRecordAmount,
   formatRecordDate,
 } from "../../../utils/recordBook";
-import { SourceEvidence } from "./RecordDetailPanel";
+import { RecordFacts, SourceEvidence } from "./RecordDetailPanel";
 import { ErrorNotice } from "./RecordBookUI";
 function Candidate({ communityId, recordId }) {
   const query = useCommunityRecord(communityId, recordId);
@@ -38,21 +36,46 @@ export default function ImportRowPanel({
     row.issues?.filter((issue) => ["EXACT_DUPLICATE", "POSSIBLE_DUPLICATE"].includes(issue.code)) ??
     [];
   return (
-    <ModalShell title="Review record" onClose={onClose}>
-      <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
+    <DashboardDialog
+      title="Review record"
+      size="detail"
+      onClose={onClose}
+      subtitle="Pending import record · not saved to the record book yet"
+      closeDisabled={busy}
+      footer={
+        <div className="flex flex-wrap justify-end gap-3">
+          {row.source === "MANUAL" && (
+            <Button
+              size="sm-tight"
+              fullWidth={false}
+              variant="outline-caution"
+              disabled={frozen || busy}
+              onClick={onDelete}
+            >
+              Delete manual addition
+            </Button>
+          )}
+          <Button
+            size="sm-tight"
+            fullWidth={false}
+            variant="outline-neutral"
+            disabled={frozen || busy}
+            onClick={() => onPatch({ skip: row.reviewStatus !== "SKIPPED" })}
+          >
+            {row.reviewStatus === "SKIPPED" ? "Include record" : "Skip record"}
+          </Button>
+          <Button size="sm-tight" fullWidth={false} disabled={frozen || busy} onClick={onEdit}>
+            Edit record
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-4">
         <p className="text-sm text-ink-muted">
           {REVIEW_LABELS[row.reviewStatus] ?? "Check record"}
         </p>
         <p className="text-xl font-semibold">{formatRecordAmount(row.amount, row.currency)}</p>
-        <p className="text-sm">
-          {row.payerName || row.payerReference || "Unlinked payer"} ·{" "}
-          {formatRecordDate(row.occurredOn)}
-        </p>
-        <p className="text-sm text-ink-muted">
-          {RECORD_TYPES[row.recordType] || "Type missing"} ·{" "}
-          {DIRECTIONS[row.direction] || "Direction missing"}
-        </p>
-        {row.description && <p className="text-sm break-words">{row.description}</p>}
+        <RecordFacts row={row} />
         <ErrorNotice error={error} />
         {frozen && (
           <p className="text-sm text-ink-muted">
@@ -78,37 +101,8 @@ export default function ImportRowPanel({
             </div>
           ))}
         </div>
-        <SourceEvidence cells={row.mappedSourceCells} />
-        {duplicates.map((issue, i) => (
-          <details key={i} className="border border-black/10 rounded-g-1 p-3">
-            <summary className="text-sm cursor-pointer">
-              Possible duplicates ({issue.candidateCount ?? issue.candidateRecordIds?.length ?? 0})
-            </summary>
-            <div className="mt-3 space-y-3">
-              {issue.candidateRecordIds?.map((id) => (
-                <Candidate key={id} communityId={communityId} recordId={id} />
-              ))}
-              {issue.candidateCount > (issue.candidateRecordIds?.length ?? 0) && (
-                <p className="text-sm text-ink-muted">
-                  Only some candidates are shown. Review the record book for further matches.
-                </p>
-              )}
-            </div>
-          </details>
-        ))}
         <div className="flex flex-wrap gap-3">
-          <Button size="sm-tight" fullWidth={false} disabled={frozen || busy} onClick={onEdit}>
-            Edit record
-          </Button>
-          <Button
-            size="sm-tight"
-            fullWidth={false}
-            variant="outline-neutral"
-            disabled={frozen || busy}
-            onClick={() => onPatch({ skip: row.reviewStatus !== "SKIPPED" })}
-          >
-            {row.reviewStatus === "SKIPPED" ? "Include record" : "Skip record"}
-          </Button>
+          {" "}
           {row.rowAssistanceAcceptanceRequired && (
             <Button
               size="sm-tight"
@@ -142,19 +136,26 @@ export default function ImportRowPanel({
               Clear duplicate acceptance
             </Button>
           )}
-          {row.source === "MANUAL" && (
-            <Button
-              size="sm-tight"
-              fullWidth={false}
-              variant="outline-caution"
-              disabled={frozen || busy}
-              onClick={onDelete}
-            >
-              Delete manual addition
-            </Button>
-          )}
         </div>
+        <SourceEvidence cells={row.mappedSourceCells} />
+        {duplicates.map((issue, i) => (
+          <details key={i} className="border border-black/10 rounded-g-1 p-3">
+            <summary className="text-sm cursor-pointer">
+              Possible duplicates ({issue.candidateCount ?? issue.candidateRecordIds?.length ?? 0})
+            </summary>
+            <div className="mt-3 space-y-3">
+              {issue.candidateRecordIds?.map((id) => (
+                <Candidate key={id} communityId={communityId} recordId={id} />
+              ))}
+              {issue.candidateCount > (issue.candidateRecordIds?.length ?? 0) && (
+                <p className="text-sm text-ink-muted">
+                  Only some candidates are shown. Review the record book for further matches.
+                </p>
+              )}
+            </div>
+          </details>
+        ))}
       </div>
-    </ModalShell>
+    </DashboardDialog>
   );
 }
