@@ -9,6 +9,7 @@ import {
   formatDateLong,
   formatRelativeDateTime,
   dayLabel,
+  formatDateTime,
 } from "../../utils/format";
 
 describe("formatNaira", () => {
@@ -212,5 +213,43 @@ describe("dayLabel", () => {
   it("returns 'Earlier' for a missing date", () => {
     expect(dayLabel(null)).toBe("Earlier");
     expect(dayLabel(undefined)).toBe("Earlier");
+  });
+});
+
+// The AI-usage screens render allowance timestamps in the reader's own
+// timezone, so the same instant reads differently for two people. These cases
+// were moved here from a feature-named module when the formatter moved into
+// this one.
+describe("formatDateTime", () => {
+  it.each([
+    ["2026-07-01T00:00:00Z", "America/New_York", "Jun 30, 2026", "8:00 PM"],
+    ["2026-01-01T00:00:00Z", "America/New_York", "Dec 31, 2025", "7:00 PM"],
+    ["2026-01-01T00:00:00Z", "Asia/Kolkata", "Jan 1, 2026", "5:30 AM"],
+  ])("formats %s in the profile timezone %s", (instant, timezone, day, time) => {
+    const formatted = formatDateTime(instant, timezone);
+    expect(formatted).toContain(day);
+    expect(formatted).toContain(time);
+  });
+
+  it.each([undefined, null, "", "not/a-timezone", 42])(
+    "uses the browser timezone for invalid or missing profile timezone %s",
+    (timezone) => {
+      const instant = "2026-01-01T00:00:00Z";
+      expect(formatDateTime(instant, timezone)).toBe(formatDateTime(instant));
+    },
+  );
+
+  it.each([null, undefined, "not-a-date"])(
+    "keeps unavailable timestamps explicit: %s",
+    (instant) => {
+      expect(formatDateTime(instant, "America/New_York")).toBe("Unavailable");
+    },
+  );
+
+  it("renders the same instant differently in two timezones", () => {
+    const instant = "2026-11-01T00:00:00Z";
+    expect(formatDateTime(instant, "America/New_York")).not.toBe(
+      formatDateTime(instant, "Asia/Tokyo"),
+    );
   });
 });

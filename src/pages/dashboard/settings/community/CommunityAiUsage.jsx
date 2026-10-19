@@ -5,7 +5,7 @@ import { useRecordBookAccess } from "../../../../hooks/useRecordBookAccess";
 import { useCommunityAiUsageList } from "../../../../hooks/useCommunityAiUsage";
 import { useMe } from "../../../../hooks/useMyAccount";
 import AiFeatureUsage from "./AiFeatureUsage";
-import { usageDate } from "../../../../utils/communityAiUsage";
+import { formatDateTime } from "../../../../utils/format";
 
 function Notice({ children }) {
   return (
@@ -37,7 +37,7 @@ function UsageContent({ access }) {
           </p>
           {query.dataUpdatedAt > 0 && (
             <p className="mt-1 text-xs text-ink-ghost">
-              Last updated {usageDate(query.dataUpdatedAt, me?.timezone)}
+              Last updated {formatDateTime(query.dataUpdatedAt, me?.timezone)}
             </p>
           )}
         </div>

@@ -2,14 +2,14 @@ import { useCommunityAiUsage } from "../../../hooks/useCommunityAiUsage";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/Button";
 import { useMe } from "../../../hooks/useMyAccount";
-import { usageDate } from "../../../utils/communityAiUsage";
+import { formatDateTime } from "../../../utils/format";
 export default function AiUsageNotice({ communityId, allowed }) {
   const navigate = useNavigate();
   const query = useCommunityAiUsage(communityId, allowed);
   const { data: me } = useMe();
   if (!allowed) return null;
   const usage = query.data;
-  const reset = usage?.resetsAt ? usageDate(usage.resetsAt, me?.timezone) : null;
+  const reset = usage?.resetsAt ? formatDateTime(usage.resetsAt, me?.timezone) : null;
   return (
     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
       <p className="text-xs text-ink-ghost">

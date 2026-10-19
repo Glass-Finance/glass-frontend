@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { usageDate } from "../../../../utils/communityAiUsage";
+import { formatDateTime } from "../../../../utils/format";
 
 const count = (value) => Number.isSafeInteger(value) && value >= 0;
 const signedCount = (value) => Number.isSafeInteger(value);
@@ -144,8 +144,10 @@ export default function AiFeatureUsage({ usage, timezone }) {
                 ? { DAILY: "Daily", WEEKLY: "Weekly", MONTHLY: "Monthly" }[usage.periodType]
                 : "Unavailable"}
             </Fact>
-            <Fact label="Current period started">{usageDate(usage.periodStartsAt, timezone)}</Fact>
-            <Fact label="Next reset">{usageDate(usage.resetsAt, timezone)}</Fact>
+            <Fact label="Current period started">
+              {formatDateTime(usage.periodStartsAt, timezone)}
+            </Fact>
+            <Fact label="Next reset">{formatDateTime(usage.resetsAt, timezone)}</Fact>
           </dl>
         </div>
       </div>

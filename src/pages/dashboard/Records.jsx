@@ -13,6 +13,7 @@ import RecordsTable from "./records/RecordsTable";
 import RecordDeleteSummary from "./records/RecordDeleteSummary";
 import RecordDetailPanel from "./records/RecordDetailPanel";
 import RecordFormModal from "./records/RecordFormModal";
+import AiUsageNotice from "./records/AiUsageNotice";
 import { ErrorNotice, QueryState, Pager } from "./records/RecordBookUI";
 
 export default function Records() {
@@ -86,6 +87,10 @@ function RecordsContent({ access }) {
           </Button>
         )}
       </RecordsHeader>
+      {/* The community's import allowance, so an admin can see what is left
+          before starting a spreadsheet import. The Imports screen carries the
+          same notice; this one puts it next to the Import button. */}
+      <AiUsageNotice communityId={access.id} allowed={access.usage} />
       {searchParams.get("importJobId") && (
         <p className="text-sm text-ink-muted">Showing records saved from this import.</p>
       )}
