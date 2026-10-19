@@ -78,7 +78,7 @@ export default function OrganizationProfile() {
   const existingCommunityId = location.state?.communityId ?? savedProgress.communityId ?? null;
   const existingCommunitySlug =
     location.state?.communitySlug ?? savedProgress.communitySlug ?? null;
-  const { updateUser, isAuthenticated } = useAuth();
+  const { refreshUser, isAuthenticated } = useAuth();
 
   // Covers users who already have an account (and so already have a
   // session) but end up here by accident — e.g. hitting back/forward or a
@@ -204,12 +204,51 @@ export default function OrganizationProfile() {
       const community = res.data?.data;
       if (!community?.id) throw new Error("Community creation failed.");
 
+      // From here on, this community exists on the backend whether or not
+      // the rest of onboarding completes -- persist the link to it so a
+      // dropped session on the next two steps can resume instead of
+      // stranding a half-configured community with no way back to it.
+      //
+      // Persisted BEFORE the refresh below, deliberately: a failed refresh
+      // surfaces an error, and if this had not run yet the retry would find no
+      // existingCommunityId and create a SECOND community rather than updating
+      // this one. Recording the id first is what makes the retry an update.
+      saveOnboardingProgress({
+        email,
+        isPaying,
+        communityId: community.id,
+        communitySlug: community.slug,
+        communityName: community.name,
+      });
+
       // AuthContext's isAdmin reflects the communities list as of the last
       // login/refresh, which didn't include this community yet since it
-      // didn't exist. Without this, ProtectedRoute's admin check bounces
-      // straight to the member app, which then hits the device guard on
-      // desktop and dead-ends at the QR handoff instead of the dashboard.
-      updateUser({ isAdmin: true });
+      // didn't exist. Without a refresh here, ProtectedRoute's admin check
+      // bounces straight to the member app, which then hits the device guard
+      // on desktop and dead-ends at the QR handoff instead of the dashboard.
+      //
+      // Re-derived from the server rather than asserted locally. This used to
+      // be updateUser({ isAdmin: true }), which wrote a privilege flag into
+      // localStorage from the client — a value ProtectedRoute then read back as
+      // though the backend had said so. The backend genuinely did just make
+      // this user an admin, so the outcome is the same either way; the
+      // difference is that refreshUser() asks, and cannot be wrong about it.
+      // It also sets the standing correctly if community creation ever
+      // succeeds without conferring admin (a role pending approval, say),
+      // which the hardcoded true would have papered over.
+      //
+      // refreshUser() reports `false` rather than throwing when the profile
+      // pair can't be fetched, and isAdmin then keeps its stale pre-creation
+      // value — which lands the user right back in the bounce this call exists
+      // to prevent, just by a different route. So a failed refresh is raised
+      // as an error rather than silently continuing into it; the user retries,
+      // and because the community id is already persisted this second pass
+      // updates rather than duplicates.
+      if (!(await refreshUser())) {
+        throw new Error(
+          "Your community was created, but we couldn't confirm your admin access. Please try again.",
+        );
+      }
 
       // Both the dashboard's community list (["communities", "me", ...] in
       // useCommunities.js) and the member app's (["communities"] in
@@ -218,18 +257,6 @@ export default function OrganizationProfile() {
       // shows the pre-creation snapshot instead of refetching. Invalidating
       // the shared "communities" prefix covers both keys at once.
       queryClient.invalidateQueries({ queryKey: ["communities"] });
-
-      // From here on, this community exists on the backend whether or not
-      // the rest of onboarding completes -- persist the link to it so a
-      // dropped session on the next two steps can resume instead of
-      // stranding a half-configured community with no way back to it.
-      saveOnboardingProgress({
-        email,
-        isPaying,
-        communityId: community.id,
-        communitySlug: community.slug,
-        communityName: community.name,
-      });
 
       navigate("/onboarding/payment-profile", {
         state: {
