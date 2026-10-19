@@ -6,6 +6,7 @@ import {
   notificationVisual,
   notificationCategory,
   notificationTypeTarget,
+  NOTIFICATION_TYPES,
 } from "../../utils/notificationTypes";
 
 describe("isPaymentNotificationType", () => {
@@ -91,5 +92,133 @@ describe("notificationTypeTarget", () => {
 
   it("returns null for a member-app type with no member-side destination (e.g. SETTLEMENT_COMPLETED)", () => {
     expect(notificationTypeTarget("SETTLEMENT_COMPLETED", { memberApp: true })).toBeNull();
+  });
+});
+
+// The backend's NotificationType enum had ten values this file did not list:
+// KYC_APPROVED, KYC_REJECTED, KYC_REVOKED, PHONE_VERIFICATION,
+// PHONE_UPDATE_VERIFICATION, EMAIL_UPDATE_VERIFICATION, LOGIN_VERIFICATION,
+// AUTO_DEBIT_UPCOMING, COMMUNITY_ACCOUNT_NEEDS_INFO and
+// COMMUNITY_ACCOUNT_REJECTED. All ten are live — the backend emits every one.
+//
+// A missing type is not a crash: notificationCategory() returns null and the
+// admin panel falls back to a text heuristic (see categorizeHeuristic in
+// pages/dashboard/Notifications.jsx). But the heuristic files anything without
+// FAIL/URGENT/ALERT/OVERDUE/SUSPEND under "payment", so a KYC REJECTION
+// landed under "Payment Activity", and a missing visual meant no icon at all.
+//
+// These tests are the guard for the NEXT time the backend adds a type.
+
+describe("backend notification type parity", () => {
+  const BACKEND_TYPES = [
+    "ACCOUNT_VERIFICATION",
+    "ACCOUNT_REGISTRATION",
+    "PASSWORD_RESET",
+    "COMMUNITY_INVITE_SENT",
+    "COMMUNITY_INVITE_ACCEPTED",
+    "COMMUNITY_INVITE_REVOKED",
+    "COMMUNITY_INVITE_EXPIRED",
+    "COMMUNITY_ACCOUNT_VERIFIED",
+    "COMMUNITY_ACCOUNT_NEEDS_INFO",
+    "COMMUNITY_ACCOUNT_REJECTED",
+    "JOIN_REQUEST_CREATED",
+    "JOIN_REQUEST_APPROVED",
+    "JOIN_REQUEST_REJECTED",
+    "JOIN_REQUEST_REVOKED",
+    "COMMUNITY_SETTINGS_CHANGED",
+    "RECORD_IMPORT_STATUS",
+    "KYC_APPROVED",
+    "KYC_REJECTED",
+    "KYC_REVOKED",
+    "PHONE_VERIFICATION",
+    "PHONE_UPDATE_VERIFICATION",
+    "EMAIL_UPDATE_VERIFICATION",
+    "LOGIN_VERIFICATION",
+    "AUTO_DEBIT_UPCOMING",
+    "PAYMENT_REQUEST_CREATED",
+    "PAYMENT_DUE",
+    "PAYMENT_OVERDUE",
+    "PAYMENT_REMINDER_DUE",
+    "PAYMENT_REMINDER_OVERDUE",
+    "PAYMENT_RECEIVED",
+    "PAYMENT_FAILED",
+    "PAYMENT_AUTHORIZATION_DISABLED",
+    "REFUND_REQUESTED",
+    "SETTLEMENT_COMPLETED",
+    "RECONCILIATION_FINDINGS",
+    "PROFILE_UPDATED",
+    "PROFILE_IMAGE_UPDATED",
+    "PASSWORD_UPDATED",
+    "EMAIL_UPDATED",
+    "ACCOUNT_DELETION_VERIFICATION",
+    "ACCOUNT_DELETION_REQUESTED",
+  ];
+
+  it("lists every backend notification type", () => {
+    const missing = BACKEND_TYPES.filter((t) => !NOTIFICATION_TYPES.includes(t));
+    expect(missing).toEqual([]);
+  });
+
+  it("gives every backend type a category, so none falls to the text heuristic", () => {
+    const uncategorised = BACKEND_TYPES.filter((t) => notificationCategory(t) === null);
+    expect(uncategorised).toEqual([]);
+  });
+
+  it("gives every backend type an icon, except the self-account ones by design", () => {
+    // Self-account types deliberately show the reader's own photo instead.
+    const iconless = BACKEND_TYPES.filter(
+      (t) => notificationVisual(t) === null && !isSelfAccountType(t),
+    );
+    expect(iconless).toEqual([]);
+  });
+
+  it("gives every backend type a destination on at least one surface", () => {
+    const unrouted = BACKEND_TYPES.filter(
+      (t) =>
+        notificationTypeTarget(t) === null &&
+        notificationTypeTarget(t, { memberApp: true }) === null,
+    );
+    expect(unrouted).toEqual([]);
+  });
+
+  it("files a KYC rejection as urgent rather than letting the heuristic file it as payment", () => {
+    // "REJECTED" contains none of FAIL/URGENT/ALERT/OVERDUE/SUSPEND, so the
+    // heuristic would have put a blocked verification under Payment Activity.
+    expect(notificationCategory("KYC_REJECTED")).toBe("urgent");
+    expect(notificationCategory("KYC_REVOKED")).toBe("urgent");
+    expect(notificationCategory("KYC_APPROVED")).toBe("member");
+  });
+
+  it("files an upcoming auto-debit as payment activity", () => {
+    expect(notificationCategory("AUTO_DEBIT_UPCOMING")).toBe("payment");
+  });
+
+  it("routes a member's verification decisions to the member's own screens", () => {
+    expect(notificationTypeTarget("KYC_REJECTED", { memberApp: true })).toBe(
+      "/member/verify-identity",
+    );
+    expect(notificationTypeTarget("KYC_APPROVED", { memberApp: true })).toBe(
+      "/member/verify-identity/history",
+    );
+    expect(notificationTypeTarget("PHONE_VERIFICATION", { memberApp: true })).toBe(
+      "/member/verify-phone",
+    );
+    expect(notificationTypeTarget("EMAIL_UPDATE_VERIFICATION", { memberApp: true })).toBe(
+      "/member/update-email",
+    );
+    expect(notificationTypeTarget("LOGIN_VERIFICATION", { memberApp: true })).toBe(
+      "/member/security/authentication",
+    );
+    expect(notificationTypeTarget("AUTO_DEBIT_UPCOMING", { memberApp: true })).toBe(
+      "/member/auto-pay",
+    );
+  });
+
+  it("keeps the community account review staff-facing, like COMMUNITY_ACCOUNT_VERIFIED", () => {
+    // These notify community STAFF, so a member has no member-app destination.
+    for (const type of ["COMMUNITY_ACCOUNT_NEEDS_INFO", "COMMUNITY_ACCOUNT_REJECTED"]) {
+      expect(notificationTypeTarget(type)).toBe("/dashboard/settings/community/profile");
+      expect(notificationTypeTarget(type, { memberApp: true })).toBeNull();
+    }
   });
 });
