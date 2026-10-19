@@ -41,26 +41,45 @@ const client = axios.create({
 // retry. Everything else — including verifyPayment, which carries no key —
 // stays strictly single-shot, because for those a second attempt is a second
 // side effect, not a recovery.
+//
+// A second gate decides WHICH failures are worth replaying, and it is
+// deliberately narrow — see isRetryableIdempotentError below. A key makes a
+// replay SAFE; it does not make every failure worth retrying.
 export const IDEMPOTENT_RETRY_LIMIT = 2;
 export const IDEMPOTENT_RETRY_BASE_MS = 400;
 export const IDEMPOTENT_RETRY_MAX_MS = 2_000;
 
-// 502/503/504 are the gateway's "I did not finish" signals, and a 500 from
-// this backend can be thrown after a charge has already been initialised —
-// which is precisely the case the key makes safe to replay. 4xx is excluded
-// outright: a rejected request will be rejected identically, and 429 is the
-// rate limiter answering correctly, so retrying it would be treating a
-// protection mechanism as a fault.
+// ONLY a failure that produced no response at all is replayed: the request
+// never got an answer (offline, DNS failure, connection reset, or an axios
+// timeout — the last of which also has no `response`). That is the one shape
+// where the client genuinely does not know the outcome, and it is the case
+// ADR-004 calls a "network retry" — the key makes the replay the same intent
+// rather than a second charge.
+//
+// A 4xx or 5xx RESPONSE is deliberately excluded, and the distinction is not
+// about severity — it is about who decided. A response means the backend
+// reached a verdict and reported it, and that verdict is the member's to see:
+// the payment screens surface a 500's message inline and leave the button
+// usable so the member chooses to retry, reusing the same key (see
+// e2e/payment-idempotency.spec.js, which pins that contract). Replaying it
+// behind the member's back would override a decision the server made.
+//
+// It is also unsafe in the response case, not merely unwanted. This backend
+// commits the Transaction row BEFORE it calls Paystack, so a 5xx raised by the
+// provider leaves an INITIATED transaction with no gateway payload behind it.
+// Replaying that key returns the existing transaction — 201, no
+// authorizationUrl, status INITIATED — which the payment screens read as
+// "charged immediately against a saved method" and report as "Payment sent".
+// A silent replay would therefore turn a visible failure into a false success.
+// (429 stays excluded for the same reason as any other response: the rate
+// limiter is answering correctly, and retrying it treats a protection
+// mechanism as a fault.)
 function isRetryableIdempotentError(error) {
   if (!error) return false;
   // A caller-cancelled request must not be resurrected by a retry.
   if (axios.isCancel(error)) return false;
-  // No response at all = the request never got an answer (offline, DNS, reset).
-  // That is the single most common shape on this network and the most safely
-  // recoverable one.
-  if (!error.response) return true;
-  const status = error.response.status;
-  return status === 500 || status === 502 || status === 503 || status === 504;
+  // No response at all = the request never got an answer.
+  return !error.response;
 }
 
 function readIdempotencyKey(config) {
