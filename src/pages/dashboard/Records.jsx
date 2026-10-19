@@ -1,9 +1,11 @@
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Download } from "lucide-react";
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useRecordBookAccess } from "../../hooks/useRecordBookAccess";
 import { useCommunityRecords, useRecordMutation } from "../../hooks/useCommunityRecords";
+import { useExportJob } from "../../hooks/useExportJob";
+import { exportCommunityRecords } from "../../api/exports";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Button } from "../../components/ui/Button";
 import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
@@ -57,6 +59,22 @@ function RecordsContent({ access }) {
       pageSize: 20,
     }).filter(([, value]) => value !== "" && value != null),
   );
+  // The export takes the SAME filters as the list — the backend uses the list
+  // filters and sort, and "page number and size do not limit the export" — so
+  // it exports every matching record, not the twenty on screen. Built from
+  // one shared object rather than a second copy of the filter list, so the
+  // export cannot drift from what the user is looking at.
+  const exportParams = Object.fromEntries(
+    Object.entries({
+      ...filters,
+      search,
+      importJobId: searchParams.get("importJobId"),
+    }).filter(([, value]) => value !== "" && value != null),
+  );
+  const { run: runExport, isExporting } = useExportJob();
+  function exportCsv() {
+    runExport(() => exportCommunityRecords(access.id, exportParams, "CSV"));
+  }
   const query = useCommunityRecords(access.id, params);
   const create = useRecordMutation(access.id, "create");
   const update = useRecordMutation(access.id, "update");
@@ -64,6 +82,19 @@ function RecordsContent({ access }) {
   return (
     <div>
       <RecordsHeader identifier={access.identifier}>
+        {access.export && (
+          <Button
+            variant="outline"
+            size="sm-tight"
+            fullWidth={false}
+            onClick={exportCsv}
+            disabled={isExporting}
+            title="Export every record matching the current filters"
+          >
+            <Download size={13} />
+            {isExporting ? "Exporting…" : "Export CSV"}
+          </Button>
+        )}
         {access.create && (
           <Button size="sm-tight" fullWidth={false} onClick={() => setEditing("new")}>
             <Plus size={13} />
