@@ -12,7 +12,7 @@ Working agreements with other contributors (branch/PR flow, who owns coverage fl
 
 ## Testing and checks
 
-Add focused Vitest/Testing Library coverage for changed logic and user-visible states. Mock API modules at the boundary; never require production credentials. Touching a payment flow? Extend the Vitest coverage in `src/__tests__/pages/memberApp/PaymentSummary.test.jsx` for payment retries and idempotency. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`. If you cloned `glass-waitlist-v1` next to this repo, also run `npm run check:landing-sync` after touching shared landing components.
+Add focused Vitest/Testing Library coverage for changed logic and user-visible states. Mock API modules at the boundary; never require production credentials. Touching a payment flow? Extend the E2E coverage in `e2e/` too — it pins same-`idempotencyKey` retry behaviour through the real browser. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`. If you cloned `glass-waitlist-v1` next to this repo, also run `npm run check:landing-sync` after touching shared landing components.
 
 ## Git workflow
 

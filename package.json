@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "verify:pwa": "node scripts/verify-pwa-sw.mjs",
     "probe:idempotency": "node scripts/probe-payment-idempotency.mjs",
     "check:landing-sync": "node scripts/check-landing-sync.mjs",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.2",

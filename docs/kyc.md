@@ -27,4 +27,4 @@ Frontend-only integration against the Glass backend KYC API (`kyc-frontend-integ
 
 - Documented KYC status contract in this `docs/` tree when the backend guide is checked into the repo (today it lives outside).
 - Optional cache-shape test for the attempts list if a second consumer appears (pattern: `src/__tests__/hooks/*CacheShape.test.jsx`).
-- Expand `KycWizardModal` component coverage for the member start path when product prioritizes it; keep Smile ID and API calls mocked.
+- E2E coverage for the member start path if product prioritizes it (no real Smile ID in Playwright; would need a support.js stub).

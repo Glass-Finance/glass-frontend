@@ -88,7 +88,10 @@ export default defineConfig({
     // parallelism. Raising the budget does not weaken the assertion; it stops
     // a legitimately slow test from reading as a regression.
     testTimeout: 15000,
-    exclude: [...configDefaults.exclude, "**/node_modules/**"],
+    // e2e/ is Playwright (npm run test:e2e), not Vitest — without this the
+    // default *.spec.js glob swallows those files and fails on the
+    // @playwright/test import.
+    exclude: [...configDefaults.exclude, "e2e/**", "**/node_modules/**"],
     coverage: {
       provider: "v8",
       // Union of both branches: the summaries plus text detail, the local

@@ -22,7 +22,7 @@ Server-side contract, from the live OpenAPI spec (`/v3/api-docs/springdocDefault
 ## Tooling in this repo
 
 - `npm run probe:idempotency` (`scripts/probe-payment-idempotency.mjs`) — fires the same key twice against the live API and prints PASS/FAIL (needs `GLASSPAY_TOKEN` + `GLASSPAY_PAYMENT_LINK`; does not open checkout, so no money moves).
-- `src/__tests__/pages/memberApp/PaymentSummary.test.jsx` — verifies that the client reuses one key across a failed attempt and retry on the same mounted component.
+- `npm run test:e2e` (`e2e/payment-idempotency.spec.js`) — proves the client reuses one key across a fail-and-retry in a real browser.
 - `src/__tests__/api/paymentIdempotencyContract.test.js` — pins the OpenAPI required/minLength contract (set `RUN_LIVE_API_DOCS=1` to also re-fetch the live spec).
 
 ## Residual follow-up

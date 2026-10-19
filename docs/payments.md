@@ -24,4 +24,4 @@ A payment plan's terms (`amountMode`, `visibility`, `audience`, `memberIds`) are
 
 ## Residual follow-up
 
-Run `npm run probe:idempotency` once with production credentials to capture a live PASS artifact. Client-side reuse is covered by Vitest tests in `src/__tests__/pages/memberApp/PaymentSummary.test.jsx`.
+Run `npm run probe:idempotency` once with production credentials to capture a live PASS artifact. Client-side reuse is covered by unit + E2E tests (`e2e/payment-idempotency.spec.js`).
