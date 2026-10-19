@@ -60,8 +60,10 @@ const PayingAdminDashboard = lazy(() =>
 );
 const Payments = lazy(() => import("./pages/dashboard/Payments"));
 const Members = lazy(() => import("./pages/dashboard/Members"));
-const Groups = lazy(() => import("./pages/dashboard/Groups"));
 const Records = lazy(() => import("./pages/dashboard/Records"));
+const RecordImports = lazy(() => import("./pages/dashboard/RecordImports"));
+const RecordImportDetail = lazy(() => import("./pages/dashboard/RecordImportDetail"));
+const Groups = lazy(() => import("./pages/dashboard/Groups"));
 const MemberDetail = lazy(() => import("./pages/dashboard/MemberDetail"));
 const AdminTransactionDetail = lazy(() => import("./pages/dashboard/TransactionDetail"));
 const AdminNotifications = lazy(() => import("./pages/dashboard/Notifications"));
@@ -78,6 +80,9 @@ const AutoPay = lazy(() => import("./pages/dashboard/settings/finance/AutoPay"))
 const PaystackAccount = lazy(() => import("./pages/dashboard/settings/finance/PaystackAccount"));
 const CommunityProfile = lazy(
   () => import("./pages/dashboard/settings/community/CommunityProfile"),
+);
+const CommunityAiUsage = lazy(
+  () => import("./pages/dashboard/settings/community/CommunityAiUsage"),
 );
 const MemberAccess = lazy(() => import("./pages/dashboard/settings/community/MemberAccess"));
 const SystemConfig = lazy(() => import("./pages/dashboard/settings/admin/SystemConfig"));
@@ -240,10 +245,9 @@ function App() {
                 <Route path="members" element={<Members />} />
                 <Route path="members/:memberId" element={<MemberDetail />} />
                 <Route path="groups" element={<Groups />} />
-                {/* Record book — visible records for the active community.
-                    Community-scoped, so it sits inside CommunityAdminGuard
-                    like the rest of the ?community= pages. */}
                 <Route path="records" element={<Records />} />
+                <Route path="records/imports" element={<RecordImports />} />
+                <Route path="records/imports/:jobId" element={<RecordImportDetail />} />
                 <Route path="transactions/:transactionId" element={<AdminTransactionDetail />} />
                 <Route path="join-requests" element={<JoinRequests />} />
               </Route>
@@ -278,6 +282,7 @@ function App() {
                   <Route path="finance/paystack" element={<PaystackAccount />} />
                   <Route path="community/profile" element={<CommunityProfile />} />
                   <Route path="community/member-access" element={<MemberAccess />} />
+                  <Route path="community/ai-usage" element={<CommunityAiUsage />} />
                 </Route>
               </Route>
             </Route>

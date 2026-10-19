@@ -29,7 +29,14 @@ import { Button } from "../ui/Button";
 // mandatory because Button does not add one.
 const CLOSE_BTN = "flex-shrink-0";
 
-export default function ModalShell({ title, subtitle, onClose, children, footer }) {
+export default function ModalShell({
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  size = "default",
+}) {
   // Escape-to-close -- every dashboard modal built on this shell gets this
   // for free; hand-rolled modals elsewhere in the app don't have it yet.
   useEffect(() => {
@@ -48,7 +55,7 @@ export default function ModalShell({ title, subtitle, onClose, children, footer 
       }}
     >
       <div
-        className={`relative bg-surface-bg rounded-2xl w-full shadow-2xl border border-surface-container-border ${title ? "max-w-md" : "max-w-xl px-6 py-8"}`}
+        className={`relative bg-surface-bg rounded-2xl w-full shadow-2xl border border-surface-container-border ${size === "wide" ? "max-w-3xl" : title ? "max-w-md" : "max-w-xl"} ${title ? "" : "px-6 py-8"}`}
       >
         {title ? (
           <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100">

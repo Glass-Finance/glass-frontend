@@ -27,13 +27,20 @@ export function useCommunityMember(communityId, memberId) {
   });
 }
 
-export function useCommunityMembers(communityId) {
+export function useCommunityMembers(communityId, { includeHistorical = false } = {}) {
   const queryClient = useQueryClient();
   const enabled = !!communityId;
 
   const query = useQuery({
-    queryKey: ["community", communityId, "members"],
-    queryFn: () => fetchAllCommunityMembers(communityId),
+    // Historical record association needs inactive/exited memberships. Keep a
+    // separate key so the established active-roster cache cannot be poisoned.
+    queryKey: includeHistorical
+      ? ["community", communityId, "members", "historical"]
+      : ["community", communityId, "members"],
+    queryFn: () =>
+      includeHistorical
+        ? fetchAllCommunityMembers(communityId, { status: undefined })
+        : fetchAllCommunityMembers(communityId),
     enabled,
     staleTime: 1000 * 60 * 2,
   });

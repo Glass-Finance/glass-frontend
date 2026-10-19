@@ -21,6 +21,7 @@ import { X } from "lucide-react";
 // wizard is the first consumer; other modals can migrate onto it.
 export default function GlassModal({
   open = true,
+  appearance = "default",
   onClose,
   label,
   title,
@@ -59,7 +60,10 @@ export default function GlassModal({
     if (!open) return undefined;
     const onKeyDown = (e) => {
       if (e.key === "Escape") {
-        if (!closeDisabled) onClose?.();
+        if (!closeDisabled) {
+          e.preventDefault();
+          onClose?.();
+        }
         return;
       }
       if (e.key !== "Tab") return;
@@ -67,13 +71,20 @@ export default function GlassModal({
       if (!panel) return;
       const nodes = Array.from(
         panel.querySelectorAll(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
         ),
       ).filter((el) => el.offsetParent !== null || el === document.activeElement);
-      if (nodes.length === 0) return;
+      if (nodes.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
       const first = nodes[0];
       const last = nodes[nodes.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
+      if (document.activeElement === panel || !panel.contains(document.activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
         last.focus();
       } else if (!e.shiftKey && document.activeElement === last) {
@@ -94,7 +105,7 @@ export default function GlassModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[85] flex items-end justify-center sm:items-center sm:p-4 bg-[rgba(15,23,42,0.45)]"
+      className={`fixed inset-0 z-[85] flex items-end justify-center sm:items-center sm:p-4 ${appearance === "dashboard" ? "bg-black/20" : "bg-[rgba(15,23,42,0.45)]"}`}
       onClick={onBackdropClick}
     >
       <div
@@ -103,7 +114,7 @@ export default function GlassModal({
         role="dialog"
         aria-modal="true"
         aria-label={label ?? title}
-        className={`relative outline-none w-full bg-white rounded-t-[20px] sm:rounded-2xl border border-surface-container-border shadow-2xl flex flex-col overflow-hidden max-h-[92dvh] sm:max-h-[88vh] ${className}`}
+        className={`relative outline-none w-full ${appearance === "dashboard" ? "bg-white rounded-t-g-3 sm:rounded-g-3" : "bg-white rounded-t-[20px] sm:rounded-2xl"} border border-surface-container-border shadow-2xl flex flex-col overflow-hidden max-h-[92dvh] sm:max-h-[88vh] ${className}`}
       >
         {(title || showClose) && (
           <div className={`flex-shrink-0 relative ${headerClassName}`}>
@@ -130,12 +141,14 @@ export default function GlassModal({
           </div>
         )}
         <div
-          className={`flex-1 overflow-y-auto scrollbar-neutral px-5 py-4 sm:px-6 ${bodyClassName}`}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-neutral px-5 py-4 sm:px-6 ${bodyClassName}`}
         >
           {children}
         </div>
         {footer && (
-          <div className="flex-shrink-0 border-t border-gray-100 px-5 py-4 sm:px-6 bg-white/85 backdrop-blur-xl">
+          <div
+            className={`flex-shrink-0 border-t border-surface-container-border px-5 py-4 sm:px-6 ${appearance === "dashboard" ? "bg-white" : "bg-white/85 backdrop-blur-xl"}`}
+          >
             {footer}
           </div>
         )}

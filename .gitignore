@@ -17,6 +17,9 @@ test-results
 
 .env
 
+# Local planning roadmap
+/plan.md
+
 # Test/tooling output
 coverage/
 test-results/

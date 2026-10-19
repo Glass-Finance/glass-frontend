@@ -63,3 +63,21 @@ describe("notificationAction", () => {
     });
   });
 });
+
+it("opens a record import in its own community from the verified notification contract", () => {
+  expect(
+    notificationTarget({
+      notificationType: "RECORD_IMPORT_STATUS",
+      communityId: "c",
+      relatedEntityType: "RecordImportJob",
+      relatedEntityId: "j",
+      content: { jobId: "j", communityId: "c" },
+    }),
+  ).toBe("/dashboard/records/imports/j?community=c");
+  expect(
+    notificationTarget(
+      { notificationType: "RECORD_IMPORT_STATUS", communityId: "c" },
+      { memberApp: true },
+    ),
+  ).toBeNull();
+});

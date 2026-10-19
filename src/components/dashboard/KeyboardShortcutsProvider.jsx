@@ -42,11 +42,19 @@ export default function KeyboardShortcutsProvider({ children }) {
       if (e.metaKey || e.ctrlKey || e.altKey) return; // never shadow OS/browser shortcuts
 
       if (e.key === "Escape") {
+        chordRef.current = null;
         const entry = findLast("Escape");
         if (entry) entry.handler(e);
         return;
       }
 
+      // A modal owns interaction even when focus is on its footer buttons.
+      // Let its own Escape/Tab handlers run, but never navigate away from a
+      // draft or open shortcut help behind it. Drop any previously armed chord.
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        chordRef.current = null;
+        return;
+      }
       if (isTypingTarget(document.activeElement)) return;
 
       // While the help overlay is open, only Escape (above) and "?" (its

@@ -1,207 +1,183 @@
-import { useState } from "react";
-import ModalShell from "../../../components/dashboard/ModalShell";
+import { useEffect, useRef, useState } from "react";
+import DashboardDialog from "../../../components/dashboard/DashboardDialog";
 import { Button } from "../../../components/ui/Button";
-import { RECORD_TYPES, RECORD_DIRECTIONS } from "../../../utils/recordBook";
-import {
-  RECORD_CURRENCIES,
-  OPTIONAL_FIELDS,
-  seedForm,
-  buildPatch,
-  buildCreate,
-  validateForm,
-} from "./recordPatch";
-
-// Manual record create / edit.
-//
-// The request semantics live in recordPatch.js, not here — see the note there
-// on why a PATCH may only carry what actually changed.
-//
-// The other trap: duplicateAccepted is CONSENT, not a validation bypass. A 409
-// means this duplicates a committed record, and the fix is to ask the user. The
-// caller handles the 409 and offers the override via onAcceptDuplicate.
-
-function fieldClass() {
-  // Border-colour focus change, not a focus ring — see docs/design-system.md.
-  return "w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-brand";
-}
+import { makeRecordPatch, validateRecord } from "../../../utils/recordBook";
+import RecordFields from "./RecordFields";
+import { ErrorNotice } from "./RecordBookUI";
 
 export default function RecordFormModal({
+  communityId,
+  defaultCurrency = "NGN",
   record,
+  draft = false,
+  readOnly = false,
+  readOnlyMessage,
+  onSave,
   onClose,
-  onSubmit,
-  saving,
-  error,
-  onAcceptDuplicate,
 }) {
-  const isEdit = Boolean(record);
-
-  // Seeded in the initialiser rather than synced by an effect; the caller passes
-  // a `key` that changes with the record being edited, so switching rows (or to
-  // "new") remounts this and reseeds cleanly — no stale values carried over.
-  const [form, setForm] = useState(() => seedForm(record));
-  const [touched, setTouched] = useState(false);
-
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
-
-  // occurredOn cannot be later than the current UTC date, so cap the picker
-  // rather than letting the user choose a date the server will reject.
-  const today = new Date().toISOString().slice(0, 10);
-
-  const errors = validateForm(form);
-  const invalid = Boolean(errors.occurredOn || errors.amount);
-
-  function submit(e) {
-    e.preventDefault();
-    setTouched(true);
-    if (invalid) return;
-    onSubmit(isEdit ? buildPatch(record, form) : buildCreate(form));
+  const formRef = useRef(null);
+  const keepEditingRef = useRef(null);
+  const wasConfirmingClose = useRef(false);
+  const [original] = useState(record);
+  const [values, setValues] = useState(() =>
+    record
+      ? { ...record, amount: record.amount == null ? "" : String(record.amount) }
+      : {
+          recordType: "MEMBER_PAYMENT",
+          direction: "INFLOW",
+          occurredOn: new Date().toISOString().slice(0, 10),
+          amount: "",
+          currency: defaultCurrency,
+        },
+  );
+  const [errors, setErrors] = useState({});
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [duplicate, setDuplicate] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
+  useEffect(() => {
+    if (confirmClose) keepEditingRef.current?.focus();
+    else if (wasConfirmingClose.current) formRef.current?.querySelector("input, select")?.focus();
+    wasConfirmingClose.current = confirmClose;
+  }, [confirmClose]);
+  const changedOnServer = !!original?.updatedAt && record?.updatedAt !== original.updatedAt;
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+  function close() {
+    if (busy) return;
+    if (dirty) setConfirmClose(true);
+    else onClose();
   }
-
+  async function save(e) {
+    e.preventDefault();
+    if (confirmClose) return;
+    const validation = validateRecord(values, draft);
+    setErrors(validation);
+    if (Object.keys(validation).length) {
+      const first = Object.keys(validation)[0];
+      requestAnimationFrame(() => formRef.current?.querySelector(`[name="${first}"]`)?.focus());
+    }
+    if (Object.keys(validation).length || readOnly || changedOnServer || busy) return;
+    setBusy(true);
+    setError(null);
+    const patch = makeRecordPatch(original, values);
+    if (duplicate) patch.duplicateAccepted = true;
+    try {
+      await onSave(patch);
+      onClose();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const label = original ? "Save changes" : "Add record";
   return (
-    <ModalShell
-      title={isEdit ? "Edit record" : "New record"}
+    <DashboardDialog
+      size="wide"
+      title={original ? "Edit record" : "Add record"}
+      onClose={close}
+      closeDisabled={busy}
       subtitle={
-        isEdit
-          ? "Only changed fields are sent. Emptying a field clears it."
-          : "Records are a history of what happened — they don't move money."
+        draft
+          ? "Pending import record · not saved to the record book yet"
+          : "Historical record · no money is moved"
       }
-      onClose={onClose}
+      footer={
+        confirmClose ? (
+          <div className="space-y-3" role="alert">
+            <p className="text-sm font-medium">Discard your unsaved changes?</p>
+            <div className="flex flex-wrap justify-end gap-3">
+              <Button
+                size="sm-tight"
+                fullWidth={false}
+                variant="outline-neutral"
+                ref={keepEditingRef}
+                onClick={() => setConfirmClose(false)}
+              >
+                Keep editing
+              </Button>
+              <Button size="sm-tight" fullWidth={false} variant="critical" onClick={onClose}>
+                Discard changes
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              variant="outline-neutral"
+              size="sm-tight"
+              fullWidth={false}
+              onClick={close}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="record-book-form"
+              size="sm-tight"
+              fullWidth={false}
+              loading={busy}
+              disabled={readOnly || changedOnServer}
+            >
+              {label}
+            </Button>
+          </div>
+        )
+      }
     >
-      <form onSubmit={submit} className="px-5 py-4 flex flex-col gap-4">
-        {error && <p className="text-xs text-danger">{error}</p>}
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="rec-type" className="block text-xs font-bold text-gray-700 mb-1.5">
-              Type
-            </label>
-            <select
-              id="rec-type"
-              value={form.recordType}
-              onChange={set("recordType")}
-              className={fieldClass()}
-            >
-              {RECORD_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="rec-direction" className="block text-xs font-bold text-gray-700 mb-1.5">
-              Direction
-            </label>
-            <select
-              id="rec-direction"
-              value={form.direction}
-              onChange={set("direction")}
-              className={fieldClass()}
-            >
-              {RECORD_DIRECTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d === "INFLOW" ? "Money in" : "Money out"}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="rec-amount" className="block text-xs font-bold text-gray-700 mb-1.5">
-              Amount
-            </label>
-            <input
-              id="rec-amount"
-              type="number"
-              step="0.01"
-              min="0"
-              inputMode="decimal"
-              value={form.amount}
-              onChange={set("amount")}
-              onBlur={() => setTouched(true)}
-              placeholder="0.00"
-              autoFocus={!isEdit}
-              className={fieldClass()}
-            />
-            {touched && errors.amount ? (
-              <p className="text-xs text-danger mt-1">{errors.amount}</p>
-            ) : (
-              <p className="text-[10px] text-gray-400 mt-1">In whole currency units.</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="rec-currency" className="block text-xs font-bold text-gray-700 mb-1.5">
-              Currency
-            </label>
-            <select
-              id="rec-currency"
-              value={form.currency}
-              onChange={set("currency")}
-              className={fieldClass()}
-            >
-              {RECORD_CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="rec-date" className="block text-xs font-bold text-gray-700 mb-1.5">
-            Date
-          </label>
-          <input
-            id="rec-date"
-            type="date"
-            max={today}
-            value={form.occurredOn}
-            onChange={set("occurredOn")}
-            onBlur={() => setTouched(true)}
-            className={fieldClass()}
+      <form ref={formRef} id="record-book-form" onSubmit={save} className="space-y-4">
+        <p className="text-sm text-ink-muted">
+          This records historical activity. It does not move money.
+        </p>
+        <ErrorNotice error={error} />
+        {(readOnly || changedOnServer) && (
+          <ErrorNotice
+            message={
+              changedOnServer
+                ? "This record changed while you were editing. Your values are preserved. Close and reopen the record to compare the latest version before saving."
+                : readOnlyMessage ||
+                  "This import is no longer editable. Your unsaved values remain here for reference."
+            }
           />
-          {touched && errors.occurredOn ? (
-            <p className="text-xs text-danger mt-1">{errors.occurredOn}</p>
-          ) : null}
-        </div>
-
-        {OPTIONAL_FIELDS.map(({ key, label }) => (
-          <div key={key}>
-            <label htmlFor={`rec-${key}`} className="block text-xs font-bold text-gray-700 mb-1.5">
-              {label} <span className="font-normal text-gray-400">(optional)</span>
-            </label>
-            <input
-              id={`rec-${key}`}
-              value={form[key]}
-              onChange={set(key)}
-              placeholder={isEdit ? "Leave empty to clear" : undefined}
-              className={fieldClass()}
-            />
-          </div>
-        ))}
-
-        {onAcceptDuplicate && (
-          <button
-            type="button"
-            onClick={onAcceptDuplicate}
-            className="self-start text-xs font-semibold text-danger underline underline-offset-2"
-          >
-            Save anyway — this duplicates a record you already have
-          </button>
         )}
-
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="outline-neutral" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" size="sm" loading={saving}>
-            {isEdit ? "Save changes" : "Add record"}
-          </Button>
-        </div>
+        <RecordFields
+          communityId={communityId}
+          values={values}
+          errors={errors}
+          disabled={busy || readOnly || changedOnServer}
+          onChange={(patch) => {
+            setValues((prev) => ({ ...prev, ...patch }));
+            setDirty(true);
+            setDuplicate(false);
+          }}
+        />
+        <label className="flex gap-3 items-start text-sm text-ink-muted">
+          <input
+            type="checkbox"
+            checked={duplicate}
+            onChange={(e) => {
+              setDuplicate(e.target.checked);
+              setDirty(true);
+            }}
+            disabled={busy || readOnly || changedOnServer}
+            className="mt-1 accent-brand"
+          />
+          <span>
+            I have checked for duplicates and want to include this record even if it matches
+            another.
+          </span>
+        </label>
       </form>
-    </ModalShell>
+    </DashboardDialog>
   );
 }

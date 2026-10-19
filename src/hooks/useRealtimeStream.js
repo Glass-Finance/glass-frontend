@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { refreshRecordImportEvent } from "../utils/recordBookQueryKeys";
 import { mintRealtimeTicket } from "../api/realtime";
 import { useAuth } from "../store/AuthContext";
 
@@ -64,20 +65,6 @@ const INVALIDATION_RULES = [
     keys: [["community"], ["communities"], ["join-requests"], ["notifications"]],
   },
   { match: /notification/i, keys: [["notifications"]] },
-  // Record-book import progress. Deliberately placed AFTER the generic
-  // notification rule so the literal event name is matched here rather than
-  // falling through to FALLBACK_KEYS, which would refresh nothing useful.
-  //
-  // React Query prefix-matches, so ["community"] covers every community-scoped
-  // key: ["community", id, "imports", ...], ["community", id, "records", ...]
-  // and the admin dashboard's own ["community"] cache. The keys that do not
-  // live under a "community" prefix — the admin AI-usage ones, keyed
-  // ["admin", communityId, "ai", ...] — are not covered; a platform admin
-  // watching a community's import will see it on their next manual refresh.
-  {
-    match: /record_import|record-import|import.progress/i,
-    keys: [["community"], ["notifications"]],
-  },
 ];
 const FALLBACK_KEYS = [["notifications"]];
 
@@ -87,13 +74,8 @@ const FALLBACK_KEYS = [["notifications"]];
 // casings) plus the unnamed default. Unrecognized names fall through to
 // the polling safety net until the backend documents them.
 const EVENT_NAMES = [
-  "message",
-  // Documented by the record-book guide, and not covered by the guess list
-  // below: that list derives lower/upper casings of a handful of names, and
-  // RECORD_IMPORT_PROGRESS is SCREAMING_SNAKE with an underscore. Without this
-  // entry EventSource never delivers the event at all, so the rule above would
-  // never fire.
   "RECORD_IMPORT_PROGRESS",
+  "message",
   ...[
     "notification",
     "transaction",
@@ -129,6 +111,7 @@ export default function useRealtimeStream() {
     let attempts = 0;
     let flushTimer = null;
     const pendingKeys = new Set();
+    const recordSequences = new Map();
 
     // Debounce invalidations — one payment can emit several events in a
     // burst, and each key only needs to be marked stale once per burst.
@@ -145,6 +128,14 @@ export default function useRealtimeStream() {
     }
 
     function handleEvent(e) {
+      if (e.type === "RECORD_IMPORT_PROGRESS") {
+        try {
+          refreshRecordImportEvent(queryClient, JSON.parse(e.data), recordSequences);
+        } catch {
+          /* Malformed progress must not interrupt the shared stream. */
+        }
+        return;
+      }
       const haystack = `${e.type} ${typeof e.data === "string" ? e.data : ""}`;
       if (IGNORE.test(haystack)) return;
       const rule = INVALIDATION_RULES.find((r) => r.match.test(haystack));
@@ -172,6 +163,11 @@ export default function useRealtimeStream() {
         es.onopen = () => {
           attempts = 0;
           setStreamConnected(true);
+          void queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === "community" &&
+              ["record-imports", "records", "ai-usage"].includes(query.queryKey[2]),
+          });
         };
         EVENT_NAMES.forEach((name) => es.addEventListener(name, handleEvent));
         es.onerror = () => {

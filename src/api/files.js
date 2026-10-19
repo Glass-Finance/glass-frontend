@@ -1,30 +1,36 @@
 import client from "./client";
 
-// POST /api/v1/file/upload — multipart, fileCategory ∈
-// PROFILE_IMAGE | COMMUNITY_LOGO | COMMUNITY_BRANDING_ASSET
+// Browser/OS MIME databases may report spreadsheets as empty, octet-stream,
+// or ZIP. Supply the declared type required by RECORD_IMPORT_SOURCE, preserving
+// the original bytes/name. The backend independently verifies signatures with
+// Tika; this metadata normalization does not relax content validation.
+function sourceFile(file, category) {
+  if (category !== "RECORD_IMPORT_SOURCE") return file;
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const types = {
+    csv: "text/csv",
+    tsv: "text/tab-separated-values",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  };
+  const type = types[extension ?? ""];
+  return type && file.type !== type
+    ? new File([file], file.name, { type, lastModified: file.lastModified })
+    : file;
+}
+
+// Browser-generated boundaries are required. `false` clears the shared JSON
+// default without forcing Axios to invent a multipart boundary for FormData.
 export const uploadFile = (file, fileCategory) => {
   const fd = new FormData();
-  fd.append("file", file);
+  fd.append("file", sourceFile(file, fileCategory));
   fd.append("fileCategory", fileCategory);
-  return client.post("/file/upload", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return client.post("/file/upload", fd, { headers: { "Content-Type": false } });
 };
 
-// POST /api/v1/file/upload/multiple — multipart, same fileCategory enum, but
-// the part name is "files" (plural) to match the backend's List<MultipartFile>
-// binding. Part order is irrelevant; fileCategory binds as a @ModelAttribute
-// field, so it can ride in the same body.
-//
-// The backend answers 201 even when some of the files were rejected: it loops
-// the batch and reports each outcome in the body rather than failing the
-// request. Callers therefore have to inspect per-entry `success` — see
-// useFileUploadMultiple, which does that split once for all of them.
 export const uploadFiles = (files, fileCategory) => {
   const fd = new FormData();
-  for (const file of files) fd.append("files", file);
+  files.forEach((file) => fd.append("files", sourceFile(file, fileCategory)));
   fd.append("fileCategory", fileCategory);
-  return client.post("/file/upload/multiple", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return client.post("/file/upload/multiple", fd, { headers: { "Content-Type": false } });
 };
