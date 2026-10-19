@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SettlementsList from "../../../../pages/dashboard/settlements/SettlementsList";
@@ -80,6 +80,47 @@ beforeEach(() => {
 });
 
 describe("SettlementsList", () => {
+  it("displays settlement totals in major units with two decimal places", async () => {
+    mockList.mockResolvedValue(
+      axiosEnvelope(page([settlement({ gross: 500.5, deductions: 0, net: 500.5 })])),
+    );
+    renderPage();
+
+    const row = await screen.findByRole("button", { name: /view settlement/i });
+    expect(within(row).getAllByText("₦500.50")).toHaveLength(2);
+    expect(within(row).getByText("₦0.00")).toBeDefined();
+  });
+
+  it("displays detail totals and matched transaction amounts in major units", async () => {
+    mockDetail.mockResolvedValue(
+      axiosEnvelope(
+        settlement({
+          gross: 1500.5,
+          deductions: 25.25,
+          net: 1475.25,
+          totalAmount: 1500,
+          transactions: [
+            {
+              id: "t1",
+              amount: 500.5,
+              currency: "NGN",
+              status: "RECEIVED",
+              paidAt: "2026-10-01T10:29:00Z",
+              matched: true,
+            },
+          ],
+        }),
+      ),
+    );
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /view settlement/i }));
+    await screen.findByText("Matched Transactions (2)");
+    for (const amount of ["₦1,500.50", "₦25.25", "₦1,475.25", "₦1,500.00", "₦500.50"]) {
+      expect(screen.getByText(amount)).toBeDefined();
+    }
+  });
+
   it("requests page 1 with no filters on first load", async () => {
     renderPage();
 
