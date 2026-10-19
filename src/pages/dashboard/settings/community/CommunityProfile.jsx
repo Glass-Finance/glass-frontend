@@ -11,6 +11,51 @@ import { safeImageUrl } from "../../../../utils/safeImageUrl";
 import { deleteCommunity } from "../../../../api/communities";
 import { Button } from "../../../../components/ui/Button";
 import { APP_ORIGIN } from "../../../../utils/deviceRedirect";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
+
+// ── Loading placeholder ─────────────────────────────────────────────────────
+// Stands in the two cards the page renders -- the community information card
+// and the danger-zone card -- at their real padding, so the page keeps its
+// shape while the community resolves.
+function CommunityFieldSkeleton({ wide = false }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Skeleton className="h-3 w-28" tone="bg-gray-100" />
+      <Skeleton className={`h-12 rounded-lg ${wide ? "w-full" : "w-64"}`} />
+    </div>
+  );
+}
+
+function CommunityProfileSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true">
+      <div className="bg-surface-container rounded-lg px-5 pt-4 pb-5 border border-surface-container-border">
+        <Skeleton className="h-4 w-44 mb-0.5" />
+        <Skeleton className="h-3 w-64 mb-4" tone="bg-gray-100" />
+        <div className="-mx-5 border-b border-gray-100 mb-4" />
+        <div className="flex items-center gap-3 mb-5">
+          <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-52" tone="bg-gray-100" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-4">
+          <CommunityFieldSkeleton />
+          <CommunityFieldSkeleton />
+          <CommunityFieldSkeleton wide />
+        </div>
+      </div>
+
+      <div className="bg-surface-container rounded-lg p-6 border border-surface-container-border">
+        <Skeleton className="h-4 w-36 mb-0.5" />
+        <Skeleton className="h-3 w-64 mb-4" tone="bg-gray-100" />
+        <Skeleton className="h-3 w-full mb-5" tone="bg-gray-100" />
+        <Skeleton className="h-11 w-32 rounded-lg" />
+      </div>
+    </div>
+  );
+}
 
 const INVITE_HOST = APP_ORIGIN.replace(/^https?:\/\//, "");
 
@@ -144,6 +189,14 @@ export default function CommunityProfile() {
   // to the initials text.
   const logoSrc = safeImageUrl(logoPreview ?? community?.logo?.url ?? community?.logoUrl);
 
+  // `useCommunity` is a plain query, so on a cold visit this used to render
+  // the form with "Loading…" as its heading and every field empty, then fill
+  // them in. The whole page is replaced here so no field is touchable before
+  // the community's own data is on the page.
+  if (isLoading) {
+    return <CommunityProfileSkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* ── Community Information -- heading, logo, and fields all in one
@@ -166,9 +219,7 @@ export default function CommunityProfile() {
               )}
             </div>
             <div>
-              <p className="text-sm text-gray-900">
-                {isLoading ? "Loading…" : (community?.name ?? "Community")}
-              </p>
+              <p className="text-sm text-gray-900">{community?.name ?? "Community"}</p>
               <p className="text-xs text-gray-500">
                 {community?.slug ? `${INVITE_HOST}/member/join?community=${community.slug}` : ""}
               </p>

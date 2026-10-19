@@ -202,3 +202,28 @@ describe("Account deletion flow", () => {
     expect(requestAccountDeletionCode).not.toHaveBeenCalled();
   });
 });
+
+// While `useMe()` resolves the form used to render with every field empty and
+// then fill in. These pin that a cold visit now gets one busy skeleton region
+// and no form at all, and that the two never appear together.
+describe("Profile loading state", () => {
+  it("shows a skeleton instead of an empty form while the user is loading", () => {
+    useMe.mockReturnValue({ data: undefined, isLoading: true });
+    const { container } = renderPage();
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeTruthy();
+    // The real form must be absent entirely -- an empty form under a skeleton
+    // is the exact flash this change removes.
+    expect(screen.queryByText("Manage your personal information")).toBeNull();
+    expect(screen.queryByText("First Name")).toBeNull();
+    expect(screen.queryByText("Delete Account")).toBeNull();
+  });
+
+  it("hides the skeleton and shows the form once the user has resolved", () => {
+    const { container } = renderPage();
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull();
+    expect(screen.getByText("Manage your personal information")).toBeTruthy();
+    expect(screen.getByText("First Name")).toBeTruthy();
+  });
+});
