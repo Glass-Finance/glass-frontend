@@ -48,7 +48,7 @@ Retry continues an eligible failed job. Start fresh import creates a new job and
 - Screens: `Records.jsx`, `RecordImports.jsx`, `RecordImportDetail.jsx`, with focused components under `pages/dashboard/records/`.
 - Notification deep links use the verified `RECORD_IMPORT_STATUS` content and `RecordImportJob` related entity in `notificationRouting.js`.
 
-The contract source is the backend's 18 October 2026 frontend integration guide, checked against the deployed `/v3/api-docs`. Records regression tests live under `src/__tests__/` and cover synthetic and mocked behavior. The existing Playwright setup and app-level browser tests remain in place. They do not establish that authenticated production permissions, private downloads, AI processing, or background commit workers work in a deployed environment.
+The contract source is the backend's 18 October 2026 frontend integration guide, checked against the deployed `/v3/api-docs`. Records regression tests live under `src/__tests__/` and cover synthetic and mocked behavior. They do not establish that authenticated production permissions, private downloads, AI processing, or background commit workers work in a deployed environment.
 
 ## Proposed/future direction
 

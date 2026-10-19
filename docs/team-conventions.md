@@ -45,14 +45,6 @@ Shared working agreements across the frontend (`Glass-Finance/glass-waitlist`) a
 - Enum/status coverage: predicate-matrix style — every backend literal, case variants, nullish inputs.
 - Coverage: `npm run test:coverage` (v8). **Threshold ownership belongs to the testing lead** — raise floors when adding tests; never lower them to green CI; don't raise them in an unrelated PR without agreement.
 
-### E2E (Playwright)
-
-- Specs in `e2e/*.spec.js`; Vitest excludes `e2e/**` (`vite.config.js`).
-- Two projects: `desktop-chromium` (admin/public) and `mobile-chromium` / Pixel 7 (member app, `MemberDeviceGuard`). Each test runs in exactly one project via `test.skip(testInfo.project.name !== ...)`.
-- Harness: local Vite on `127.0.0.1:4173` with injected public `VITE_*` (including `VITE_TEST_MODE=true`). No real backend, provider, or secrets.
-- Preferred mocking: shared `e2e/support.js` catch-all dispatcher (personas, `/api/v1` CORS, Paystack stub, third-party aborts). Inline `page.route` only for endpoint-specific cases; consolidating onto `support.js` is welcome.
-- Run: `npm run test:e2e`. CI job is the isolated `e2e` job in `.github/workflows/ci.yml` (not inline in the build job).
-
 ## Tooling
 
 - **Prettier** enforced (`npm run format:check` in CI). Format before push.
@@ -71,8 +63,6 @@ Shared working agreements across the frontend (`Glass-Finance/glass-waitlist`) a
 
 ```bash
 npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build
-# if touching e2e or payments:
-npm run test:e2e
 # if adding tests:
 npm run test:coverage
 # if landing components changed and v1 is cloned:

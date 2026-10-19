@@ -11,7 +11,6 @@ node_modules
 dist
 dist-ssr
 coverage
-playwright-report
 test-results
 *.local
 
@@ -23,9 +22,6 @@ test-results
 # Test/tooling output
 coverage/
 test-results/
-playwright-report/
-blob-report/
-.playwright/
 
 # Editor directories and files
 .vscode/*

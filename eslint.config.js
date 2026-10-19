@@ -7,7 +7,7 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist", "coverage", "playwright-report", "test-results"]),
+  globalIgnores(["dist", "coverage", "test-results"]),
   {
     files: ["**/*.{js,jsx}"],
     extends: [
@@ -73,7 +73,7 @@ export default defineConfig([
   },
   {
     // Node-side tooling config (runs under Node, not the browser).
-    files: ["playwright.config.js", "vite.config.js", "eslint.config.js"],
+    files: ["vite.config.js", "eslint.config.js"],
     languageOptions: {
       globals: { ...globals.node },
     },

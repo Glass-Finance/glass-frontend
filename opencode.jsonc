@@ -101,8 +101,7 @@
 
     // ── 5. Non-mutating validation gates ──────────────────────────────────
     // `npm run *` is deliberately NOT allowed: it would also match
-    // `npm run format` (prettier --write over the tree),
-    // `npm run test:e2e` (spawns browsers) and
+    // `npm run format` (prettier --write over the tree) or
     // `npm run probe:idempotency` (reaches the live backend). Each safe
     // script is named individually instead.
     { "action": "shell", "resource": "npm run format:check *", "effect": "allow" },

@@ -17,7 +17,7 @@ This repository is the **frontend**: a Vite + React SPA covering the member app,
 | HTTP       | Axios (interceptor-based auth refresh)                  |
 | Fonts      | Fontsource (Inter, DM Sans, Playfair Display, Urbanist) |
 | Charts     | Phosphor Icons, Lucide Icons                            |
-| Testing    | Vitest + Testing Library (unit), Playwright (E2E)       |
+| Testing    | Vitest + Testing Library                                |
 | Monitoring | Sentry (optional, env-gated)                            |
 | Images     | Cloudinary                                              |
 | KYC        | Smile ID biometric verification                         |
@@ -64,7 +64,6 @@ npm run dev            # starts on http://localhost:3000
 | `npm run test`               | Vitest (single run)                                   |
 | `npm run test:watch`         | Vitest (watch mode)                                   |
 | `npm run test:coverage`      | Vitest with coverage thresholds                       |
-| `npm run test:e2e`           | Playwright E2E                                        |
 | `npm run audit:endpoints`    | Frontend calls vs backend OpenAPI                     |
 | `npm run check:landing-sync` | Diff shared landing components against marketing repo |
 | `npm run probe:idempotency`  | Live double-charge probe (needs credentials)          |
