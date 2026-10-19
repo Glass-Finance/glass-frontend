@@ -797,16 +797,21 @@ There are two loading systems, and the split is deliberate. Pick by the shape of
 | Surface                                                         | Use                                         | Why                                                                                                       |
 | --------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Card grid, list of rows, anything that **is** the page          | `Skeleton` (`components/common/SkeletonUI`) | A spinner collapses the page to a centred ring and the content then snaps in; a skeleton holds the layout |
+| Table, where the real `<thead>` is already on screen            | `SkeletonTableRows`                         | Placeholder rows in the real `<tbody>`, so column widths and responsive column hiding are inherited       |
+| Table, where the loading state returns before the table exists  | `SkeletonTable`                             | There is no header to align against, so it draws its own                                                  |
 | Small inline region — a table cell, a button body, a search box | `LoadingState`                              | There is no shape to hold, and a skeleton would be larger than the thing it stands in for                 |
 | Whole-route transition                                          | `PageLoadingState` / `LoadingScreen`        | Brand mark at page scale; `LoadingState`'s 14px ring is illegible at that size                            |
+
+**The in-card case.** A settings card that renders its own chrome — border, title, padding — and swaps only its _body_ for a spinner is not a layout jump: the card keeps its height and the content arrives in the space it was going to occupy anyway. `LoadingState` is the right call there, and six settings sub-pages do exactly this (`Security`, `SystemConfig`, `MemberAccess`, `AutoPay`, `PaymentMethod`, `PaystackAccount`). Reach for a skeleton only when the _whole_ surface is the thing that is loading, or when the frame itself would otherwise collapse.
 
 Rules that are not judgement calls:
 
 - **Skeleton is decorative.** It sets `aria-hidden` on itself; the _container_ must carry `aria-busy`. A screen-reader user gets "this region is loading", not a list of grey bars.
 - **Do not hand-roll a placeholder.** `Skeleton` and `SkeletonRow` exist; a local `animate-pulse` div is a duplicate. Pass `tone` for a non-grey surface (e.g. the dark sidebar rail uses `bg-white/10`) rather than reaching for a second `bg-*` class — both utilities have equal specificity, so which wins depends on Tailwind's emit order.
-- **SkeletonRow is for settings-list rows** (label + description + trailing toggle), not tables. `SkeletonRow` renders a `<div>`, so it cannot stand in for a `<tr>`. Dashboard tables (`Members`, `MemberDetail`, `SettlementsList`) have **no** skeleton primitive yet and still use a `colSpan` spinner — building a column-shaped one is open work, not something to fake with `SkeletonRow`.
+- **SkeletonRow is for settings-list rows** (label + description + trailing toggle), not tables. `SkeletonRow` renders a `<div>`, so it cannot stand in for a `<tr>` — that is what `SkeletonTableRows` and `SkeletonTable` are for, and `Members`, `MemberDetail` and `SettlementsList` use them.
+- **A table's columns are defined once and read by both the header and the placeholder.** Several of these tables hide columns at breakpoints (`hidden sm:table-cell`, `hidden xl:table-cell`), and a placeholder that stayed visible below its column's breakpoint would overflow the table on a phone. Duplicating the column list in two places is how a column ends up added to the header and missing from the skeleton.
 
-Adopting skeletons in the places listed above brought the `Skeleton` call sites from 9 to 12; the rest of the `LoadingState` call sites are inline regions and are correct as they are.
+Skeleton call sites went from 9 to 19 files across this work; the remaining `LoadingState` sites are inline regions and in-card bodies, both of which are correct as they are.
 
 ### 9.7 Exempt
 
