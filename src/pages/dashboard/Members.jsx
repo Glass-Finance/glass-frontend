@@ -31,7 +31,7 @@ import { useJoinRequests, requesterOf, requestStatusOf } from "../../hooks/useJo
 import { getErrorMessage } from "../../utils/errorHandler";
 import { exportCommunityObligations } from "../../api/exports";
 import { useExportJob } from "../../hooks/useExportJob";
-import LoadingState from "../../components/common/LoadingState";
+import { SkeletonTableRows } from "../../components/common/SkeletonUI";
 import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
 import KycStateBadge from "../../components/dashboard/KycStateBadge";
 import StatCard from "../../components/dashboard/StatCard";
@@ -55,6 +55,35 @@ const FALLBACK_ROLES = [
 ];
 
 const SORT_OPTIONS = ["Recently Paid", "Name A-Z", "Date Joined"];
+
+// Column visibility for the members table, defined once and read by BOTH the
+// <thead> and the loading skeleton. They have to agree: a column hidden in the
+// header but still rendered by the placeholder would keep a cell in a row whose
+// column no longer exists, and the table would overflow on a phone.
+//
+// xl, not lg, for the last two: lg (1024px) is exactly where the sidebar
+// already leaves the least room, and revealing the columns there squeezed
+// member names and dates onto two lines and pushed Actions out of the row
+// rather than scrolling.
+const MEMBER_COLUMN_LABELS = [
+  "Members",
+  "Plans",
+  "Status",
+  "Date",
+  "Email",
+  "Date Joined",
+  "Actions",
+];
+const MEMBER_COLUMNS = [
+  "hidden sm:table-cell px-5 py-2.5 w-8", // 0: select-all checkbox
+  "px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 1: Members
+  "px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 2: Plans
+  "px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 3: Status
+  "hidden md:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 4: Date
+  "hidden xl:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 5: Email
+  "hidden xl:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 6: Date Joined
+  "hidden sm:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap", // 7: Actions
+];
 
 const memberName = (m) => resolveDisplayName(m);
 const memberEmail = (m) => resolveEmail(m);
@@ -517,7 +546,17 @@ export default function Members() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-y border-gray-100 bg-surface-bg">
-                  <th className="hidden sm:table-cell px-5 py-2.5 w-8">
+                  {/*
+                    Column visibility, defined once. The <th> below and the
+                    loading placeholder both read this list, so a column can
+                    never be hidden in the header and still occupy space in the
+                    skeleton (which would overflow the table on a phone).
+                    xl, not lg, for the two extra columns: lg (1024px) is
+                    exactly where the sidebar already leaves the least room, and
+                    revealing them there squeezed member names onto two lines
+                    and pushed Actions out of the row instead of scrolling.
+                  */}
+                  <th className={MEMBER_COLUMNS[0]}>
                     <input
                       type="checkbox"
                       checked={selected.length === filtered.length && filtered.length > 0}
@@ -526,42 +565,21 @@ export default function Members() {
                       }
                     />
                   </th>
-                  <th className="px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Members
-                  </th>
-                  <th className="px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Plans
-                  </th>
-                  <th className="px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Status
-                  </th>
-                  <th className="hidden md:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Date
-                  </th>
-                  {/* xl, not lg -- lg (1024px) is exactly where the sidebar
-                    already leaves the least room, so revealing two more
-                    columns right there squeezed member names/dates onto two
-                    lines and pushed Actions out of the row instead of
-                    scrolling (cells wrap before the table ever grows wide
-                    enough to trigger the overflow-x-auto scroll above). */}
-                  <th className="hidden xl:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Email
-                  </th>
-                  <th className="hidden xl:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Date Joined
-                  </th>
-                  <th className="hidden sm:table-cell px-5 py-2.5 text-left text-xs font-normal text-gray-400 whitespace-nowrap">
-                    Actions
-                  </th>
+                  {MEMBER_COLUMN_LABELS.map((label, i) => (
+                    <th key={label} className={MEMBER_COLUMNS[i + 1]}>
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={8}>
-                      <LoadingState className="py-8" />
-                    </td>
-                  </tr>
+                  // Placeholder rows in the real tbody, so the columns the
+                  // header has already drawn keep their widths and the real
+                  // rows do not jump sideways when they arrive. MEMBER_COLUMNS
+                  // is the single list both this and the <thead> read, so a
+                  // column cannot be hidden at one and shown at the other.
+                  <SkeletonTableRows rows={8} columns={MEMBER_COLUMNS} />
                 ) : kycGated ? (
                   <tr>
                     <td colSpan={8} className="px-5 py-6">

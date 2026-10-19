@@ -7,7 +7,7 @@ import { useMembersWithPayments, useMemberPaymentLinks } from "../../hooks/useMe
 import { useCommunityMembers } from "../../hooks/useCommunityMembers";
 import { useCommunity } from "../../hooks/useCommunity";
 import ReceiptDownloadButton from "../../components/dashboard/ReceiptDownloadButton";
-import LoadingState from "../../components/common/LoadingState";
+import { SkeletonTable } from "../../components/common/SkeletonUI";
 import EmptyState from "../../components/common/EmptyState";
 import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
 import { Button } from "../../components/ui/Button";
@@ -17,6 +17,12 @@ import { resolveDisplayName, resolveEmail, resolvePhone } from "../../utils/memb
 import { isSuccessfulStatus, isPaidObligationStatus } from "../../utils/paymentStatus";
 
 const TABS = ["All Plans", "Payment History", "Contact Details"];
+
+// The payment table's columns, defined once and read by both the real <thead>
+// and the loading placeholder. Every column is visible at every breakpoint
+// here, so the placeholder only needs the count -- but it must come from the
+// same list, or adding a column silently leaves the skeleton a column short.
+const MEMBER_DETAIL_COLUMNS = ["Plan", "Amount", "Status", "Method", "Date", "Actions"];
 
 const memberName = (m) => resolveDisplayName(m);
 const memberEmail = (m) => resolveEmail(m);
@@ -78,10 +84,19 @@ export default function MemberDetail() {
   }
 
   if (isLoading) {
+    // Stand a whole placeholder table in rather than a spinner. The real table
+    // renders below with the same classes and the same six columns, so the
+    // page keeps its shape instead of collapsing to a centred ring and then
+    // growing a table into that space.
     return (
-      <div className="px-4 md:px-6 py-6 h-full">
-        <LoadingState className="py-6" />
-      </div>
+      <SkeletonTable
+        rows={6}
+        columns={MEMBER_DETAIL_COLUMNS.length}
+        className="px-4 md:px-6 py-6 h-full"
+        tableClassName="w-full text-sm border-collapse"
+        headClassName="border-y border-gray-100"
+        cellClassName="px-5 py-3"
+      />
     );
   }
   if (!member) {
@@ -190,7 +205,7 @@ export default function MemberDetail() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-y border-gray-100">
-                  {["Plan", "Amount", "Status", "Method", "Date", "Actions"].map((h) => (
+                  {MEMBER_DETAIL_COLUMNS.map((h) => (
                     <th
                       key={h}
                       className="px-5 py-2.5 text-left text-xs font-semibold text-gray-400 whitespace-nowrap"
