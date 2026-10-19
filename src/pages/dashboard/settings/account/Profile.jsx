@@ -23,14 +23,82 @@ import { Button } from "../../../../components/ui/Button";
 import verifiedBadge from "../../../../assets/icons/verified-badge.webp";
 import { toastSuccess } from "../../../../utils/toast";
 import { DeleteAccountModal } from "./ProfileSections";
+import { Skeleton } from "../../../../components/common/SkeletonUI";
 
 const inputCls =
   "w-full h-12 min-h-8 px-4 py-1 rounded-lg text-black placeholder-black/60 text-placeholder outline-none transition-all border-[1.5px] focus:border-brand";
 
+// ── Loading placeholder ─────────────────────────────────────────────────────
+// One label + one input is the page's repeating unit, so the skeleton is built
+// from that rather than guessing at the form's shape. Field wrappers are
+// `flex flex-col gap-1.5` and inputs are `h-12 rounded-lg` (see inputCls), so
+// the placeholders carry the same geometry and the form does not jump when the
+// real fields arrive.
+function ProfileFieldSkeleton() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Skeleton className="h-3 w-24" tone="bg-gray-100" />
+      <Skeleton className="h-12 w-full rounded-lg" />
+    </div>
+  );
+}
+
+// Stands in the four cards the page renders, in order: the main profile form,
+// the two change-email / change-phone cards, and the danger-zone card. Card
+// padding is copied from the real ones (`rounded-lg p-6` vs `rounded-xl` with a
+// `px-6 py-4` header) so the stack keeps its shape.
+function ProfileSkeleton() {
+  return (
+    <div className="flex flex-col gap-5 w-full" aria-busy="true">
+      <div className="bg-surface-container rounded-lg p-6 border border-surface-container-border">
+        <Skeleton className="h-4 w-20 mb-0.5" />
+        <Skeleton className="h-3 w-56 mb-4" tone="bg-gray-100" />
+        <div className="-mx-6 border-b border-gray-100 mb-5" />
+        <div className="flex items-center gap-3 mb-5">
+          <Skeleton className="w-14 h-14 rounded-full flex-shrink-0" />
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+          <ProfileFieldSkeleton />
+          <ProfileFieldSkeleton />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+          <ProfileFieldSkeleton />
+          <ProfileFieldSkeleton />
+        </div>
+        <Skeleton className="h-11 w-32 rounded-lg" />
+      </div>
+
+      {[0, 1].map((i) => (
+        <div
+          key={i}
+          className="bg-surface-container rounded-xl border border-surface-container-border"
+        >
+          <div className="px-6 py-4 border-b border-gray-100">
+            <Skeleton className="h-4 w-44" />
+          </div>
+          <div className="p-6">
+            <div className="max-w-md">
+              <ProfileFieldSkeleton />
+            </div>
+            <Skeleton className="h-11 w-32 rounded-lg mt-5" />
+          </div>
+        </div>
+      ))}
+
+      <div className="bg-surface-container rounded-lg p-6 border border-surface-container-border">
+        <Skeleton className="h-4 w-40 mb-4" />
+        <Skeleton className="h-3 w-72 mb-5" tone="bg-gray-100" />
+        <Skeleton className="h-11 w-32 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: user } = useMe();
+  const { data: user, isLoading: isMeLoading } = useMe();
   const { refreshUser, logout } = useAuth();
   const updateProfile = useUpdateProfile();
   const uploadFile = useFileUpload();
@@ -323,6 +391,16 @@ export default function Profile() {
       .map((w) => w[0]?.toUpperCase())
       .join("") || "?";
 
+  // `useMe()` is a 10-minute-cache query, so this is a no-op on any visit
+  // inside that window -- but on a cold one the form used to render with
+  // every field empty and then fill in, which reads as a half-built page and
+  // lets the user touch fields before they exist. The whole page is replaced
+  // here, including the danger card, so no interactive control is reachable
+  // before the user's own data is on the page.
+  if (isMeLoading) {
+    return <ProfileSkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-5 w-full">
       {view === "profile" && (
@@ -475,7 +553,6 @@ export default function Profile() {
           </div>
         </>
       )}
-
       {view === "email" && (
         <>
           {/* No back link here: the breadcrumb above (Account › Profile) is
