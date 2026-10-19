@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,11 +33,20 @@ vi.mock("../../../hooks/useKycGate", () => ({
 
 vi.mock("../../../hooks/usePageTitle", () => ({ usePageTitle: () => {} }));
 
+// MemoryRouter, matching the repo's own pattern for dashboard components that
+// call useNavigate (CommunitiesHome.*.test.jsx). Everything under /dashboard
+// renders inside a BrowserRouter in the app, so a component reaching for
+// useNavigate without a Router in its test harness is a harness gap -- this
+// one surfaced as a failure only once a second test file shared the run.
 function wrapper({ children }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <MemoryRouter initialEntries={["/dashboard"]}>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </MemoryRouter>
+  );
 }
 
 const page = (content, totalElements = content.length, totalPages = 1) => ({

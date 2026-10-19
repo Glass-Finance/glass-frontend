@@ -62,6 +62,7 @@ const Payments = lazy(() => import("./pages/dashboard/Payments"));
 const Members = lazy(() => import("./pages/dashboard/Members"));
 const Groups = lazy(() => import("./pages/dashboard/Groups"));
 const Records = lazy(() => import("./pages/dashboard/Records"));
+const ImportWizard = lazy(() => import("./pages/dashboard/records/imports/ImportWizard"));
 const MemberDetail = lazy(() => import("./pages/dashboard/MemberDetail"));
 const AdminTransactionDetail = lazy(() => import("./pages/dashboard/TransactionDetail"));
 const AdminNotifications = lazy(() => import("./pages/dashboard/Notifications"));
@@ -244,6 +245,7 @@ function App() {
                     Community-scoped, so it sits inside CommunityAdminGuard
                     like the rest of the ?community= pages. */}
                 <Route path="records" element={<Records />} />
+                <Route path="records/imports" element={<ImportWizard />} />
                 <Route path="transactions/:transactionId" element={<AdminTransactionDetail />} />
                 <Route path="join-requests" element={<JoinRequests />} />
               </Route>

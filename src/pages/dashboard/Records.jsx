@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { BookOpen, ArrowDownLeft, ArrowUpRight, Plus, Pencil, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, ArrowDownLeft, ArrowUpRight, Plus, Pencil, Trash2, Upload } from "lucide-react";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
@@ -262,6 +263,7 @@ function RecordDetail({ communityId, recordId, onClose, onEdit, onDelete }) {
 
 export default function Records() {
   usePageTitle("Records");
+  const navigate = useNavigate();
   const communityId = useActiveCommunityId();
 
   const [search, setSearch] = useState("");
@@ -409,6 +411,15 @@ export default function Records() {
           <Button size="xs" fullWidth={false} onClick={() => setEditing("new")}>
             <Plus size={12} className="mr-1.5" />
             Add record
+          </Button>
+          <Button
+            variant="outline-neutral"
+            size="xs"
+            fullWidth={false}
+            onClick={() => navigate("/dashboard/records/imports")}
+          >
+            <Upload size={12} className="mr-1.5" />
+            Import
           </Button>
           <SearchBar
             value={search}
