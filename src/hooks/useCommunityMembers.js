@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAllCommunityMembers,
+  getCommunityMember,
   updateCommunityMember,
   removeCommunityMember,
 } from "../api/communities";
@@ -11,6 +12,19 @@ function unwrapList(res) {
   const data = res.data?.data;
   if (Array.isArray(data)) return data;
   return data?.content ?? [];
+}
+
+// Detail responses include optional server aggregates in `stats`; list and
+// mutation responses do not. Keep this cache entry separate from the roster.
+export function useCommunityMember(communityId, memberId) {
+  return useQuery({
+    queryKey: ["community", communityId, "members", "detail", memberId],
+    queryFn: async () => {
+      const res = await getCommunityMember(communityId, memberId);
+      return res.data?.data;
+    },
+    enabled: !!communityId && !!memberId,
+  });
 }
 
 export function useCommunityMembers(communityId) {

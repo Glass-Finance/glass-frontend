@@ -4,7 +4,7 @@ import { usePageTitle } from "../../hooks/usePageTitle";
 import { UserMinus, Phone, MessageCircle, CreditCard } from "lucide-react";
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
 import { useMembersWithPayments, useMemberPaymentLinks } from "../../hooks/useMembersWithPayments";
-import { useCommunityMembers } from "../../hooks/useCommunityMembers";
+import { useCommunityMember, useCommunityMembers } from "../../hooks/useCommunityMembers";
 import { useCommunity } from "../../hooks/useCommunity";
 import ReceiptDownloadButton from "../../components/dashboard/ReceiptDownloadButton";
 import { SkeletonTable } from "../../components/common/SkeletonUI";
@@ -14,7 +14,7 @@ import { Button } from "../../components/ui/Button";
 import StatCard from "../../components/dashboard/StatCard";
 import { formatNaira, formatDate } from "../../utils/format";
 import { resolveDisplayName, resolveEmail, resolvePhone } from "../../utils/memberName";
-import { isSuccessfulStatus, isPaidObligationStatus } from "../../utils/paymentStatus";
+import { isPaidObligationStatus } from "../../utils/paymentStatus";
 
 const TABS = ["All Plans", "Payment History", "Contact Details"];
 
@@ -62,6 +62,7 @@ export default function MemberDetail() {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   const { members, isLoading } = useMembersWithPayments(communityId);
+  const { data: memberDetail } = useCommunityMember(communityId, memberId);
   const { removeMember } = useCommunityMembers(communityId);
   const { data: community } = useCommunity(communityId);
   const member = members.find((m) => String(m.id) === String(memberId));
@@ -107,8 +108,9 @@ export default function MemberDetail() {
     );
   }
 
-  const successfulTxs = member.transactions.filter((t) => isSuccessfulStatus(t.status));
-  const totalPaid = successfulTxs.reduce((sum, t) => sum + (t.amount ?? t.amountPaid ?? 0), 0);
+  // These are all-time server aggregates, independent of the paged lists
+  // used by the tabs. Missing stats mean unavailable, not zero activity.
+  const stats = memberDetail?.stats;
 
   // Distinct plans (one card per payment link, latest obligation for that
   // link). Obligations carry the per-cycle amount/due-date/paid-status. An
@@ -162,10 +164,19 @@ export default function MemberDetail() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <StatCard label="Total Amount Paid" value={formatNaira(totalPaid)} />
-        <StatCard label="Active Plans" value={String(distinctPlans.length)} />
-        <StatCard label="Plans Yet to pay" value={String(member.totalCount - member.paidCount)} />
-        <StatCard label="Failed Payments" value={String(member.failedCount)} />
+        <StatCard
+          label="Total Amount Paid"
+          value={stats?.totalPaymentAmount != null ? formatNaira(stats.totalPaymentAmount) : "—"}
+        />
+        <StatCard label="Active Plans" value={String(stats?.activePaymentLinkCount ?? "—")} />
+        <StatCard
+          label="Plans Yet to pay"
+          value={String(stats?.pendingObligationPaymentLinkCount ?? "—")}
+        />
+        <StatCard
+          label="Failed Payments"
+          value={String(stats?.failedPaymentTransactionCount ?? "—")}
+        />
       </div>
 
       {/* Tabs */}
