@@ -30,11 +30,18 @@ export function useRealtimeConnected() {
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 const STREAM_URL = `${BASE_URL}/api/v1/realtime/stream`;
 
-// The backend doesn't document its SSE event names/payloads yet, so events
-// are routed to cache invalidations by keyword against the event name + raw
-// data. Worst case an event refetches slightly more than needed — every
+// The backend doesn't document most of its SSE event names/payloads yet, so
+// events are routed to cache invalidations by keyword against the event name +
+// raw data. Worst case an event refetches slightly more than needed — every
 // query here is already cheap and cached, and the existing 30s notification
 // polling remains as a safety net for anything the stream misses.
+//
+// RECORD_IMPORT_PROGRESS is the one documented exception: the record-book
+// guide in glass-backend (docs/new/community-record-book-frontend-api.md)
+// names the event and gives its payload as { title, description, communityId,
+// jobId, status, sequence, failureCode }. It is subscribed by name below and
+// gets an explicit rule, because it carries an underscore where the other
+// guesses are hyphenated and would otherwise be missed.
 const IGNORE = /heartbeat|ping|keep-?alive|timeout|connected/i;
 const INVALIDATION_RULES = [
   {
@@ -57,6 +64,20 @@ const INVALIDATION_RULES = [
     keys: [["community"], ["communities"], ["join-requests"], ["notifications"]],
   },
   { match: /notification/i, keys: [["notifications"]] },
+  // Record-book import progress. Deliberately placed AFTER the generic
+  // notification rule so the literal event name is matched here rather than
+  // falling through to FALLBACK_KEYS, which would refresh nothing useful.
+  //
+  // React Query prefix-matches, so ["community"] covers every community-scoped
+  // key: ["community", id, "imports", ...], ["community", id, "records", ...]
+  // and the admin dashboard's own ["community"] cache. The keys that do not
+  // live under a "community" prefix — the admin AI-usage ones, keyed
+  // ["admin", communityId, "ai", ...] — are not covered; a platform admin
+  // watching a community's import will see it on their next manual refresh.
+  {
+    match: /record_import|record-import|import.progress/i,
+    keys: [["community"], ["notifications"]],
+  },
 ];
 const FALLBACK_KEYS = [["notifications"]];
 
@@ -67,6 +88,12 @@ const FALLBACK_KEYS = [["notifications"]];
 // the polling safety net until the backend documents them.
 const EVENT_NAMES = [
   "message",
+  // Documented by the record-book guide, and not covered by the guess list
+  // below: that list derives lower/upper casings of a handful of names, and
+  // RECORD_IMPORT_PROGRESS is SCREAMING_SNAKE with an underscore. Without this
+  // entry EventSource never delivers the event at all, so the rule above would
+  // never fire.
+  "RECORD_IMPORT_PROGRESS",
   ...[
     "notification",
     "transaction",

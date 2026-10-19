@@ -10,6 +10,7 @@ import {
   Bell,
   Landmark,
   Undo2,
+  FileSpreadsheet,
 } from "lucide-react";
 
 // Exact notificationType enum + per-type rules, sourced from the backend's
@@ -36,6 +37,13 @@ export const NOTIFICATION_TYPES = [
   "JOIN_REQUEST_REJECTED",
   "JOIN_REQUEST_REVOKED",
   "COMMUNITY_SETTINGS_CHANGED",
+  // Record-book import progress. The backend emits this in-app for
+  // READY_FOR_REVIEW, COMMITTED, FAILED and DISCARDED — including when a
+  // commit comes back blocked and the job reopens for review. One type covers
+  // the whole lifecycle, so the icon is deliberately neutral rather than
+  // green-for-success / red-for-failure: the payload's status, not the type,
+  // is what says which of those happened.
+  "RECORD_IMPORT_STATUS",
   "PAYMENT_REQUEST_CREATED",
   "PAYMENT_DUE",
   "PAYMENT_OVERDUE",
@@ -149,6 +157,9 @@ const NOTIFICATION_VISUAL = {
   COMMUNITY_ACCOUNT_VERIFIED: { icon: CheckCircle2, ...GREEN },
   COMMUNITY_SETTINGS_CHANGED: { icon: Settings, ...GRAY },
 
+  // Record book
+  RECORD_IMPORT_STATUS: { icon: FileSpreadsheet, ...INDIGO },
+
   GENERAL: { icon: Bell, ...GRAY },
 };
 
@@ -194,6 +205,10 @@ const ADMIN_CATEGORY = {
   ACCOUNT_REGISTRATION: "member",
   PROFILE_UPDATED: "member",
   PROFILE_IMAGE_UPDATED: "member",
+  // Record-book import progress is community activity, not money movement and
+  // not a security-sensitive account change — it reports on a community's own
+  // bookkeeping, so "member" is the bucket, never "urgent" and never "payment".
+  RECORD_IMPORT_STATUS: "member",
   GENERAL: "member",
 };
 
@@ -245,6 +260,13 @@ const ADMIN_TARGET = {
   EMAIL_UPDATED: () => "/dashboard/settings/account/security",
   ACCOUNT_DELETION_VERIFICATION: () => "/dashboard/settings/account/profile",
   ACCOUNT_DELETION_REQUESTED: () => "/dashboard/settings/account/profile",
+
+  // Record book. Points at the community dashboard rather than a record-book
+  // page because none exists yet — the API and hooks landed before the UI.
+  // Repoint this to the import wizard's own route when that ships, otherwise
+  // an admin who taps "your import is ready for review" lands somewhere that
+  // cannot show them the job.
+  RECORD_IMPORT_STATUS: adminDash,
 };
 
 const MEMBER_TARGET = {
