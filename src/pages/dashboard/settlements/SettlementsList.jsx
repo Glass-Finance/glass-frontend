@@ -4,6 +4,7 @@ import { Landmark, ShieldCheck, ShieldAlert } from "lucide-react";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import LoadingState from "../../../components/common/LoadingState";
 import EmptyState from "../../../components/common/EmptyState";
+import { SkeletonTable } from "../../../components/common/SkeletonUI";
 import { getErrorMessage } from "../../../utils/errorHandler";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useActiveCommunityId } from "../../../hooks/useActiveCommunityId";
@@ -28,6 +29,11 @@ const PAGE_SIZE = 20;
 function fmt(amount, currency) {
   return fmtCurrency(amount, currency, { minor: false, decimals: 2 });
 }
+
+// Columns of the settlements table, defined once and read by both the real
+// <thead> and the loading placeholder, so a column added to one cannot leave
+// the other a column short. All are visible at every breakpoint.
+const SETTLEMENT_COLUMNS = ["Settled", "Gross", "Deductions", "Net", "Status", "Matched txns"];
 
 // SettlementStatus enum values a community caller can actually observe. The
 // backend filters MISMATCHED and REVIEWED out of both the list and the detail
@@ -249,7 +255,20 @@ export default function SettlementsList() {
 
       <div className="bg-surface-container rounded-2xl overflow-hidden border border-surface-container-border">
         {isLoading ? (
-          <LoadingState className="py-16" />
+          // Stand the table's shape in rather than a centred ring. The real
+          // table below is inside the same overflow-x-auto wrapper and uses the
+          // same six columns, so the card keeps its height and the rows do not
+          // shove the content down when they arrive.
+          <div className="overflow-x-auto">
+            <SkeletonTable
+              rows={5}
+              columns={SETTLEMENT_COLUMNS.length}
+              tableClassName="w-full border-collapse"
+              headClassName="border-b border-stacked-container"
+              cellClassName="px-4 py-3"
+              headBarClassName="h-2.5 w-12"
+            />
+          </div>
         ) : is403 ? (
           /* Not an edge case: the endpoints require
              `community.reconciliation.read`, which COMMUNITY_MEMBER and
@@ -275,7 +294,7 @@ export default function SettlementsList() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-stacked-container">
-                  {["Settled", "Gross", "Deductions", "Net", "Status", "Matched txns"].map((h) => (
+                  {SETTLEMENT_COLUMNS.map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"

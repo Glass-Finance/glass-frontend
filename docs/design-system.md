@@ -609,7 +609,7 @@ product UI.
 
 §7.1 measures the **Figma file**, not the app — Freq counts Figma nodes. Where the two
 disagree the code verdict wins. The one that matters: settings rows, which Figma draws at
-18/500 + 16/400 and the app ships at **14/500 + 12/400** (owner-directed, §9.7). Do not
+18/500 + 16/400 and the app ships at **14/500 + 12/400** (owner-directed, §9.8). Do not
 "correct" the app back to the table above.
 
 Weights present: **400, 500, 600** (2 nodes), **700** (names/emails in mock data + one C2
@@ -790,12 +790,30 @@ Pills are legal here (§1.5 carve-out). Frequency-badge text is 14/500; status c
 | Community Logos               | asset set                                                                     | `src/assets`                  | **n/a** (assets)                                                        |
 | Social Button (Google)        | r=8, white@60% + `#000000@10%`, label 16/500                                  | SignUp Google button          | **change**: verify radius/fill (r=8 is legal — Social is not a §2 role) |
 
-### 9.6 Exempt
+### 9.6 Loading — which indicator for which shape
+
+There are two loading systems, and the split is deliberate. Pick by the shape of what is loading, not by preference.
+
+| Surface                                                         | Use                                         | Why                                                                                                       |
+| --------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Card grid, list of rows, anything that **is** the page          | `Skeleton` (`components/common/SkeletonUI`) | A spinner collapses the page to a centred ring and the content then snaps in; a skeleton holds the layout |
+| Small inline region — a table cell, a button body, a search box | `LoadingState`                              | There is no shape to hold, and a skeleton would be larger than the thing it stands in for                 |
+| Whole-route transition                                          | `PageLoadingState` / `LoadingScreen`        | Brand mark at page scale; `LoadingState`'s 14px ring is illegible at that size                            |
+
+Rules that are not judgement calls:
+
+- **Skeleton is decorative.** It sets `aria-hidden` on itself; the _container_ must carry `aria-busy`. A screen-reader user gets "this region is loading", not a list of grey bars.
+- **Do not hand-roll a placeholder.** `Skeleton` and `SkeletonRow` exist; a local `animate-pulse` div is a duplicate. Pass `tone` for a non-grey surface (e.g. the dark sidebar rail uses `bg-white/10`) rather than reaching for a second `bg-*` class — both utilities have equal specificity, so which wins depends on Tailwind's emit order.
+- **SkeletonRow is for settings-list rows** (label + description + trailing toggle), not tables. `SkeletonRow` renders a `<div>`, so it cannot stand in for a `<tr>`. Dashboard tables (`Members`, `MemberDetail`, `SettlementsList`) have **no** skeleton primitive yet and still use a `colSpan` spinner — building a column-shaped one is open work, not something to fake with `SkeletonRow`.
+
+Adopting skeletons in the places listed above brought the `Skeleton` call sites from 9 to 12; the rest of the `LoadingState` call sites are inline regions and are correct as they are.
+
+### 9.7 Exempt
 
 The `dashboard-overlay/` product mocks (inline styles, radius 7) stay **exempt** — decorative
 reference renders, not conformance targets (§6.5).
 
-### 9.7 Settings rows (owner-directed)
+### 9.8 Settings rows (owner-directed)
 
 `dashboard/settings/Settings.jsx` renders the sidebar's menu rows. Figma and the app
 disagree here on purpose — the app was scaled down in successive owner passes, and the
@@ -820,7 +838,7 @@ export has no equivalent: `IconNavNotifications` (bell) and `IconNavIdentity` (I
 The trailing `ChevronRight size={16}` and the card's padding/gap are independent of the
 type scale — leave them out of any future row pass unless the row itself changes.
 
-### 9.8 Landing footer watermark (extension)
+### 9.9 Landing footer watermark (extension)
 
 The landing footer carries a giant Glass mark behind the CTA and link columns. **Figma does
 not draw it** — the footer node `1:1374` ("Frame 1000003394", 1280×883) is flat `#001F6E`

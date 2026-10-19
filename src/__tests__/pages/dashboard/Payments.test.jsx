@@ -139,9 +139,18 @@ afterEach(() => {
 });
 
 describe("Payments — page states", () => {
-  it("shows the loading indicator while plans are loading", () => {
-    renderPage(makePlanPlans({ isLoading: true }));
-    expect(screen.getByText("Loading…")).toBeTruthy();
+  it("skeletons the plan grid while plans are loading", () => {
+    const { container } = renderPage(makePlanPlans({ isLoading: true }));
+
+    // The skeleton deliberately mirrors the real plan grid's classes so the
+    // loaded layout does not shift under the user -- that is the whole point of
+    // it, so assert the layout classes rather than merely "something rendered".
+    const grid = container.querySelector(".grid.grid-cols-1");
+    expect(grid).toBeTruthy();
+    expect(grid?.children).toHaveLength(4);
+
+    // And the empty state must still be suppressed, or a slow fetch would
+    // flash "no plans yet" before the plans arrive.
     expect(screen.queryByText("No payment plans yet")).toBeNull();
   });
 
