@@ -20,9 +20,10 @@ Measured against both repos' `origin/main` on 2026-10-19.
 ### A1. Design-token migration not ported (9 files)
 
 The app replaced raw hex with `var(--color-*)` tokens. The marketing site still carries the
-pre-migration hex. This matters beyond tidiness: the marketing repo's own
-`docs/design-system.md` bans off-palette hex values, so these files currently violate the
-spec they are supposed to follow.
+pre-migration hex. For most of these files that is a consistency problem only, but **five of
+the nine also contain hex values that are not on the sanctioned palette at all**, including
+one of the six retired navies — which does contradict the marketing repo's own
+`docs/design-system.md`. See "How bad is it, precisely" below for the per-file breakdown.
 
 | File                                                      | app tokens | v1 tokens | app hex | v1 hex |
 | --------------------------------------------------------- | ---------- | --------- | ------- | ------ |
@@ -36,10 +37,36 @@ spec they are supposed to follow.
 | `organizations/dashboard-overlay/constants.js`            | 4          | 0         | 1       | 5      |
 | `members/MembersProblem.jsx`                              | 5          | 0         | 17      | 31     |
 
-**Direction: app → marketing site.** The marketing site cannot resolve these tokens until it
-defines them in `src/index.css`, so treat this as one piece of work: add the token set, then
-port. `StatsRow`/`TopBar` also carry `#9ca3af`, a Tailwind gray that is not on the sanctioned
-palette.
+### How bad is it, precisely
+
+"Raw hex" and "off-palette" are different problems, and conflating them overstates this.
+Resolving every raw hex in the nine files against the app's palette (70 `--color-*` definitions
+that collapse to 59 distinct values):
+
+| Verdict                                                             | Files                                                                                     |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Every raw hex is a sanctioned value — only the _reference_ is wrong | 4 (`TopBar`, `NavRail`, `PaymentPlansPanel`, `constants`)                                 |
+| Contain at least one value that is **not** in the palette           | 5 (`StatsRow`, `RecentActivityPanel`, `SidebarNav`, `DashboardOverlay`, `MembersProblem`) |
+
+So for four files this is a **refactor with zero visual change** — `#9ca3af` raw renders
+identically to `var(--color-ink-faint)`, which resolves to `#9ca3af`. (`#9ca3af` is a Tailwind
+gray _and_ the sanctioned value of that token; an earlier draft of this file called it
+off-palette, which was wrong.)
+
+The five files with genuine violations, by value:
+
+| Value                                                                                    | Where                                           | Note                                                                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `#0f1d6e`                                                                                | `DashboardOverlay`, `MembersProblem`            | **One of the six retired "near-identical navies."** `design-system.md` §9 states Figma has exactly one navy, `#001f6e`; `--color-brand-ink`/`--color-brand-deep` are both that. The app replaced this occurrence. |
+| `#b45309`, `#e85d04`, `#ecfdf5`, `#fff4ee`                                               | `StatsRow`, `SidebarNav`, `RecentActivityPanel` | Tailwind `amber-700`, `orange-600`, `emerald-50`, `orange-50` — not Figma values.                                                                                                                                 |
+| `#3a3a3a`                                                                                | `DashboardOverlay`                              | ad-hoc gray                                                                                                                                                                                                       |
+| `#c4c9e0`, `#eef0f8`, `#f7f8fc`, `#f3f4f8`, `#ecedf3`, `#e4e5ec`, `#e4e7f9`, `#0c1020d0` | various                                         | near-white surfaces not on the scale; `#0c1020d0` is an 8-digit hex with an alpha channel                                                                                                                         |
+
+**Direction: app → marketing site.** Add the token set to the marketing `src/index.css`
+first — 10 of the 17 tokens these files reference are missing there (`--color-ink`,
+`--color-ink-strong`, `--color-ink-muted`, `--color-ink-faint`, `--color-white`,
+`--color-accent-gold`, `--color-accent-indigo`, `--color-accent-purple`,
+`--color-danger-bright`, `--color-success-strong`) — then port.
 
 ### A2. `CloudImage` migration not ported (6 files)
 
