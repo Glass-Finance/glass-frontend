@@ -19,9 +19,15 @@ import {
 // community admin. Relocating those helpers to a neutral home is a reasonable
 // follow-up once a second consumer exists, but it would touch every
 // platform-admin section, so it is not bundled into this change.
-import { fmt, fmtDateTime, STATUS_COLORS } from "../platform-admin/shared";
+import { fmt as fmtCurrency, fmtDateTime, STATUS_COLORS } from "../platform-admin/shared";
 
 const PAGE_SIZE = 20;
+
+// Community settlement totals and matched transaction amounts are already
+// in major currency units. Keep their decimal precision without rescaling.
+function fmt(amount, currency) {
+  return fmtCurrency(amount, currency, { minor: false, decimals: 2 });
+}
 
 // SettlementStatus enum values a community caller can actually observe. The
 // backend filters MISMATCHED and REVIEWED out of both the list and the detail
