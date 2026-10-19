@@ -15,7 +15,15 @@
  *   4. logout()→ calls authService.logout(), clears everything
  */
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { login as apiLogin, logout as apiLogout, storeAuthSession } from "../services/authService";
 import { getMe } from "../api/members";
@@ -297,11 +305,16 @@ export function AuthProvider({ children }) {
   // ── updateUser ─────────────────────────────────────────────────────────────
   // Call after profile edits so the UI reflects the change immediately.
   // NOTE: privilege fields (isAdmin/isPlatformAdmin/role) must never be set
-  // through here — admin standing is derived server-side at login/restore.
-  // The single exception is OrganizationProfile's post-creation
-  // updateUser({ isAdmin: true }): the backend just made this user an admin
-  // by creating their community, but the cached communities list predates it,
-  // so routing would bounce without this explicit, auditable override.
+  // through here — admin standing is derived server-side at login/restore, and
+  // there is no longer any exception.
+  //
+  // There WAS one, and this comment used to document it: OrganizationProfile
+  // called updateUser({ isAdmin: true }) after creating a community, because
+  // the cached communities list predated the new one and routing would bounce.
+  // It now calls refreshUser() instead, which re-derives standing from the
+  // server. The rule above is therefore unconditional — a privilege flag
+  // written from the client is read back by ProtectedRoute as though the
+  // backend had said so, which is the thing this guards against.
   const updateUser = useCallback((patch) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -514,25 +527,54 @@ export function AuthProvider({ children }) {
   const isAdmin = isPlatformAdmin || (user?.isAdmin ?? false);
   const isMember = !isAdmin;
 
-  const value = {
-    user,
-    token,
-    loading,
-    sessionVerified,
-    isAuthenticated: !!token,
-    isPlatformAdmin,
-    isAdmin,
-    isMember,
+  // Memoised, not a fresh literal on every render. useAuth() is consumed in
+  // 38 files across the app and there is no React.memo anywhere in the
+  // codebase, so an unstable provider value re-renders every one of those
+  // subtrees on any AuthProvider state change — including changes that leave
+  // `user` and `token` identical (a `loading` flip during restore, say).
+  //
+  // Every action above is already useCallback-wrapped, so they are referentially
+  // stable and belong in the dep list for correctness only: dropping them would
+  // be safe today but would silently start serving stale actions the day one
+  // is un-memoised. `isAuthenticated` is derived from `token` rather than being
+  // listed itself, since it is a pure function of an already-listed value.
+  const value = useMemo(
+    () => ({
+      user,
+      token,
+      loading,
+      sessionVerified,
+      isAuthenticated: !!token,
+      isPlatformAdmin,
+      isAdmin,
+      isMember,
 
-    // Actions
-    login,
-    logout,
-    setSession,
-    storeSessionIfPresent,
-    updateUser,
-    refreshUser,
-    hydrateUserProfile,
-  };
+      // Actions
+      login,
+      logout,
+      setSession,
+      storeSessionIfPresent,
+      updateUser,
+      refreshUser,
+      hydrateUserProfile,
+    }),
+    [
+      user,
+      token,
+      loading,
+      sessionVerified,
+      isPlatformAdmin,
+      isAdmin,
+      isMember,
+      login,
+      logout,
+      setSession,
+      storeSessionIfPresent,
+      updateUser,
+      refreshUser,
+      hydrateUserProfile,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
