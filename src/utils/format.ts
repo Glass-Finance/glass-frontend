@@ -171,3 +171,44 @@ export function dayLabel(dateStr: DateInput): string {
   if (diffDays >= 0 && diffDays < 7) return "This Week";
   return d.toLocaleDateString("en-NG", { weekday: "long", month: "short", day: "numeric" });
 }
+
+// Renders an instant as a readable date and time, in the reader's own
+// timezone, with the zone's short label ("GMT+1", "WAT") so the reader can
+// tell which clock they are looking at.
+//
+// The zone comes from the signed-in user's profile, so it can be a valid IANA
+// zone ("Africa/Lagos"), an empty string, or a zone this runtime does not
+// know. All three have to render something: a usage or allowance screen that
+// renders nothing at all is worse than one that renders the browser's own
+// zone. An unusable zone is therefore dropped and the browser default is
+// used, rather than the whole value failing.
+//
+// The browser's own locale is used rather than the "en-NG" the formatters
+// above use: this value is read by one person, in their own locale, and a
+// reader in Lagos and a reader in London should not be shown the same words
+// for the same instant.
+//
+// Anything that is not a real instant reads as "Unavailable" — a screen that
+// silently shows a wrong date is worse than one that admits it has no date.
+export function formatDateTime(value: DateInput, timezone?: string | null): string {
+  if (!value) return "Unavailable";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "Unavailable";
+  const options: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  };
+  if (typeof timezone === "string" && timezone.trim()) options.timeZone = timezone.trim();
+  try {
+    return date.toLocaleString(undefined, options);
+  } catch {
+    // The runtime rejected the zone (unknown or malformed IANA name). Fall
+    // back to the browser's own zone instead of losing the value.
+    delete options.timeZone;
+    return date.toLocaleString(undefined, options);
+  }
+}
