@@ -8,6 +8,12 @@ Payment initiation sends an `idempotencyKey`, amount, obligation information, an
 
 The live OpenAPI spec (`/v3/api-docs/springdocDefault`) confirms the backend **requires** `idempotencyKey` on `InitializePaymentRequest` (`required: ["idempotencyKey"]`) and **persists** it (`TransactionResponse.idempotencyKey`). **Backend confirmed (2026-09-23):** a repeated key returns the original result (or a conflict) and never initializes a second charge — double-charge via retry is not possible end-to-end given the client reuses one key per attempt (see ADR-004).
 
+### Client-side retry (`src/api/client.js`)
+
+The API client replays a request automatically **only when it never got a response at all** — offline, DNS failure, connection reset, or a timeout. That is the one shape where the client genuinely does not know the outcome; the key makes the replay the same intent rather than a second charge.
+
+A 4xx/5xx **response** is never auto-retried, for two reasons. The server reached a verdict and reported it, and that verdict belongs to the member — the payment screens surface the message inline and leave the button usable so the member chooses to retry on the same mounted flow (`e2e/payment-idempotency.spec.js` pins this). And it is actively unsafe here: the backend commits the `Transaction` row _before_ it calls Paystack, so a 5xx leaves an `INITIATED` transaction with no gateway payload behind it. Replaying that key returns the existing transaction — 201, no `authorizationUrl`, status `INITIATED` — which the payment screens read as "charged immediately against a saved method" and report as **"Payment sent"**. A silent replay would turn a visible failure into a false success.
+
 The browser does not directly implement settlement, ledger, or processor-side authorization. Those behaviors belong to the backend and processor integration.
 
 ### Plan terms: amount mode, visibility, audience

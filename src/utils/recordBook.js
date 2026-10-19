@@ -215,6 +215,22 @@ export function toggleRowSelection(ids, id) {
       ? [...ids, id]
       : ids;
 }
+// Commit failure codes. A commit that validation blocks does not FAIL the
+// job — it reopens READY_FOR_REVIEW with one of these, and the user's next
+// move is to correct or skip the blocking rows and request commit again. They
+// are named here rather than spelled inline at each call site, because the
+// distinction between "reopen for review" and "give up" is the whole point.
+export const COMMIT_BLOCKED_CODE = "IMPORT_COMMIT_BLOCKED";
+export const COMMIT_RETRIES_EXHAUSTED_CODE = "IMPORT_COMMIT_RETRIES_EXHAUSTED";
+
+// PLATFORM records are read-only projections of platform transactions: the
+// backend rejects edits and deletes on them, so the UI must not offer either.
+// A shared predicate keeps that rule in one place instead of a `source ===
+// "PLATFORM"` comparison repeated per component.
+export function isRecordEditable(record) {
+  if (!record) return false;
+  return record.source !== "PLATFORM";
+}
 export function recordCounts(job) {
   const totals = job?.reviewTotals ?? {};
   return {

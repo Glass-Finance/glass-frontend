@@ -8,6 +8,7 @@ import {
   RECORD_SOURCES,
   formatRecordAmount,
   formatRecordDate,
+  isRecordEditable,
 } from "../../../utils/recordBook";
 import { QueryState } from "./RecordBookUI";
 
@@ -31,7 +32,7 @@ export default function RecordDetailPanel({
       onClose={onClose}
       footer={
         row && !query.error ? (
-          row.source === "PLATFORM" ? (
+          !isRecordEditable(row) ? (
             <div className="flex justify-end">
               {row.transactionId && (
                 <Button
@@ -78,7 +79,7 @@ export default function RecordDetailPanel({
                 {formatRecordAmount(row.amount, row.currency)}
               </p>
               <RecordFacts row={row} />
-              {row.source === "PLATFORM" && (
+              {!isRecordEditable(row) && (
                 <p className="text-sm text-ink-muted">Glass transaction records are read-only.</p>
               )}
               {row.importJobId && (

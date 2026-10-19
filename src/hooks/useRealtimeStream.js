@@ -31,11 +31,18 @@ export function useRealtimeConnected() {
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 const STREAM_URL = `${BASE_URL}/api/v1/realtime/stream`;
 
-// The backend doesn't document its SSE event names/payloads yet, so events
-// are routed to cache invalidations by keyword against the event name + raw
-// data. Worst case an event refetches slightly more than needed — every
+// The backend doesn't document most of its SSE event names/payloads yet, so
+// events are routed to cache invalidations by keyword against the event name +
+// raw data. Worst case an event refetches slightly more than needed — every
 // query here is already cheap and cached, and the existing 30s notification
 // polling remains as a safety net for anything the stream misses.
+//
+// RECORD_IMPORT_PROGRESS is the one documented exception: the record-book
+// guide in glass-backend (docs/new/community-record-book-frontend-api.md)
+// names the event and gives its payload as { title, description, communityId,
+// jobId, status, sequence, failureCode }. It is subscribed by name below and
+// gets an explicit rule, because it carries an underscore where the other
+// guesses are hyphenated and would otherwise be missed.
 const IGNORE = /heartbeat|ping|keep-?alive|timeout|connected/i;
 const INVALIDATION_RULES = [
   {

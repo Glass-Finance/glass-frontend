@@ -5,7 +5,7 @@ import { Plus, Wallet, ListChecks, Clock, XCircle, Landmark } from "lucide-react
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
 import { usePaymentPlans } from "../../hooks/usePaymentPlans";
 import { getErrorMessage, notifyError } from "../../utils/errorHandler";
-import LoadingState from "../../components/common/LoadingState";
+import { Skeleton } from "../../components/common/SkeletonUI";
 import EmptyState from "../../components/common/EmptyState";
 import SuccessBadge from "../../components/common/SuccessBadge";
 import PaymentPlanIllustration from "./admin-dashboard/sections/PaymentPlanIllustration";
@@ -194,7 +194,16 @@ export default function Payments() {
 
           {/* Plan cards */}
           {plansLoading ? (
-            <LoadingState className="py-10" />
+            // Same treatment as the admin dashboard's PaymentPlansCard: the
+            // plan grid below is the page's main content, so a centred spinner
+            // collapses it to nothing and the cards then snap in. The grid and
+            // gap classes mirror the real branch exactly so the loaded layout
+            // does not shift.
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-32 rounded-xl" />
+              ))}
+            </div>
           ) : plans.length === 0 ? (
             <EmptyState
               illustrationNode={<PaymentPlanIllustration />}

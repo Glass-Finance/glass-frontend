@@ -6,6 +6,9 @@ import {
   jobLabel,
   toggleRowSelection,
   formatRecordAmount,
+  isRecordEditable,
+  COMMIT_BLOCKED_CODE,
+  COMMIT_RETRIES_EXHAUSTED_CODE,
 } from "../../utils/recordBook";
 describe("record book interpretation", () => {
   it("freezes review for queued commit and unknown states", () => {
@@ -83,4 +86,22 @@ it("preserves explicit cleared payer fields when creating or changing a member l
       { memberId: "m1", payerName: "", payerReference: "" },
     ),
   ).toEqual({ memberId: "m1", payerName: null, payerReference: null });
+});
+
+it("names the two commit failure codes that reopen a job for review", () => {
+  // Both mean "reopen READY_FOR_REVIEW", not "the import failed" — the user's
+  // next move is to fix rows and commit again, so the copy must not read as a
+  // dead end. They are named once here rather than spelled inline per screen.
+  expect(COMMIT_BLOCKED_CODE).toBe("IMPORT_COMMIT_BLOCKED");
+  expect(COMMIT_RETRIES_EXHAUSTED_CODE).toBe("IMPORT_COMMIT_RETRIES_EXHAUSTED");
+  expect(COMMIT_BLOCKED_CODE).not.toBe(COMMIT_RETRIES_EXHAUSTED_CODE);
+});
+
+it("refuses to treat PLATFORM records as editable", () => {
+  // PLATFORM records are read-only projections of platform transactions; the
+  // backend rejects writes on them, so the UI must not offer Edit or Delete.
+  expect(isRecordEditable({ source: "PLATFORM" })).toBe(false);
+  expect(isRecordEditable({ source: "MANUAL" })).toBe(true);
+  expect(isRecordEditable({ source: "FILE_IMPORT" })).toBe(true);
+  expect(isRecordEditable(null)).toBe(false);
 });

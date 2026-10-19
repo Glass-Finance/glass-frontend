@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../../api/client", () => ({
-  default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+  default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
 import client from "../../api/client";
 import * as records from "../../api/communityRecords";
@@ -91,4 +91,48 @@ it("lists all community AI features with the server pagination contract", () => 
   const params = { pageNumber: 2, pageSize: 10, sortBy: "feature", dir: "asc" };
   usage.getCommunityAiUsage("crew", params);
   expect(client.get).toHaveBeenCalledWith("/communities/crew/ai/usage", { params });
+});
+
+it("keeps the platform-admin mirrors on their own admin paths", () => {
+  // The admin routes need platform permissions and no community membership, so
+  // they are a different scope, not a different argument on the same call.
+  records.getAdminCommunityRecords("crew", { pageNumber: 1 });
+  records.getAdminCommunityRecord("crew", "r1");
+  expect(client.get.mock.calls[0][0]).toBe("/admin/communities/crew/records");
+  expect(client.get.mock.calls[1][0]).toBe("/admin/communities/crew/records/r1");
+
+  usage.getAdminAiPolicy("crew");
+  usage.getAdminAiPeriods("crew");
+  usage.getAdminAiOperations("crew");
+  usage.getAdminAiAdjustments("crew");
+  // slice(-4) because the two admin record reads above also used client.get.
+  expect(client.get.mock.calls.slice(-4).map((call) => call[0])).toEqual([
+    "/admin/communities/crew/ai/policies/RECORD_IMPORT",
+    "/admin/communities/crew/ai/usage/RECORD_IMPORT/periods",
+    "/admin/communities/crew/ai/usage/RECORD_IMPORT/operations",
+    "/admin/communities/crew/ai/usage/RECORD_IMPORT/adjustments",
+  ]);
+});
+
+it("writes the admin policy with PUT and posts append-only adjustments", () => {
+  // A policy is replaced, not patched. And adjustments are append-only: there
+  // is no update or delete route to call, so a correction is a compensating
+  // entry of the opposite sign.
+  usage.updateAdminAiPolicy("crew", "RECORD_IMPORT", {
+    mode: "LIMITED",
+    periodType: "MONTHLY",
+    allowanceUnits: 100,
+  });
+  expect(client.put.mock.calls[0][0]).toBe("/admin/communities/crew/ai/policies/RECORD_IMPORT");
+  expect(client.put.mock.calls[0][1]).toEqual({
+    mode: "LIMITED",
+    periodType: "MONTHLY",
+    allowanceUnits: 100,
+  });
+
+  usage.createAdminAiAdjustment("crew", "RECORD_IMPORT", { deltaUnits: -10, reason: "correction" });
+  expect(client.post.mock.calls[0][0]).toBe(
+    "/admin/communities/crew/ai/usage/RECORD_IMPORT/adjustments",
+  );
+  expect(client.post.mock.calls[0][1]).toEqual({ deltaUnits: -10, reason: "correction" });
 });

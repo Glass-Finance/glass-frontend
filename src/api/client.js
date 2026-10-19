@@ -24,6 +24,102 @@ const client = axios.create({
   timeout: REQUEST_TIMEOUT_MS,
 });
 
+// ── Retry, scoped to requests that are safe to replay ────────────────────────
+//
+// A payment that fails on a flaky Nigerian mobile connection 30 seconds after
+// the member tapped "Make Payment" is not a failure the member should absorb —
+// the money may or may not have moved, and today the UI simply reports the
+// error. Retrying blind would be worse: a POST replayed without a key can
+// double-charge.
+//
+// So retry is opt-in BY THE PAYLOAD, not by path or method. A request carrying
+// a non-empty `idempotencyKey` in its body is one whose every replay the
+// backend treats as the same intent (see Transaction.idempotencyKey — nullable
+// = false, uniquely indexed, with the duplicate resolved on the constraint
+// violation rather than by the client asking twice). PaymentSummary and
+// AdminPaymentModal both hold that key in a ref precisely so it survives a
+// retry. Everything else — including verifyPayment, which carries no key —
+// stays strictly single-shot, because for those a second attempt is a second
+// side effect, not a recovery.
+//
+// A second gate decides WHICH failures are worth replaying, and it is
+// deliberately narrow — see isRetryableIdempotentError below. A key makes a
+// replay SAFE; it does not make every failure worth retrying.
+export const IDEMPOTENT_RETRY_LIMIT = 2;
+export const IDEMPOTENT_RETRY_BASE_MS = 400;
+export const IDEMPOTENT_RETRY_MAX_MS = 2_000;
+
+// ONLY a failure that produced no response at all is replayed: the request
+// never got an answer (offline, DNS failure, connection reset, or an axios
+// timeout — the last of which also has no `response`). That is the one shape
+// where the client genuinely does not know the outcome, and it is the case
+// ADR-004 calls a "network retry" — the key makes the replay the same intent
+// rather than a second charge.
+//
+// A 4xx or 5xx RESPONSE is deliberately excluded, and the distinction is not
+// about severity — it is about who decided. A response means the backend
+// reached a verdict and reported it, and that verdict is the member's to see:
+// the payment screens surface a 500's message inline and leave the button
+// usable so the member chooses to retry, reusing the same key (see
+// e2e/payment-idempotency.spec.js, which pins that contract). Replaying it
+// behind the member's back would override a decision the server made.
+//
+// It is also unsafe in the response case, not merely unwanted. This backend
+// commits the Transaction row BEFORE it calls Paystack, so a 5xx raised by the
+// provider leaves an INITIATED transaction with no gateway payload behind it.
+// Replaying that key returns the existing transaction — 201, no
+// authorizationUrl, status INITIATED — which the payment screens read as
+// "charged immediately against a saved method" and report as "Payment sent".
+// A silent replay would therefore turn a visible failure into a false success.
+// (429 stays excluded for the same reason as any other response: the rate
+// limiter is answering correctly, and retrying it treats a protection
+// mechanism as a fault.)
+function isRetryableIdempotentError(error) {
+  if (!error) return false;
+  // A caller-cancelled request must not be resurrected by a retry.
+  if (axios.isCancel(error)) return false;
+  // No response at all = the request never got an answer.
+  return !error.response;
+}
+
+function readIdempotencyKey(config) {
+  if (!config) return null;
+  // axios leaves config.data as the object it was handed for JSON bodies; it
+  // only serialises at transform time. Tolerate a pre-serialised string
+  // anyway rather than silently skipping a retryable request.
+  const { data } = config;
+  if (data && typeof data === "object") {
+    return typeof data.idempotencyKey === "string" && data.idempotencyKey
+      ? data.idempotencyKey
+      : null;
+  }
+  if (typeof data === "string") {
+    try {
+      const parsed = JSON.parse(data);
+      return typeof parsed?.idempotencyKey === "string" && parsed.idempotencyKey
+        ? parsed.idempotencyKey
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+// Full jitter rather than fixed backoff: without it, every member who lost
+// connectivity on the same Paystack blip retries on the same schedule and
+// walks straight back into the outage together.
+function retryDelayMs(attempt) {
+  const ceiling = Math.min(IDEMPOTENT_RETRY_MAX_MS, IDEMPOTENT_RETRY_BASE_MS * 2 ** attempt);
+  return Math.random() * ceiling;
+}
+
 // ── Attach JWT to every request ───────────────────────────────────────────────
 client.interceptors.request.use((config) => {
   const token = getAccessToken();
@@ -268,6 +364,24 @@ client.interceptors.response.use(
         if (!originalRequest._skipAuthRedirect) clearSessionAndRedirect();
         return Promise.reject(refreshError);
       }
+    }
+
+    // ── Idempotent retry ──────────────────────────────────────────────────────
+    // Deliberately AFTER the 401 branch above. A request whose session could
+    // not be refreshed has already been handled (rejected, or redirected); it
+    // must not then be replayed here, or a dead session turns into three
+    // identical doomed round-trips before the member sees the sign-in page.
+    //
+    // Runs on the original config, so `_retry` (the 401 marker) and
+    // `_skipAuthRedirect` both survive the replay.
+    if (
+      isRetryableIdempotentError(error) &&
+      readIdempotencyKey(originalRequest) !== null &&
+      (originalRequest._idempotentRetries ?? 0) < IDEMPOTENT_RETRY_LIMIT
+    ) {
+      originalRequest._idempotentRetries = (originalRequest._idempotentRetries ?? 0) + 1;
+      await sleep(retryDelayMs(originalRequest._idempotentRetries - 1));
+      return client(originalRequest);
     }
 
     return Promise.reject(error);

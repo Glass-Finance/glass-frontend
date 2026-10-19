@@ -12,6 +12,8 @@ import {
   recordCounts,
   JOB_LABELS,
   errorDescription,
+  COMMIT_BLOCKED_CODE,
+  COMMIT_RETRIES_EXHAUSTED_CODE,
 } from "../../utils/recordBook";
 import { recordKeys } from "../../utils/recordBookQueryKeys";
 import RecordsTabs from "./records/RecordsTabs";
@@ -162,9 +164,9 @@ function JobContent({ access, jobId }) {
       {job.failureCode && (
         <ErrorNotice
           message={
-            job.failureCode === "IMPORT_COMMIT_BLOCKED"
+            job.failureCode === COMMIT_BLOCKED_CODE
               ? "Some records need attention before they can be saved. Review the updated issues, correct or skip those records, then save again."
-              : job.failureCode === "IMPORT_COMMIT_RETRIES_EXHAUSTED"
+              : job.failureCode === COMMIT_RETRIES_EXHAUSTED_CODE
                 ? "Saving could not finish after several attempts. Your review work is retained. You can try saving again when the service is available."
                 : job.failureMessage ||
                   "This import could not be processed. Use Import actions above to start fresh, or retry processing when available."

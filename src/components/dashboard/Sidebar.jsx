@@ -47,6 +47,7 @@ import { toPascalCaseName } from "../../utils/format";
 import { toastSuccess } from "../../utils/toast";
 import { MobileOverlay, SidebarLogo, LogoutButton, UserIdentity } from "./SidebarPrimitives";
 import PulseImg from "../common/PulseImg";
+import { Skeleton } from "../common/SkeletonUI";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 // `path` is the route under /dashboard; "home" maps to the per-community
@@ -554,11 +555,12 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
             >
               {loading ? (
                 // Skeleton. Translucent white rather than the neutral
-                // SkeletonUI grey, because this rail is dark. Decorative, so
-                // the wrapper carries aria-busy and these bars are hidden.
-                <div aria-hidden="true" className="flex flex-col gap-2 items-center w-full">
+                // SkeletonUI grey, because this rail is dark -- hence the
+                // explicit `tone`. Decorative, so the wrapper carries
+                // aria-busy and Skeleton sets aria-hidden on itself.
+                <div className="flex flex-col gap-2 items-center w-full">
                   {[0, 1].map((i) => (
-                    <div key={i} className="w-9 h-9 rounded-sm bg-white/10 animate-pulse" />
+                    <Skeleton key={i} tone="bg-white/10" className="w-9 h-9 rounded-sm" />
                   ))}
                 </div>
               ) : adminCommunities.length === 0 ? (

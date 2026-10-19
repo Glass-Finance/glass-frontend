@@ -105,6 +105,10 @@ src/
 
 Landing components in this repo are the **source of truth** but do not auto-sync to the marketing repo. Cross-domain navigation goes through `goToApp()` (`src/utils/deviceRedirect.js`), never raw `navigate()`.
 
+`npm run check:landing-sync` makes that hand-porting rule verifiable: any file present in **both** repos under a shared path must be byte-identical, so a copy that silently drifts fails instead of being discovered by eyeballing two sites side by side. A handful of shared files are **supposed** to differ — the deployment headers, the cross-domain origin fallback, the legal pages' SEO shell, the SDK-version-pinned configs — and those are enumerated in `INTENTIONALLY_DIVERGENT` in `scripts/check-landing-sync.mjs`, each with the reason it can never converge. That list is the thing to keep honest: an entry is only legitimate when the difference is permanent by design, and the script fails with exit `2` if an entry stops matching (a stale exemption hides future drift) or names a path neither repo has.
+
+Note the check **currently exits 1**, and that is correct — there is real unported drift outstanding. `docs/landing-drift.md` records what is left and which direction each one should be ported.
+
 ### Authorization Model
 
 - **Platform roles:** `SUPER_ADMIN`, `OPERATIONS_ADMIN`, `COMPLIANCE_ADMIN` grant platform-wide admin access.

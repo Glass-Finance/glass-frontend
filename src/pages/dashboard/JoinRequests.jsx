@@ -8,7 +8,7 @@ import {
 } from "../../hooks/useJoinRequests";
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
 import { usePageTitle } from "../../hooks/usePageTitle";
-import LoadingState from "../../components/common/LoadingState";
+import { Skeleton } from "../../components/common/SkeletonUI";
 import { Button } from "../../components/ui/Button";
 import { formatDate, formatDateShort } from "../../utils/format";
 
@@ -178,7 +178,24 @@ export default function JoinRequests() {
       </p>
 
       {isLoading ? (
-        <LoadingState className="py-8" />
+        // Same footprint as the real RequestCard below (px-5 py-4 card,
+        // w-11 h-11 rounded-full avatar slot) so the list does not jump when
+        // the requests arrive -- and so it agrees with the empty state, which
+        // already mirrors that card.
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3.5 px-5 py-4 bg-surface-container rounded-xl border border-surface-container-border"
+            >
+              <Skeleton className="w-11 h-11 rounded-full flex-shrink-0" />
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                <Skeleton className="h-3.5 w-40" />
+                <Skeleton className="h-3 w-56" tone="bg-gray-100" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : pending.length === 0 ? (
         // Shaped like a real RequestCard below (same px-5/py-4 card, same
         // w-11 h-11 rounded-full avatar slot) but dashed and empty, instead
