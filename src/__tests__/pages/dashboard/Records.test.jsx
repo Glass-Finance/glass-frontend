@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { getCommunityRecords } from "../../../api/records";
+import { getCommunityRecords, createCommunityRecord } from "../../../api/records";
 import Records from "../../../pages/dashboard/Records";
 
 // The two number/date contracts on this screen are silent-wrong when missed, so
@@ -17,6 +17,9 @@ import Records from "../../../pages/dashboard/Records";
 vi.mock("../../../api/records", () => ({
   getCommunityRecords: vi.fn(),
   getCommunityRecord: vi.fn(),
+  createCommunityRecord: vi.fn(),
+  updateCommunityRecord: vi.fn(),
+  deleteCommunityRecord: vi.fn(),
 }));
 
 vi.mock("../../../hooks/useActiveCommunityId", () => ({
@@ -58,6 +61,8 @@ const record = (over = {}) => ({
 beforeEach(() => {
   getCommunityRecords.mockReset();
   getCommunityRecords.mockResolvedValue(page([record()]));
+  createCommunityRecord.mockReset();
+  createCommunityRecord.mockResolvedValue({ status: 201, data: { data: record() } });
 });
 
 describe("Records", () => {
@@ -168,5 +173,74 @@ describe("Records", () => {
     await user.keyboard("{Enter}");
     // Row-click alone was mouse-only in SettlementsList until it was fixed.
     expect(document.activeElement).toBe(row);
+  });
+});
+
+describe("Records — manual writes", () => {
+  // Scoped by the <form>, not by role="dialog": ModalShell renders no dialog
+  // role at all, and the page header's trigger button and the modal's submit
+  // button share the "Add record" label, so a screen-wide query matches two.
+  // The Records page itself renders no form, so this is unambiguous.
+  async function openCreateForm() {
+    const user = userEvent.setup();
+    render(<Records />, { wrapper });
+    await screen.findByText("September dues");
+    await user.click(screen.getByRole("button", { name: /add record/i }));
+    const form = document.querySelector("form");
+    await within(form).findByLabelText(/^description/i);
+    return { user, form };
+  }
+
+  async function fillRequired(form, user, { amount = "500", date = "2026-10-01" } = {}) {
+    await user.type(within(form).getByLabelText("Amount"), amount);
+    await user.type(within(form).getByLabelText("Date"), date);
+  }
+
+  it("sends no duplicateAccepted on a first, unchallenged create", async () => {
+    // duplicateAccepted is consent, not a validation bypass. It must never ride
+    // along automatically or the backend's 409 guard becomes decorative.
+    const { user, form } = await openCreateForm();
+    await fillRequired(form, user);
+    await user.click(within(form).getByRole("button", { name: /add record/i }));
+
+    await waitFor(() => expect(createCommunityRecord).toHaveBeenCalled());
+    const body = createCommunityRecord.mock.calls[0][1];
+    expect(body).not.toHaveProperty("duplicateAccepted");
+    expect(body.amount).toBe(500);
+    expect(body.occurredOn).toBe("2026-10-01");
+  });
+
+  it("offers no duplicate override until the backend actually returns 409", async () => {
+    const { user, form } = await openCreateForm();
+    expect(screen.queryByText(/save anyway/i)).toBeNull();
+
+    createCommunityRecord.mockRejectedValue({ response: { status: 409, data: {} } });
+    await fillRequired(form, user);
+    await user.click(within(form).getByRole("button", { name: /add record/i }));
+
+    expect(await within(form).findByText(/save anyway/i)).toBeTruthy();
+  });
+
+  it("resends with duplicateAccepted only after the user accepts the duplicate", async () => {
+    const { user, form } = await openCreateForm();
+    createCommunityRecord.mockRejectedValue({ response: { status: 409, data: {} } });
+    await fillRequired(form, user);
+    await user.click(within(form).getByRole("button", { name: /add record/i }));
+
+    createCommunityRecord.mockClear();
+    createCommunityRecord.mockResolvedValue({ status: 201, data: { data: record() } });
+    await user.click(await within(form).findByText(/save anyway/i));
+
+    await waitFor(() => expect(createCommunityRecord).toHaveBeenCalled());
+    expect(createCommunityRecord.mock.calls[0][1].duplicateAccepted).toBe(true);
+  });
+
+  it("blocks a submit with a zero amount before it reaches the API", async () => {
+    const { user, form } = await openCreateForm();
+    await fillRequired(form, user, { amount: "0" });
+    await user.click(within(form).getByRole("button", { name: /add record/i }));
+
+    expect(await within(form).findByText(/greater than zero/i)).toBeTruthy();
+    expect(createCommunityRecord).not.toHaveBeenCalled();
   });
 });
