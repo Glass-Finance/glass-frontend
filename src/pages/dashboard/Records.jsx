@@ -1,17 +1,26 @@
 import { useMemo, useState } from "react";
-import { BookOpen, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { BookOpen, ArrowDownLeft, ArrowUpRight, Plus, Pencil, Trash2 } from "lucide-react";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
 import { useKycGate } from "../../hooks/useKycGate";
 import { isKycGatedCommunityRequestError } from "../../utils/kycStatus";
-import { useCommunityRecords, useCommunityRecord } from "../../hooks/useCommunityRecords";
+import {
+  useCommunityRecords,
+  useCommunityRecord,
+  useCreateCommunityRecord,
+  useUpdateCommunityRecord,
+  useDeleteCommunityRecord,
+} from "../../hooks/useCommunityRecords";
 import { isRecordEditable, reviewStatusLabel } from "../../utils/recordBook";
 import { getErrorMessage } from "../../utils/errorHandler";
 import { fmt, fmtDate } from "./platform-admin/shared";
 import LoadingState from "../../components/common/LoadingState";
 import ModalShell from "../../components/dashboard/ModalShell";
+import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
 import CommunityStaffKycNotice from "../../components/dashboard/CommunityStaffKycNotice";
+import { Button } from "../../components/ui/Button";
+import RecordFormModal from "./records/RecordFormModal";
 import {
   TableShell,
   TableFooter,
@@ -136,9 +145,12 @@ function AmountCell({ record }) {
   );
 }
 
-function RecordDetail({ communityId, recordId, onClose }) {
+function RecordDetail({ communityId, recordId, onClose, onEdit, onDelete }) {
   const { data, isLoading, error } = useCommunityRecord(communityId, recordId);
   const record = data;
+  // PLATFORM records are projections of platform transactions; the backend
+  // rejects writes on them, so neither control is offered.
+  const editable = isRecordEditable(record);
 
   return (
     <ModalShell
@@ -158,10 +170,33 @@ function RecordDetail({ communityId, recordId, onClose }) {
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <SourceBadge source={record.source} />
               <ReviewBadge status={record.reviewStatus} />
-              {!isRecordEditable(record) && (
+              {!editable && (
                 <span className="text-[10px] text-gray-400">Platform records are read-only.</span>
               )}
             </div>
+
+            {editable && (
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant="outline-neutral"
+                  size="xs"
+                  fullWidth={false}
+                  onClick={() => onEdit(record)}
+                >
+                  <Pencil size={12} className="mr-1.5" />
+                  Edit
+                </Button>
+                <Button
+                  variant="critical"
+                  size="xs"
+                  fullWidth={false}
+                  onClick={() => onDelete(record)}
+                >
+                  <Trash2 size={12} className="mr-1.5" />
+                  Delete
+                </Button>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
@@ -240,6 +275,20 @@ export default function Records() {
   // PageRequest.of(pageNumber - 1, …) and rejects page 0 with a 400.
   const [pageNumber, setPageNumber] = useState(1);
   const [openRecordId, setOpenRecordId] = useState(null);
+  // null | "new" | { record } — the form modal remounts on identity change via
+  // `key`, so switching rows reseeds cleanly (same approach as GroupFormModal).
+  const [editing, setEditing] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [formError, setFormError] = useState("");
+  // Set after a 409 so the form can offer the explicit duplicate override. The
+  // pending body is held here so "Save anyway" resends it verbatim with
+  // duplicateAccepted rather than re-deriving it.
+  const [duplicateRetry, setDuplicateRetry] = useState(null);
+
+  const createRecord = useCreateCommunityRecord(communityId);
+  const updateRecord = useUpdateCommunityRecord(communityId);
+  const deleteRecord = useDeleteCommunityRecord(communityId);
+  const formSaving = createRecord.isPending || updateRecord.isPending;
 
   const debouncedSet = useDebounce((v) => {
     setDebouncedSearch(v);
@@ -287,6 +336,54 @@ export default function Records() {
     };
   }
 
+  function closeForm() {
+    setEditing(null);
+    setFormError("");
+    setDuplicateRetry(null);
+  }
+
+  // A 409 is the backend asking for consent, not reporting a failure: this
+  // duplicates a record the community already committed. It is surfaced as an
+  // explicit choice rather than retried automatically — duplicateAccepted is
+  // consent, not a validation bypass, and silently resending it would create
+  // the duplicate the user never agreed to.
+  async function save(payload, { acceptDuplicate = false } = {}) {
+    const isEdit = Boolean(editing && editing !== "new");
+    setFormError("");
+    setDuplicateRetry(null);
+    try {
+      if (isEdit) {
+        await updateRecord.mutateAsync({ recordId: editing.id, payload });
+      } else {
+        await createRecord.mutateAsync({
+          ...payload,
+          ...(acceptDuplicate ? { duplicateAccepted: true } : {}),
+        });
+      }
+      closeForm();
+      setOpenRecordId(null);
+    } catch (err) {
+      if (err?.response?.status === 409) {
+        setFormError("This looks like a duplicate of a record you already have.");
+        setDuplicateRetry(payload);
+        return;
+      }
+      setFormError(getErrorMessage(err, "Couldn't save the record."));
+    }
+  }
+
+  async function runDelete() {
+    if (!confirmDelete) return;
+    try {
+      await deleteRecord.mutateAsync(confirmDelete.id);
+      setConfirmDelete(null);
+      setOpenRecordId(null);
+    } catch (err) {
+      setFormError(getErrorMessage(err, "Couldn't delete the record."));
+      setConfirmDelete(null);
+    }
+  }
+
   if (!communityId) {
     return (
       <div className="px-4 md:px-8 py-6">
@@ -309,6 +406,10 @@ export default function Records() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button size="xs" fullWidth={false} onClick={() => setEditing("new")}>
+            <Plus size={12} className="mr-1.5" />
+            Add record
+          </Button>
           <SearchBar
             value={search}
             onChange={(v) => {
@@ -438,6 +539,45 @@ export default function Records() {
           communityId={communityId}
           recordId={openRecordId}
           onClose={() => setOpenRecordId(null)}
+          onEdit={(record) => {
+            setFormError("");
+            setDuplicateRetry(null);
+            setEditing({ record });
+          }}
+          onDelete={(record) => setConfirmDelete(record)}
+        />
+      )}
+
+      {editing && (
+        <RecordFormModal
+          key={editing === "new" ? "new" : editing.id}
+          record={editing === "new" ? null : editing.record}
+          onClose={closeForm}
+          onSubmit={(payload) => save(payload)}
+          saving={formSaving}
+          error={formError}
+          // Only offered after the backend actually returned 409, so the
+          // override never appears for an unrelated failure.
+          onAcceptDuplicate={
+            duplicateRetry ? () => save(duplicateRetry, { acceptDuplicate: true }) : undefined
+          }
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete this record?"
+          subtitle={fmtBusinessDate(confirmDelete.occurredOn)}
+          description="This removes the record from the visible record book. It can't be undone."
+          confirmLabel="Delete record"
+          confirmingLabel="Deleting…"
+          confirming={deleteRecord.isPending}
+          error={formError}
+          onConfirm={runDelete}
+          onClose={() => {
+            setConfirmDelete(null);
+            setFormError("");
+          }}
         />
       )}
     </div>
