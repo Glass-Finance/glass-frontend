@@ -75,11 +75,9 @@ describe("client.js idempotent retry", () => {
 
   const paymentPayload = () => ({ idempotencyKey: "key-123", amount: 5000 });
 
-  it("replays a keyed request once after a 503 and resolves on the retry", async () => {
+  it("replays a keyed request once after a lost connection and resolves on the retry", async () => {
     adapter
-      .mockImplementationOnce(() =>
-        Promise.reject(axiosError({ url: PAY_PATH, method: "post", data: paymentPayload() }, 503)),
-      )
+      .mockImplementationOnce((cfg) => Promise.reject(networkError(cfg)))
       .mockImplementationOnce((cfg) => Promise.resolve(ok(cfg)));
 
     const res = await client.post(PAY_PATH, paymentPayload());
@@ -94,17 +92,24 @@ describe("client.js idempotent retry", () => {
     expect(keyOf(adapter.mock.calls[1])).toBe("key-123");
   });
 
-  it("retries a keyed request after a network error with no response", async () => {
-    adapter
-      .mockImplementationOnce((cfg) => Promise.reject(networkError(cfg)))
-      .mockImplementationOnce((cfg) => Promise.resolve(ok(cfg)));
+  it("does NOT retry a keyed request answered with a 5xx that carries a response", async () => {
+    // Regression guard for the E2E payment-idempotency failure: this backend
+    // commits the Transaction row before it calls Paystack, so a 5xx leaves an
+    // unfinalised transaction behind. Replaying the key returns that existing
+    // transaction — 201 with no authorizationUrl — which the payment screens
+    // would report as "Payment sent". A 5xx is the server's own verdict and
+    // must reach the member, who then retries on the same mounted flow.
+    adapter.mockImplementation((cfg) => Promise.reject(axiosError(cfg, 500)));
 
-    await expect(client.post(PAY_PATH, paymentPayload())).resolves.toMatchObject({ status: 200 });
-    expect(adapter).toHaveBeenCalledTimes(2);
+    await expect(client.post(PAY_PATH, paymentPayload())).rejects.toThrow();
+    expect(adapter).toHaveBeenCalledTimes(1);
   });
 
   it("does NOT retry a request with no idempotency key", async () => {
-    adapter.mockImplementation((cfg) => Promise.reject(axiosError(cfg, 503)));
+    // Uses a network error — the shape that IS retryable — so this fails if the
+    // key gate breaks, rather than passing because the status happened to be
+    // non-retryable.
+    adapter.mockImplementation((cfg) => Promise.reject(networkError(cfg)));
 
     await expect(
       client.post("/payments/callback/verify", null, { params: { reference: "r1" } }),
@@ -113,7 +118,7 @@ describe("client.js idempotent retry", () => {
     expect(adapter).toHaveBeenCalledTimes(1);
   });
 
-  it("does NOT retry a keyed request rejected with a 4xx", async () => {
+  it("does NOT retry a keyed request answered with a 4xx", async () => {
     adapter.mockImplementation((cfg) => Promise.reject(axiosError(cfg, 400)));
 
     await expect(client.post(PAY_PATH, paymentPayload())).rejects.toThrow();
@@ -130,7 +135,7 @@ describe("client.js idempotent retry", () => {
   });
 
   it("gives up after the retry limit rather than looping", async () => {
-    adapter.mockImplementation((cfg) => Promise.reject(axiosError(cfg, 503)));
+    adapter.mockImplementation((cfg) => Promise.reject(networkError(cfg)));
 
     await expect(client.post(PAY_PATH, paymentPayload())).rejects.toThrow();
     // 1 initial attempt + 2 retries, then the error surfaces to the caller.
@@ -138,7 +143,7 @@ describe("client.js idempotent retry", () => {
   });
 
   it("treats an empty idempotency key as absent", async () => {
-    adapter.mockImplementation((cfg) => Promise.reject(axiosError(cfg, 503)));
+    adapter.mockImplementation((cfg) => Promise.reject(networkError(cfg)));
 
     await expect(client.post(PAY_PATH, { idempotencyKey: "", amount: 5000 })).rejects.toThrow();
     expect(adapter).toHaveBeenCalledTimes(1);
