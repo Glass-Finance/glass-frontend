@@ -40,15 +40,25 @@ Selections persist across pages and filters for one community/job, up to 500 exp
 
 Retry continues an eligible failed job. Start fresh import creates a new job and AI operation without copying corrections or consent. Discard removes pending rows only in allowed states, retaining job history.
 
+### Community AI usage and policy
+
+**Settings → Community → AI usage & policy** provides a read-only view of every AI feature returned by the selected community’s paginated usage endpoint, currently spreadsheet imports. The Imports allowance notice links to this page. Access requires `community.ai.usage.read` as well as the community dashboard guard.
+
+Each feature shows used, in-progress and remaining units, availability, base allowance, the signed period adjustment, reset schedule, period start and next reset. Timestamps use `timezone` from GET `/user/me` through the existing `useMe` query and display the timezone label, including daylight-saving changes. Missing or invalid timezone values fall back to the browser timezone. This applies to period dates, last-updated time, and the Imports allowance reset notice. Unlimited allowances display Unlimited; missing values remain Unavailable. Limited allowances show an accessible usage bar only when the returned counts and effective allowance support it. Each spreadsheet import unit is explained in one sentence. The Allowance rules section has no explanatory paragraph or editing controls.
+
+Refresh, window focus, reconnect, and applicable import progress events update the page. Import mutation and SSE invalidation refresh the same community’s list and compact notice together. The API does not expose general policy-change events, so unrelated policy changes are picked up on refresh/focus/reconnect. Failed refreshes retain clearly marked stale values; permission denial hides retained usage. Community changes reset pagination and never retain the previous community’s results.
+
+This view uses the effective allowance rules included in community usage responses. Policy editing, historical periods, operation logs and adjustment history remain platform-only.
+
 ### Integration boundaries
 
 - Axios wrappers: `src/api/communityRecords.js`, `recordImports.js`, `communityAiUsage.js`, and `files.js`.
 - React Query hooks: `useCommunityRecords`, `useRecordImports`, `useRecordImportRows`, `useCommunityAiUsage`, and `useRecordBookAccess`.
 - Shared interpretation/cache keys: `src/utils/recordBook.js` and `recordBookQueryKeys.js`.
-- Screens: `Records.jsx`, `RecordImports.jsx`, `RecordImportDetail.jsx`, with focused components under `pages/dashboard/records/`.
+- Screens: `Records.jsx`, `RecordImports.jsx`, `RecordImportDetail.jsx`, with focused components under `pages/dashboard/records/`; community AI settings live under `pages/dashboard/settings/community/`.
 - Notification deep links use the verified `RECORD_IMPORT_STATUS` content and `RecordImportJob` related entity in `notificationRouting.js`.
 
-The contract source is the backend's 18 October 2026 frontend integration guide, checked against the deployed `/v3/api-docs`. Records regression tests live under `src/__tests__/` and cover synthetic and mocked behavior. The existing Playwright setup and app-level browser tests remain in place. They do not establish that authenticated production permissions, private downloads, AI processing, or background commit workers work in a deployed environment.
+The contract source is the backend's 18 October 2026 frontend integration guide, checked against the deployed `/v3/api-docs`. Records regression tests live under `src/__tests__/` and cover synthetic and mocked behavior. The existing Playwright setup covers record workflows, dialogs, drag and drop, and AI settings navigation, modes, live refresh, permissions, errors, and responsive layouts. They do not establish that authenticated production permissions, private downloads, AI processing, or background commit workers work in a deployed environment.
 
 ## Proposed/future direction
 

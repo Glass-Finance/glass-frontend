@@ -92,6 +92,7 @@ function renderSettings(initialPath = "/dashboard/settings/community") {
           <Route path="finance" element={<div>Finance menu destination</div>} />
           <Route path="community" element={<div>Community menu destination</div>} />
           <Route path="community/profile" element={<div>Community Profile destination</div>} />
+          <Route path="community/ai-usage" element={<div>AI usage destination</div>} />
           <Route path="community/member-access" element={<div>Member Access destination</div>} />
           <Route path="account/profile" element={<div>Profile destination</div>} />
           <Route path="finance/paystack" element={<div>Payout Account destination</div>} />
@@ -318,4 +319,13 @@ describe("Settings -- Identity Verification row", () => {
 
     expect(screen.getByText("Not started")).toBeTruthy();
   });
+});
+
+it("opens AI usage settings in the explicitly selected community", async () => {
+  useActiveCommunityId.mockReturnValue("comm-b");
+  const user = userEvent.setup();
+  renderSettings("/dashboard/settings/community?community=comm-b");
+  await user.click(screen.getByRole("button", { name: /AI usage & policy/i }));
+  expect(await screen.findByText("AI usage destination")).toBeTruthy();
+  expect(currentUrl()).toBe("/dashboard/settings/community/ai-usage?community=comm-b");
 });

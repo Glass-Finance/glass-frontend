@@ -32,7 +32,7 @@ export function useRecordImport(id, jobId, enabled = true) {
   useEffect(() => {
     if (status === "COMMITTED") {
       void client.invalidateQueries({ queryKey: recordKeys.records(id) });
-      void client.invalidateQueries({ queryKey: recordKeys.usage(id) });
+      void client.invalidateQueries({ queryKey: recordKeys.usageRoot(id) });
     }
   }, [status, id, client]);
   return query;
@@ -59,7 +59,7 @@ export function useImportAction(id, jobId, action) {
     },
     onSettled: () => {
       void client.invalidateQueries({ queryKey: recordKeys.imports(id) });
-      void client.invalidateQueries({ queryKey: recordKeys.usage(id) });
+      void client.invalidateQueries({ queryKey: recordKeys.usageRoot(id) });
     },
   });
 }
@@ -83,7 +83,7 @@ export function useImportUpload(id) {
     onSuccess: (job) => client.setQueryData(recordKeys.job(id, job.id), job),
     onSettled: () => {
       void client.invalidateQueries({ queryKey: recordKeys.imports(id) });
-      void client.invalidateQueries({ queryKey: recordKeys.usage(id) });
+      void client.invalidateQueries({ queryKey: recordKeys.usageRoot(id) });
     },
   });
   // Reconcile an uncertain POST response by its uploaded file ID before any

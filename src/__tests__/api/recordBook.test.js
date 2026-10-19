@@ -4,6 +4,7 @@ vi.mock("../../api/client", () => ({
 }));
 import client from "../../api/client";
 import * as records from "../../api/communityRecords";
+import * as usage from "../../api/communityAiUsage";
 import * as imports from "../../api/recordImports";
 import { uploadFile, uploadFiles } from "../../api/files";
 
@@ -84,4 +85,10 @@ describe("spreadsheet file-part MIME metadata", () => {
     uploadFile(csv, "SUPPORT_ATTACHMENT");
     expect(client.post.mock.calls[1][1].get("file").type).toBe("application/octet-stream");
   });
+});
+
+it("lists all community AI features with the server pagination contract", () => {
+  const params = { pageNumber: 2, pageSize: 10, sortBy: "feature", dir: "asc" };
+  usage.getCommunityAiUsage("crew", params);
+  expect(client.get).toHaveBeenCalledWith("/communities/crew/ai/usage", { params });
 });

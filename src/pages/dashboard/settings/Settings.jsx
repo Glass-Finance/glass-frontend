@@ -109,6 +109,13 @@ const FINANCE_ITEMS = [
 
 const COMMUNITY_ITEMS = [
   {
+    label: "AI usage & policy",
+    desc: "View your community’s AI usage, remaining allowance, and reset time.",
+    path: "/dashboard/settings/community/ai-usage",
+    communityScoped: true,
+    icon: IconNavAutopay,
+  },
+  {
     label: "Community Profile",
     desc: "How your community looks and behaves to its members.",
     path: "/dashboard/settings/community/profile",
@@ -132,6 +139,7 @@ const BREADCRUMB_MAP = {
   "finance/payment-methods": { parent: "Finance", child: "Payment Methods" },
   "finance/auto-pay": { parent: "Finance", child: "Auto-Pay" },
   "finance/paystack": { parent: "Finance", child: "Payout Account" },
+  "community/ai-usage": { parent: "Community", child: "AI usage & policy" },
   "community/profile": { parent: "Community", child: "Community Profile" },
   "community/member-access": { parent: "Community", child: "Member Access" },
 };

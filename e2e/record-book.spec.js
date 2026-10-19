@@ -12,7 +12,7 @@ import {
 const PERSONA = {
   ...ADMIN_PERSONA,
   user: { ...ADMIN_PERSONA.user, role: "USER", isPlatformAdmin: false, isAdmin: true },
-  profile: { ...ADMIN_PERSONA.profile, platformRole: "USER" },
+  profile: { ...ADMIN_PERSONA.profile, platformRole: "USER", timezone: "America/New_York" },
 };
 const COMMUNITY = {
   id: "comm-records",
@@ -46,8 +46,26 @@ const ROW = {
   reviewStatus: "VALID",
   issues: [],
 };
+const AI_USAGE = {
+  id: "ai-record-import",
+  communityId: COMMUNITY.id,
+  feature: "RECORD_IMPORT",
+  mode: "LIMITED",
+  meterType: "OPERATIONS",
+  periodType: "MONTHLY",
+  allowanceUnits: 100,
+  adjustmentUnits: 10,
+  consumedUnits: 20,
+  reservedUnits: 5,
+  remainingUnits: 85,
+  periodStartsAt: "2026-10-01T00:00:00Z",
+  resetsAt: "2026-11-01T00:00:00Z",
+};
 async function seed(page) {
   const state = {
+    usageFeatures: [AI_USAGE],
+    usageAllowed: true,
+    usageError: false,
     records: [],
     job: null,
     rows: [{ ...ROW, id: "draft-1", source: "FILE_IMPORT", payerName: "Imported payer" }],
@@ -68,8 +86,15 @@ async function seed(page) {
           code: "COMMUNITY_OWNER",
           permissions: ["read", "create", "update", "delete", "import"]
             .map((key) => ({ code: `community.recordbook.${key}` }))
-            .concat([{ code: "community.ai.usage.read" }]),
+            .concat(state.usageAllowed ? [{ code: "community.ai.usage.read" }] : []),
         });
+        return true;
+      }
+      if (path === `/communities/${COMMUNITY.id}/ai/usage`) {
+        state.calls.push({ path, params: Object.fromEntries(url.searchParams) });
+        if (state.usageError)
+          await json(route, 500, { success: false, message: "temporarily unavailable" });
+        else await ok(route, pageOf(state.usageFeatures));
         return true;
       }
       if (path === `/communities/${COMMUNITY.id}/ai/usage/RECORD_IMPORT`) {
@@ -632,4 +657,101 @@ test("dropping onto the Imports page opens a validated upload preview", async ({
   await page.getByRole("button", { name: "Upload and start imports" }).click();
   await expect(page).toHaveURL(/\/dashboard\/records\/imports\/job-1\?community=/);
   expect(state.calls.find((call) => call.path === "/file/upload").fileContentType).toBe("text/csv");
+});
+
+for (const width of [375, 768, 1440])
+  test(`community AI usage settings fit ${width}px and refresh from SSE`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium", "explicit admin viewports");
+    const { state, event } = await seed(page);
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto(`/dashboard/settings/community?community=${COMMUNITY.slug}`);
+    await page.getByRole("button", { name: /AI usage & policy/ }).click();
+    await expect(page).toHaveURL(
+      `/dashboard/settings/community/ai-usage?community=${COMMUNITY.slug}`,
+    );
+    const feature = page.getByRole("region", { name: "Spreadsheet imports" });
+    await expect(feature).toBeVisible();
+    await expect(feature).toContainText("100 operations per month");
+    await expect(feature).toContainText("+10 operations");
+    await expect(feature).toContainText("Oct 31, 2026, 8:00 PM EDT");
+    await expect(page.getByText(/Last updated/)).toContainText(/EDT|EST/);
+    await expect(feature).toContainText("Each unit represents one spreadsheet import.");
+    await expect(feature).not.toContainText("Managed by Glass");
+    await expect(feature.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "25");
+    expect(state.calls.find((call) => call.path.endsWith("/ai/usage")).params).toEqual({
+      pageNumber: "1",
+      pageSize: "10",
+      sortBy: "feature",
+      dir: "asc",
+    });
+    state.usageFeatures = [{ ...AI_USAGE, consumedUnits: 21, remainingUnits: 84 }];
+    await event("MAPPING", 1);
+    await expect(feature.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "26");
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    await page.screenshot({
+      path: testInfo.outputPath(`ai-settings-${width}.png`),
+      fullPage: true,
+    });
+  });
+
+test("AI settings show all returned feature modes and retain stale usage after an error", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "admin settings");
+  const { state } = await seed(page);
+  state.usageFeatures = [
+    { ...AI_USAGE, id: "unlimited", mode: "UNLIMITED", allowanceUnits: null, remainingUnits: null },
+    {
+      ...AI_USAGE,
+      id: "disabled",
+      feature: "MEMBER_ASSISTANCE",
+      mode: "DISABLED",
+      remainingUnits: 0,
+    },
+    {
+      ...AI_USAGE,
+      id: "exhausted",
+      feature: "REPORT_ASSISTANCE",
+      consumedUnits: 110,
+      reservedUnits: 0,
+      remainingUnits: 0,
+    },
+  ];
+  await page.goto(`/dashboard/settings/community/ai-usage?community=${COMMUNITY.slug}`);
+  const unlimited = page.getByRole("region", { name: "Spreadsheet imports" });
+  await expect(unlimited).toContainText("Unlimited");
+  await expect(unlimited.getByRole("progressbar")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Member assistance" })).toContainText("Disabled");
+  await expect(page.getByRole("region", { name: "Report assistance" })).toContainText(
+    "Allowance used up",
+  );
+  state.usageError = true;
+  await page.getByRole("button", { name: "Refresh", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("out of date");
+  await expect(unlimited).toBeVisible();
+  state.usageError = false;
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("AI settings enforce the usage permission and Imports links to the dedicated page", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "admin settings");
+  const { state } = await seed(page);
+  state.usageAllowed = false;
+  await page.goto(`/dashboard/settings/community/ai-usage?community=${COMMUNITY.slug}`);
+  await expect(
+    page.getByText("You don't have permission to view AI usage for this community."),
+  ).toBeVisible();
+  expect(state.calls.filter((call) => call.path.endsWith("/ai/usage"))).toHaveLength(0);
+  state.usageAllowed = true;
+  await page.goto(`/dashboard/records/imports?community=${COMMUNITY.slug}`);
+  await page.getByRole("button", { name: "View AI usage" }).click();
+  await expect(page).toHaveURL(`/dashboard/settings/community/ai-usage?community=${COMMUNITY.id}`);
+  await expect(page.getByRole("region", { name: "Spreadsheet imports" })).toBeVisible();
 });

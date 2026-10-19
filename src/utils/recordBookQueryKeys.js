@@ -6,6 +6,8 @@ export const recordKeys = {
   imports: (id) => ["community", id, "record-imports"],
   job: (id, jobId) => ["community", id, "record-imports", "job", jobId],
   usage: (id) => ["community", id, "ai-usage", "RECORD_IMPORT"],
+  usageRoot: (id) => ["community", id, "ai-usage"],
+  usageList: (id, params) => ["community", id, "ai-usage", "list", params],
 };
 export function refreshRecordImportEvent(client, payload, sequences) {
   if (
@@ -24,7 +26,7 @@ export function refreshRecordImportEvent(client, payload, sequences) {
   // Bound tab-lifetime bookkeeping; a forgotten sequence only causes a refetch.
   if (sequences.size > 1000) sequences.delete(sequences.keys().next().value);
   void client.invalidateQueries({ queryKey: recordKeys.imports(communityId) });
-  void client.invalidateQueries({ queryKey: recordKeys.usage(communityId) });
+  void client.invalidateQueries({ queryKey: recordKeys.usageRoot(communityId) });
   void client.invalidateQueries({ queryKey: ["notifications"] });
   if (status === "COMMITTED")
     void client.invalidateQueries({ queryKey: recordKeys.records(communityId) });

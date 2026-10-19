@@ -81,6 +81,9 @@ const PaystackAccount = lazy(() => import("./pages/dashboard/settings/finance/Pa
 const CommunityProfile = lazy(
   () => import("./pages/dashboard/settings/community/CommunityProfile"),
 );
+const CommunityAiUsage = lazy(
+  () => import("./pages/dashboard/settings/community/CommunityAiUsage"),
+);
 const MemberAccess = lazy(() => import("./pages/dashboard/settings/community/MemberAccess"));
 const SystemConfig = lazy(() => import("./pages/dashboard/settings/admin/SystemConfig"));
 const PlatformAdmin = lazy(() => import("./pages/dashboard/PlatformAdmin"));
@@ -279,6 +282,7 @@ function App() {
                   <Route path="finance/paystack" element={<PaystackAccount />} />
                   <Route path="community/profile" element={<CommunityProfile />} />
                   <Route path="community/member-access" element={<MemberAccess />} />
+                  <Route path="community/ai-usage" element={<CommunityAiUsage />} />
                 </Route>
               </Route>
             </Route>
