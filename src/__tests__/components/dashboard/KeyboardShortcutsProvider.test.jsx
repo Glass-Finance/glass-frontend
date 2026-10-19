@@ -188,3 +188,50 @@ describe("KeyboardShortcutsProvider — help overlay pausing other shortcuts", (
     expect(onA).toHaveBeenCalledTimes(1);
   });
 });
+
+it("pauses dashboard navigation and help inside an accessible modal while retaining Escape", async () => {
+  const { default: GlassModal } = await import("../../../components/common/GlassModal");
+  const { useShortcutsHelp } = await import("../../../hooks/useKeyboardShortcuts");
+  const navigate = vi.fn();
+  const close = vi.fn();
+  function ModalProbe({ open }) {
+    const { open: helpOpen } = useShortcutsHelp();
+    useRegisterShortcutGroup(
+      useMemo(() => [{ keys: "g h", description: "Home", handler: navigate }], []),
+    );
+    return (
+      <>
+        <p>{helpOpen ? "Help opened" : "Help closed"}</p>
+        <GlassModal
+          open={open}
+          title="Dirty draft"
+          onClose={close}
+          footer={<button type="button">Keep editing</button>}
+        >
+          Draft
+        </GlassModal>
+      </>
+    );
+  }
+  const { rerender } = render(
+    <KeyboardShortcutsProvider>
+      <ModalProbe open />
+    </KeyboardShortcutsProvider>,
+  );
+  screen.getByRole("button", { name: "Keep editing" }).focus();
+  press("g");
+  press("h");
+  press("?");
+  expect(navigate).not.toHaveBeenCalled();
+  expect(screen.getByText("Help closed")).toBeTruthy();
+  press("Escape");
+  expect(close).toHaveBeenCalledTimes(1);
+  rerender(
+    <KeyboardShortcutsProvider>
+      <ModalProbe open={false} />
+    </KeyboardShortcutsProvider>,
+  );
+  press("g");
+  press("h");
+  expect(navigate).toHaveBeenCalledTimes(1);
+});

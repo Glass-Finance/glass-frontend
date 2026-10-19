@@ -60,3 +60,25 @@ describe("GlassModal", () => {
     expect(document.body.style.overflow).not.toBe("hidden");
   });
 });
+
+it("keeps keyboard focus inside from the initial dialog and restores the trigger on close", () => {
+  const trigger = document.createElement("button");
+  document.body.append(trigger);
+  trigger.focus();
+  const { unmount } = renderModal();
+  const dialog = screen.getByRole("dialog");
+  const first = screen.getByRole("button", { name: "Close" });
+  const last = screen.getByRole("button", { name: "Primary" });
+  // jsdom has no layout: make the visible controls measurable for the trap.
+  for (const node of [first, last]) Object.defineProperty(node, "offsetParent", { value: dialog });
+  expect(document.activeElement).toBe(dialog);
+  fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+  expect(document.activeElement).toBe(last);
+  fireEvent.keyDown(window, { key: "Tab" });
+  expect(document.activeElement).toBe(first);
+  fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+  expect(document.activeElement).toBe(last);
+  unmount();
+  expect(document.activeElement).toBe(trigger);
+  trigger.remove();
+});
