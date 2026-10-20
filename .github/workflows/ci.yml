@@ -6,6 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege for every job in this workflow. Each job that needs more
+# (CodeQL needs security-events: write) declares it at the job level, which
+# overrides this. Without it, GITHUB_TOKEN inherits the repository/org default
+# — commonly read-write — into jobs that only ever need to read the tree.
+permissions:
+  contents: read
+
+# One run per ref. A superseded pull request keeps burning minutes for
+# nothing otherwise, and two runs racing to write the same ref is a source
+# of confusing failures.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Lint & Build
@@ -22,9 +36,12 @@ jobs:
       VITE_TEST_MODE: "false"
 
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to a commit SHA, not a floating tag. A tag can be
+      # moved to point at new code by whoever controls the tag; a SHA cannot.
+      # Dependabot's github-actions ecosystem keeps the pins current.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -54,7 +71,7 @@ jobs:
 
       - name: Upload coverage summary (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-summary
           path: |
@@ -81,14 +98,51 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The service worker is the one shipped artifact whose BEHAVIOUR nothing
+      # else verifies: it controls offline navigation and API caching, and it
+      # is only visible once it is deployed. verify:pwa executes the built
+      # dist/sw.js in a mocked ServiceWorkerGlobalScope and drives real fetch
+      # events through it, so a broken worker fails the PR instead of
+      # production. It has to run after the build — it inspects dist/sw.js.
+      - name: Verify the built service worker
+        run: npm run verify:pwa
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Full history, so the scan sees commits a shallow clone would hide.
+          fetch-depth: 0
+
+      # Scans the commits in the push / pull request for credentials, and
+      # exits non-zero (183) when it finds one. `--results=verified,unknown`
+      # is TruffleHog's documented CI setting: it reports a credential that
+      # was confirmed live, or one whose verification could not complete, and
+      # ignores the unverified noise a generic pattern match produces.
+      #
+      # The action passes --fail itself, so only the result filter is here.
+      # The CLI version is pinned alongside the action SHA: the action runs
+      # the scanner with --no-update, so a floating image would silently keep
+      # using an old detector set. The image tag carries NO `v` prefix --
+      # ghcr.io publishes `3.99.3`, not `v3.99.3`, and a wrong tag fails the
+      # job with "manifest unknown" rather than scanning anything.
+      - name: Scan for leaked credentials
+        uses: trufflesecurity/trufflehog@e63326d6545de8f425d93ce24078c6e68d83f70e # v3.99.3
+        with:
+          version: "3.99.3"
+          extra_args: --results=verified,unknown
+
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -104,7 +158,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
           path: playwright-report/

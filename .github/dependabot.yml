@@ -54,8 +54,6 @@ updates:
         update-types: [version-update:semver-major]
       - dependency-name: motion
         update-types: [version-update:semver-major]
-      - dependency-name: framer-motion
-        update-types: [version-update:semver-major]
       - dependency-name: lucide-react
         update-types: [version-update:semver-major]
       - dependency-name: react
@@ -75,3 +73,23 @@ updates:
         update-types:
           - version-update:semver-minor
           - version-update:semver-major
+
+  # The workflow files pin every action to a commit SHA rather than a tag,
+  # so this ecosystem is what keeps those pins current. Without it, a pinned
+  # action never moves again — which is the point of pinning, but it also
+  # means security fixes to the actions themselves have to be applied by hand.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Actions move together; one PR for all of them is easier to review
+      # than one per action.
+      github-actions:
+        patterns:
+          - "*"

@@ -37,3 +37,18 @@ blob-report/
 *.njsproj
 *.sln
 *.sw?
+
+# Build / tool caches
+*.tsbuildinfo
+.eslintcache
+.vercel/
+
+# Credentials and keys — never commit these, and never let them reach a
+# build context. The repo's own secrets live in .env (ignored above); these
+# are the file-extension shapes that turn up in pasted material.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
