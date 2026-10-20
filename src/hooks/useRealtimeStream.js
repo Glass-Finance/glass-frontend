@@ -31,19 +31,55 @@ export function useRealtimeConnected() {
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 const STREAM_URL = `${BASE_URL}/api/v1/realtime/stream`;
 
-// The backend doesn't document most of its SSE event names/payloads yet, so
-// events are routed to cache invalidations by keyword against the event name +
-// raw data. Worst case an event refetches slightly more than needed — every
-// query here is already cheap and cached, and the existing 30s notification
-// polling remains as a safety net for anything the stream misses.
+// The backend's RealtimeEventType, verbatim.
 //
-// RECORD_IMPORT_PROGRESS is the one documented exception: the record-book
-// guide in glass-backend (docs/new/community-record-book-frontend-api.md)
-// names the event and gives its payload as { title, description, communityId,
-// jobId, status, sequence, failureCode }. It is subscribed by name below and
-// gets an explicit rule, because it carries an underscore where the other
-// guesses are hyphenated and would otherwise be missed.
+// The wire format IS the enum name: RealtimeEventConsumer sends
+// `.name(event.type().name())`, and the names have never been renamed — the
+// enum has carried NOTIFICATION_CREATED, EXPORT_COMPLETED and EXPORT_FAILED
+// since the stream landed in June. So this list is exact, not a guess.
+//
+// It used to be a set of lower-case guesses ("notification", "payment",
+// "transaction", ...) that the backend has never sent. A named SSE event is
+// delivered only to listeners registered for that exact name, so
+// NOTIFICATION_CREATED was received by the browser and DISCARDED. The
+// notification push has therefore not worked since the stream was added, and
+// the symptom was invisible: useNotifications falls back to a slow poll, but
+// only when the connection is DOWN, and this bug leaves it UP — so a new
+// notification took up to five minutes to appear.
+//
+// "message" is the SSE default type for an UNNAMED event. The backend always
+// names its events, so this never fires today; it stays as a cheap safety net
+// for a server that sends one without a name.
+const EVENT_NAMES = [
+  "message",
+  ...[
+    "CONNECTED",
+    "RECORD_IMPORT_PROGRESS",
+    "NOTIFICATION_CREATED",
+    "EXPORT_COMPLETED",
+    "EXPORT_FAILED",
+  ],
+];
+
+// Matched against the EVENT TYPE only, never the payload.
+//
+// This used to be tested against the event name AND the raw data, which
+// silently swallowed real events: "shipping" contains "ping", so a
+// notification titled "Shipping update" was dropped on the floor and never
+// invalidated the notification list. Heartbeats do not need the payload to be
+// considered — the backend sends them as SSE comments
+// (RealtimeHeartbeatScheduler sends `.comment("ping")`), and comments are not
+// dispatched as events at all, so they never reach this handler. CONNECTED is
+// the only real event type matched here, and there is nothing to invalidate
+// for it.
 const IGNORE = /heartbeat|ping|keep-?alive|timeout|connected/i;
+// Rules are matched against the event name AND the raw payload, so they do
+// double duty now that the event names are exact: NOTIFICATION_CREATED
+// matches the /notification/ rule by name, and a notification whose body
+// mentions a payment or an invite routes the related lists too. Worst case an
+// event refetches slightly more than needed — every query here is already
+// cheap and cached, and the notification polling remains as a safety net for
+// anything the stream misses.
 const INVALIDATION_RULES = [
   {
     match: /transaction|payment/i,
@@ -67,27 +103,6 @@ const INVALIDATION_RULES = [
   { match: /notification/i, keys: [["notifications"]] },
 ];
 const FALLBACK_KEYS = [["notifications"]];
-
-// EventSource has no wildcard listener — named events (`event: foo`) are
-// only delivered to addEventListener("foo"). Since the names aren't
-// documented, subscribe to the plausible ones (case-sensitive, so both
-// casings) plus the unnamed default. Unrecognized names fall through to
-// the polling safety net until the backend documents them.
-const EVENT_NAMES = [
-  "RECORD_IMPORT_PROGRESS",
-  "message",
-  ...[
-    "notification",
-    "transaction",
-    "payment",
-    "obligation",
-    "member",
-    "invite",
-    "join-request",
-    "update",
-    "event",
-  ].flatMap((n) => [n, n.toUpperCase()]),
-];
 
 // Opens the realtime SSE stream while the user is authenticated and nudges
 // React Query caches when events arrive, so dashboards update without
@@ -136,8 +151,18 @@ export default function useRealtimeStream() {
         }
         return;
       }
+      if (e.type === "EXPORT_COMPLETED" || e.type === "EXPORT_FAILED") {
+        // Export jobs are not held in a React Query cache — useExportJob polls
+        // GET /exports/{id} directly — so there is no key to invalidate here.
+        // The event is subscribed so the browser does not discard it, and so
+        // the completion is observable if the export flow is ever moved onto a
+        // query. Falling through to FALLBACK_KEYS would refetch the
+        // notification list every time an export finished, for no reason.
+        return;
+      }
+      // IGNORE is tested against the event TYPE alone — see the note on it.
+      if (IGNORE.test(e.type)) return;
       const haystack = `${e.type} ${typeof e.data === "string" ? e.data : ""}`;
-      if (IGNORE.test(haystack)) return;
       const rule = INVALIDATION_RULES.find((r) => r.match.test(haystack));
       scheduleInvalidate(rule ? rule.keys : FALLBACK_KEYS);
     }
