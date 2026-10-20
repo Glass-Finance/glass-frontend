@@ -29,7 +29,6 @@ import {
   SquaresFour,
   UsersThree,
 } from "@phosphor-icons/react";
-import IntroScene from "../../assets/kyc/intro-identity.svg?react";
 import CaptureScene from "../../assets/kyc/capture-documents.svg?react";
 import SuccessScene from "../../assets/kyc/success-celebration.svg?react";
 import PendingScene from "../../assets/kyc/pending-loading.svg?react";

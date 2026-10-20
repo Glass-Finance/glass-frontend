@@ -25,7 +25,7 @@ import { useAuth } from "../../store/AuthContext";
 import { useAllNotifications } from "../../hooks/useNotifications";
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
 import { useCommunities } from "../../hooks/useCommunities";
-import { searchCommunity } from "../../api/communities";
+import { useCommunitySearch } from "../../hooks/useCommunitySearch";
 import NotificationsPanel from "./NotificationsPanel";
 import { formatNaira, toPascalCaseName } from "../../utils/format";
 import { useClickOutside } from "../../hooks/useClickOutside";
@@ -109,12 +109,14 @@ export default function Topbar({
   // ── Search — GET /communities/{id}/search, debounced (backend requires
   // 2+ chars and returns a capped top-10 preview per category). ───────────
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState(null);
-  const [searching, setSearching] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  // Which search term the user dismissed by clicking outside. Null means
+  // "not dismissed". Deriving the panel's visibility from this (rather than
+  // setting it in an effect when the response lands) keeps the
+  // "results arrived" and "clicked away" cases in one place, and lets a new
+  // search reopen the panel without a state reset.
+  const [dismissedTerm, setDismissedTerm] = useState(null);
   const searchRef = useRef(null);
-
-  useClickOutside(searchRef, () => setSearchOpen(false), searchOpen);
 
   useEffect(() => {
     // Communities Home uses the client-side community-name filter below
@@ -126,27 +128,44 @@ export default function Topbar({
       // Reset branch of the same debounced-search effect below, not a
       // derived-during-render value.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setResults(null);
-      setSearching(false);
+      setSearchTerm("");
       return;
     }
-    setSearching(true);
-    const timer = setTimeout(async () => {
-      try {
-        const { data } = await searchCommunity(communityId, { search: q, pageSize: 5 });
-        setResults(data?.data ?? null);
-        setSearchOpen(true);
-      } catch {
-        setResults(null);
-      } finally {
-        setSearching(false);
-      }
-    }, 400);
+    const timer = setTimeout(() => setSearchTerm(q), 400);
     return () => clearTimeout(timer);
   }, [query, communityId, isCommunitiesHome]);
 
+  const {
+    results,
+    searching: searchInFlight,
+    hasSearched,
+  } = useCommunitySearch(communityId, searchTerm, { enabled: !isCommunitiesHome });
+
+  // The spinner covers the debounce as well as the request: the previous
+  // inline fetch showed it from the moment the query reached 2 characters,
+  // before the 400ms debounce elapsed.
+  const searching =
+    !isCommunitiesHome &&
+    query.trim().length >= 2 &&
+    (searchTerm !== query.trim() || searchInFlight);
+
+  // The panel opens as soon as a search comes back, and stays open until the
+  // user clicks away from it or starts a new search.
+  //
+  // The dismissal is keyed by what was searched, so a new search reopens the
+  // panel while the same search stays closed after a click-away. The
+  // Communities Home path filters the community list in memory and never
+  // reaches the API, so it has its own key.
+  const dismissalKey = isCommunitiesHome ? "communities-home" : searchTerm;
+  const isSearchOpen =
+    query.trim().length >= 2 &&
+    dismissedTerm !== dismissalKey &&
+    (isCommunitiesHome || hasSearched);
+
+  useClickOutside(searchRef, () => setDismissedTerm(dismissalKey), isSearchOpen);
+
   function goToResult(path) {
-    setSearchOpen(false);
+    setDismissedTerm(dismissalKey);
     setQuery("");
     navigate(path);
   }
@@ -172,21 +191,13 @@ export default function Topbar({
     return allCommunities.filter((c) => c.name?.toLowerCase().includes(q)).slice(0, 8);
   }, [isCommunitiesHome, communitiesData, query]);
 
-  useEffect(() => {
-    if (!isCommunitiesHome) return;
-    // Mirrors the API-search effect's own setSearchOpen(true) on a match --
-    // genuinely reacting to the query changing, not a derived render value.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSearchOpen(query.trim().length >= 2);
-  }, [isCommunitiesHome, query]);
-
   const hasCommunityResults = matchedCommunities.length > 0;
 
   // Same role-based routing as CommunitiesHome's own community tiles
   // (handleCommunityClick) -- a member (not admin/owner) goes to the member
   // app, not the dashboard.
   async function goToCommunity(community) {
-    setSearchOpen(false);
+    setDismissedTerm(dismissalKey);
     setQuery("");
     if (!isCommunityAdmin(community)) {
       try {
@@ -258,14 +269,15 @@ export default function Topbar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => {
-              if (results || isCommunitiesHome) setSearchOpen(true);
+              // Refocusing reopens a panel the user had clicked away from.
+              if (results || isCommunitiesHome) setDismissedTerm(null);
             }}
             placeholder={isCommunitiesHome ? "Search your communities..." : searchPlaceholder}
             className="flex-1 bg-transparent border-none outline-none text-xs text-gray-600 placeholder-gray-400"
           />
         </div>
 
-        {searchOpen && query.trim().length >= 2 && isCommunitiesHome && (
+        {isSearchOpen && isCommunitiesHome && (
           <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-xl border border-surface-container-border shadow-lg z-50 max-h-[420px] overflow-y-auto">
             {!hasCommunityResults ? (
               <p className="text-xs text-gray-400 px-4 py-4">
@@ -293,7 +305,7 @@ export default function Topbar({
           </div>
         )}
 
-        {searchOpen && query.trim().length >= 2 && !isCommunitiesHome && (
+        {isSearchOpen && !isCommunitiesHome && (
           <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-xl border border-surface-container-border shadow-lg z-50 max-h-[420px] overflow-y-auto">
             {!hasSearchResults ? (
               <p className="text-xs text-gray-400 px-4 py-4">No results for "{query.trim()}"</p>

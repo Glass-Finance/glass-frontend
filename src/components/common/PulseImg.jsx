@@ -55,7 +55,8 @@ export default function PulseImg({
   // callers that pass their own onError (e.g. AdminPaymentModal) were relying
   // on it surviving the spread.
   onError,
-  // eslint-disable-next-line no-unused-vars -- deliberately discarded, see note above
+  // Deliberately discarded, see the note above. The leading underscore is
+  // what keeps the linter from reporting it as unused.
   srcSet: _discardedSrcSet,
   ...imgProps
 }) {

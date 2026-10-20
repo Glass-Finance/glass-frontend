@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PaystackAccount from "../../../../../pages/dashboard/settings/finance/PaystackAccount";
 import { useActiveCommunityId } from "../../../../../hooks/useActiveCommunityId";
 import { useCommunityAccount } from "../../../../../hooks/useCommunityAccount";
@@ -55,10 +56,19 @@ beforeEach(() => {
 });
 
 function renderPage() {
+  // The account form reads the bank list through useBanks and resolves the
+  // account name through useResolveAccount — both React Query hooks, so the
+  // page needs a QueryClient. Retries are off: this test asserts on the
+  // resolved state, and a retried request would only slow it down.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <PaystackAccount />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <PaystackAccount />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
