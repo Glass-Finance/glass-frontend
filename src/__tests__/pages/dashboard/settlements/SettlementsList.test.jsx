@@ -1,8 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { configure, render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SettlementsList from "../../../../pages/dashboard/settlements/SettlementsList";
+
+// testing-library's findBy*/waitFor default to a 1000ms budget. The
+// settlement query here resolves from a mock, so it is never actually slow --
+// but the suite runs ~198 test files in parallel, and on a loaded machine the
+// promise resolution and the re-render can be scheduled past that budget. The
+// wait then fails while the page is still showing its skeleton, which reads
+// as a regression but is only a starved timer.
+//
+// Only the wait budget changes; the queries and their failure messages are
+// untouched. Scoped to this file: a probe run alongside it confirmed the
+// other 197 files still see testing-library's 1000ms default.
+configure({ asyncUtilTimeout: 5000 });
 
 // Deliberately NOT mocked at the useCommunitySettlements boundary the way
 // Payments.test.jsx does its hook: mocking the hook would hide the very wiring
