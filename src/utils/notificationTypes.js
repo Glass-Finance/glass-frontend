@@ -11,6 +11,12 @@ import {
   Landmark,
   Undo2,
   FileSpreadsheet,
+  ShieldCheck,
+  ShieldAlert,
+  Phone,
+  Mail,
+  KeyRound,
+  FileQuestion,
 } from "lucide-react";
 
 // Exact notificationType enum + per-type rules, sourced from the backend's
@@ -44,6 +50,30 @@ export const NOTIFICATION_TYPES = [
   // green-for-success / red-for-failure: the payload's status, not the type,
   // is what says which of those happened.
   "RECORD_IMPORT_STATUS",
+  // ── Identity verification (KYC) decisions ──
+  // Emitted to the MEMBER whose verification was decided:
+  // KycDecisionServiceImpl/AdminKycServiceImpl notify the user, not the
+  // community. APPROVED and REJECTED are two values of one decision, so they
+  // must not share a colour.
+  "KYC_APPROVED",
+  "KYC_REJECTED",
+  // Revoked is its own decision: an approval that was later withdrawn.
+  "KYC_REVOKED",
+  // ── Account action verification ──
+  // The user doing the action, not the community (ActionVerificationPolicies).
+  "PHONE_VERIFICATION",
+  "PHONE_UPDATE_VERIFICATION",
+  "EMAIL_UPDATE_VERIFICATION",
+  "LOGIN_VERIFICATION",
+  // ── Money in motion ──
+  // ReminderServiceImpl notifies the member who will be debited, ahead of an
+  // upcoming automatic debit.
+  "AUTO_DEBIT_UPCOMING",
+  // ── Community account review ──
+  // Siblings of COMMUNITY_ACCOUNT_VERIFIED above, and staff-facing like it:
+  // CommunityAccountServiceImpl notifies the community's staff.
+  "COMMUNITY_ACCOUNT_NEEDS_INFO",
+  "COMMUNITY_ACCOUNT_REJECTED",
   "PAYMENT_REQUEST_CREATED",
   "PAYMENT_DUE",
   "PAYMENT_OVERDUE",
@@ -160,6 +190,24 @@ const NOTIFICATION_VISUAL = {
   // Record book
   RECORD_IMPORT_STATUS: { icon: FileSpreadsheet, ...INDIGO },
 
+  // Identity verification decisions
+  KYC_APPROVED: { icon: ShieldCheck, ...GREEN },
+  KYC_REJECTED: { icon: AlertTriangle, ...RED },
+  KYC_REVOKED: { icon: ShieldAlert, ...RED },
+
+  // Account action verification
+  PHONE_VERIFICATION: { icon: Phone, ...INDIGO },
+  PHONE_UPDATE_VERIFICATION: { icon: Phone, ...INDIGO },
+  EMAIL_UPDATE_VERIFICATION: { icon: Mail, ...INDIGO },
+  LOGIN_VERIFICATION: { icon: KeyRound, ...INDIGO },
+
+  // Money in motion
+  AUTO_DEBIT_UPCOMING: { icon: Clock, ...AMBER },
+
+  // Community account review
+  COMMUNITY_ACCOUNT_NEEDS_INFO: { icon: FileQuestion, ...AMBER },
+  COMMUNITY_ACCOUNT_REJECTED: { icon: AlertTriangle, ...RED },
+
   GENERAL: { icon: Bell, ...GRAY },
 };
 
@@ -209,6 +257,29 @@ const ADMIN_CATEGORY = {
   // not a security-sensitive account change — it reports on a community's own
   // bookkeeping, so "member" is the bucket, never "urgent" and never "payment".
   RECORD_IMPORT_STATUS: "member",
+
+  // Identity verification. A rejected or revoked verification is a blocked
+  // account that cannot transact, so it needs admin attention; an approval is
+  // routine. (The heuristic fallback would file all three under "payment",
+  // because none of them contain FAIL/URGENT/ALERT/OVERDUE/SUSPEND — a
+  // verification rejection would land under Payment Activity.)
+  KYC_APPROVED: "member",
+  KYC_REJECTED: "urgent",
+  KYC_REVOKED: "urgent",
+
+  // Account action verification — the member verifying their own contact
+  // details. Account-level, so Community Activity rather than Urgent.
+  PHONE_VERIFICATION: "member",
+  PHONE_UPDATE_VERIFICATION: "member",
+  EMAIL_UPDATE_VERIFICATION: "member",
+  LOGIN_VERIFICATION: "member",
+
+  // An upcoming automatic debit is money about to move: Payment Activity.
+  AUTO_DEBIT_UPCOMING: "payment",
+
+  // Community account review, staff-facing like COMMUNITY_ACCOUNT_VERIFIED.
+  COMMUNITY_ACCOUNT_NEEDS_INFO: "member",
+  COMMUNITY_ACCOUNT_REJECTED: "member",
   GENERAL: "member",
 };
 
@@ -261,6 +332,26 @@ const ADMIN_TARGET = {
   ACCOUNT_DELETION_VERIFICATION: () => "/dashboard/settings/account/profile",
   ACCOUNT_DELETION_REQUESTED: () => "/dashboard/settings/account/profile",
 
+  // Identity verification. A community admin is also a member, so these can
+  // land in the admin panel too — point them at their own profile, where the
+  // verification state is shown.
+  KYC_APPROVED: () => "/dashboard/settings/account/profile",
+  KYC_REJECTED: () => "/dashboard/settings/account/profile",
+  KYC_REVOKED: () => "/dashboard/settings/account/profile",
+
+  // Account action verification — the admin's own contact details.
+  PHONE_VERIFICATION: () => "/dashboard/settings/account/profile",
+  PHONE_UPDATE_VERIFICATION: () => "/dashboard/settings/account/profile",
+  EMAIL_UPDATE_VERIFICATION: () => "/dashboard/settings/account/profile",
+  LOGIN_VERIFICATION: () => "/dashboard/settings/account/profile",
+
+  // Upcoming auto-debit — the community's auto-pay settings.
+  AUTO_DEBIT_UPCOMING: () => "/dashboard/settings/finance/auto-pay",
+
+  // Community account review, like COMMUNITY_ACCOUNT_VERIFIED above.
+  COMMUNITY_ACCOUNT_NEEDS_INFO: () => "/dashboard/settings/community/profile",
+  COMMUNITY_ACCOUNT_REJECTED: () => "/dashboard/settings/community/profile",
+
   // Record book. Points at the community dashboard rather than a record-book
   // page because none exists yet — the API and hooks landed before the UI.
   // Repoint this to the import wizard's own route when that ships, otherwise
@@ -303,9 +394,26 @@ const MEMBER_TARGET = {
   EMAIL_UPDATED: () => "/member/security",
   ACCOUNT_DELETION_VERIFICATION: () => "/member/profile",
   ACCOUNT_DELETION_REQUESTED: () => "/member/profile",
+
+  // Identity verification. An approval is history, so it opens the attempt
+  // history; a rejection or a revocation means the member's verification is
+  // not in force, so it opens the flow where they can act on it.
+  KYC_APPROVED: () => "/member/verify-identity/history",
+  KYC_REJECTED: () => "/member/verify-identity",
+  KYC_REVOKED: () => "/member/verify-identity",
+
+  // Account action verification — the flow the member was in the middle of.
+  PHONE_VERIFICATION: () => "/member/verify-phone",
+  PHONE_UPDATE_VERIFICATION: () => "/member/verify-phone",
+  EMAIL_UPDATE_VERIFICATION: () => "/member/update-email",
+  LOGIN_VERIFICATION: () => "/member/security/authentication",
+
+  // The member who is about to be debited can manage the auto-debit here.
+  AUTO_DEBIT_UPCOMING: () => "/member/auto-pay",
   // SETTLEMENT_COMPLETED / RECONCILIATION_FINDINGS are admin/finance-ops
   // events — a member shouldn't receive these, so no target is defined;
-  // GENERAL has no single destination either.
+  // COMMUNITY_ACCOUNT_NEEDS_INFO / COMMUNITY_ACCOUNT_REJECTED are staff-facing
+  // for the same reason. GENERAL has no single destination either.
 };
 
 // Returns null when the type is missing/unrecognized, or maps to no page
