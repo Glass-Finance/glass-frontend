@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
-import { getBanks, resolveAccount } from "../../api/members";
+import { useBanks } from "../../hooks/useBanks";
+import { useResolveAccount } from "../../hooks/useResolveAccount";
 import { useEscapeToClose } from "../../hooks/useKeyboardShortcuts";
-import { getErrorMessage, notifyError } from "../../utils/errorHandler";
+import { getErrorMessage } from "../../utils/errorHandler";
 import BankSelect from "../common/BankSelect";
 import { Button } from "../ui/Button";
 
@@ -23,7 +24,8 @@ export default function AccountFormModal({
   title = "Set up your payment Account",
   subtitle = "This is where Glass will collect and manage dues on behalf of your community.",
 }) {
-  const [banks, setBanks] = useState([]);
+  const { banks } = useBanks();
+  const resolveAccount = useResolveAccount();
   const [bankCode, setBankCode] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankSlug, setBankSlug] = useState("");
@@ -34,28 +36,6 @@ export default function AccountFormModal({
   const [manualMode, setManualMode] = useState(false); // allow typing accName after resolve fails
 
   useEscapeToClose(onClose);
-
-  useEffect(() => {
-    getBanks()
-      .then(({ data }) => {
-        const list = data?.data ?? data;
-        const arr = Array.isArray(list) ? list : (list?.content ?? []);
-        const seen = new Set();
-        setBanks(
-          arr.filter((b) => {
-            if (seen.has(b.code)) return false;
-            seen.add(b.code);
-            return true;
-          }),
-        );
-      })
-      .catch((err) =>
-        notifyError(err, {
-          context: "Load banks",
-          fallback: "Couldn't load the bank list.",
-        }),
-      );
-  }, []);
 
   // Auto-resolve account name once we have a full 10-digit number + bank
   useEffect(() => {
@@ -72,7 +52,10 @@ export default function AccountFormModal({
       setResolving(true);
       setResolveError("");
       try {
-        const { data } = await resolveAccount(bankCode, accNumber);
+        const { data } = await resolveAccount.mutateAsync({
+          bankCode,
+          accountNumber: accNumber,
+        });
         // Backend may wrap in { success, data: { accountName } } or return flat
         const name =
           data?.data?.accountName ??

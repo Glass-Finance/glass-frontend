@@ -16,6 +16,7 @@ const useAuth = vi.fn();
 const useAllNotifications = vi.fn();
 const useActiveCommunityId = vi.fn();
 const useCommunities = vi.fn();
+const useCommunitySearch = vi.fn();
 
 vi.mock("../../../store/AuthContext", () => ({ useAuth: () => useAuth() }));
 vi.mock("../../../hooks/useNotifications", () => ({
@@ -26,6 +27,11 @@ vi.mock("../../../hooks/useActiveCommunityId", () => ({
 }));
 vi.mock("../../../hooks/useCommunities", () => ({
   useCommunities: () => useCommunities(),
+}));
+// The search hook owns a React Query of its own; stub it so this file keeps
+// testing the account menu without standing up a QueryClient.
+vi.mock("../../../hooks/useCommunitySearch", () => ({
+  useCommunitySearch: () => useCommunitySearch(),
 }));
 // The panel is only opened on click; stub it so it contributes no DOM here.
 vi.mock("../../../components/dashboard/NotificationsPanel", () => ({
@@ -44,6 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   useActiveCommunityId.mockReturnValue("community-1");
   useCommunities.mockReturnValue({ data: { communities: [] } });
+  useCommunitySearch.mockReturnValue({ results: null, searching: false, hasSearched: false });
   useAllNotifications.mockReturnValue({
     notifications: [],
     isLoading: false,

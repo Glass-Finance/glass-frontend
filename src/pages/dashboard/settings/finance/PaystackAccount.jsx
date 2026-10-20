@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Info, X, Trash2, AlertTriangle } from "lucide-react";
+import { Info, Trash2, AlertTriangle } from "lucide-react";
 import { useEscapeToClose } from "../../../../hooks/useKeyboardShortcuts";
 import { useActiveCommunityId } from "../../../../hooks/useActiveCommunityId";
 import { useCommunityAccount } from "../../../../hooks/useCommunityAccount";

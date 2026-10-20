@@ -30,7 +30,6 @@ import { getMe } from "../api/members";
 import { setSessionRestoring } from "../api/client";
 import { fetchCompleteMyCommunityList } from "../api/communityList";
 import {
-  KEY_TOKEN,
   SESSION_KEYS,
   getAccessToken,
   readStoredUser,

@@ -103,22 +103,29 @@ export default defineConfig({
       // (overall ~20% lines — a jsdom SPA with page-heavy surface). They are
       // regression gates, not aspirations: raise them when adding tests,
       // never lower them to make CI green.
+      //
+      // Raised 2026-10-20. The floors were set when the suite's measured
+      // coverage was around 20%, and the suite has since grown to 48.6%
+      // statements / 49.5% branches — so a 19% floor had been gating almost
+      // nothing for a long time. These sit ~2 points below the measured
+      // values, which is enough headroom for ordinary fluctuation while
+      // still failing if coverage is allowed to slide.
       thresholds: {
-        lines: 19,
-        functions: 14,
-        statements: 19,
-        branches: 16,
+        lines: 48,
+        functions: 42,
+        statements: 47,
+        branches: 47,
         "src/utils/**": {
-          lines: 48,
-          functions: 43,
-          statements: 49,
-          branches: 53,
+          lines: 62,
+          functions: 69,
+          statements: 63,
+          branches: 70,
         },
         "src/api/**": {
-          lines: 50,
-          functions: 27,
-          statements: 50,
-          branches: 50,
+          lines: 82,
+          functions: 44,
+          statements: 76,
+          branches: 80,
         },
       },
     },
