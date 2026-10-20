@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "17 6 * * 1"
 
+# One run per ref — a superseded scan does not need to finish.
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -25,12 +30,14 @@ jobs:
           - language: javascript-typescript
 
     steps:
-      - uses: actions/checkout@v4
+      # Pinned to a commit SHA, not the floating `v3` tag — see the note in
+      # ci.yml. Dependabot's github-actions ecosystem keeps the pin current.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@ce5e7eeac396d720fe2d802714996c8ce561e311 # v3
         with:
           languages: ${{ matrix.language }}
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@ce5e7eeac396d720fe2d802714996c8ce561e311 # v3
         with:
           category: "/language:${{ matrix.language }}"
