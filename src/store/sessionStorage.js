@@ -136,20 +136,87 @@ export function bumpSessionEpoch() {
 }
 
 /**
+ * Invalidate the session generation for a session that is ENDING.
+ *
+ * Distinct from bumpSessionEpoch() on purpose. When the store cannot be
+ * written, a plain bump leaves the generation UNCHANGED, and an in-flight
+ * refresh captured at that generation still matches it — so it would write
+ * its tokens straight back over the session that logout() just ended. That
+ * is the one race this module exists to make impossible, and it must not be
+ * lost to a storage error.
+ *
+ * Falling back to removing the key makes getSessionEpoch() read 0. No
+ * session-bearing operation ever runs at generation 0 (every persisted
+ * session bumps the generation to at least 1 first), so every in-flight
+ * operation sees a mismatch and refuses to write back. Failing safe by
+ * over-refusing is the right trade: a spurious sign-out is recoverable, a
+ * resurrected session is not.
+ *
+ * Only the ending path uses this. A successful write takes the normal path
+ * and nothing else changes.
+ */
+function invalidateSessionEpoch() {
+  try {
+    localStorage.setItem(KEY_EPOCH, String(getSessionEpoch() + 1));
+    return;
+  } catch {
+    // fall through to the removal fallback
+  }
+  try {
+    localStorage.removeItem(KEY_EPOCH);
+  } catch {
+    // Storage is entirely unavailable. The tokens live in the same store, so
+    // there is no session left to resurrect either.
+  }
+}
+
+/**
+ * Write one session field, treating an ABSENT value as a real absence.
+ *
+ * The session-bearing auth responses all share the backend's `AuthResponse`
+ * shape (see the OpenAPI document: /auth/login, /auth/register, /auth/verify,
+ * /auth/google, /auth/otp/verify and both MFA verify routes return it), and
+ * that shape carries BOTH tokens. A missing one therefore means "the backend
+ * did not issue it" — not "keep whatever happened to be there before".
+ *
+ * Leaving the previous value in place is not a neutral no-op. localStorage
+ * outlives the tab and the browser restart, so the PREVIOUS ACCOUNT's refresh
+ * token would survive a second sign-in. The first 401 would then exchange
+ * that stale token for a fresh access token for the first account and write it
+ * back — silently acting as the wrong user, with no rotation-reuse signal,
+ * because that token was never rotated away.
+ *
+ * Removing is also what the refresh path wants: client.js treats a falsy
+ * refresh token as "no session" and signs out cleanly, instead of putting the
+ * literal string "undefined" in front of the backend.
+ *
+ * The trade-off is deliberate: if the backend ever stops issuing a refresh
+ * token on some auth route, the user is asked to sign in again when the
+ * access token expires (loud, safe) rather than inheriting another account's
+ * session (silent, wrong). "undefined" is treated as absent for the same
+ * reason — it must never reach the refresh endpoint.
+ */
+function writeSessionField(key, value) {
+  if (typeof value === "string" && value !== "" && value !== "undefined") {
+    localStorage.setItem(key, value);
+  } else {
+    localStorage.removeItem(key);
+  }
+}
+
+/**
  * Persist tokens + basic identity from an auth response.
- * Never writes the literal string "undefined": a missing refreshToken
- * must leave the previous value alone so the refresh check in client.js
- * sees a real absence rather than a truthy "undefined" string.
+ * An absent field is cleared, not inherited — see writeSessionField above.
  * Starts a new session generation: any stale in-flight operation from a
  * previous generation must not overwrite these tokens (see client.js).
  */
 export function persistSession(authData) {
   if (!authData) return;
   try {
-    if (authData.accessToken) localStorage.setItem(KEY_TOKEN, authData.accessToken);
-    if (authData.refreshToken) localStorage.setItem(KEY_REFRESH_TOKEN, authData.refreshToken);
-    if (authData.userId) localStorage.setItem("userId", authData.userId);
-    if (authData.email) localStorage.setItem("userEmail", authData.email);
+    writeSessionField(KEY_TOKEN, authData.accessToken);
+    writeSessionField(KEY_REFRESH_TOKEN, authData.refreshToken);
+    writeSessionField("userId", authData.userId);
+    writeSessionField("userEmail", authData.email);
     bumpSessionEpoch();
   } catch {
     // ignore — callers still set React state
@@ -219,6 +286,6 @@ export function clearSessionStorage() {
   // Invalidate the generation FIRST from the perspective of in-flight work:
   // any refresh started before this clear must observe the mismatch and
   // refuse to write tokens back (see client.js doRefresh).
-  bumpSessionEpoch();
+  invalidateSessionEpoch();
   emitSessionEnd();
 }

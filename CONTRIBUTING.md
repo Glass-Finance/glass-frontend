@@ -10,6 +10,17 @@ Working agreements with other contributors (branch/PR flow, who owns coverage fl
 - Put backend request functions in `src/api/` and expose server state to components through React Query hooks.
 - Handle loading, empty, success, validation, authorization, and request-error states explicitly. Use existing error helpers and notifications rather than exposing raw responses.
 
+## Security
+
+Found something that looks like a vulnerability? Report it privately — see [`SECURITY.md`](SECURITY.md). Please do not open a public issue for it.
+
+When you touch the session system, the role checks, or the CSP, read
+[`docs/authentication.md`](docs/authentication.md),
+[`docs/authorization.md`](docs/authorization.md) and
+[`docs/decisions/ADR-002-auth-storage.md`](docs/decisions/ADR-002-auth-storage.md)
+first. Those invariants are load-bearing, and a change that looks like a
+simplification is often the thing that breaks them.
+
 ## Testing and checks
 
 Add focused Vitest/Testing Library coverage for changed logic and user-visible states. Mock API modules at the boundary; never require production credentials. Touching a payment flow? Extend the E2E coverage in `e2e/` too — it pins same-`idempotencyKey` retry behaviour through the real browser. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`. If you cloned `glass-waitlist-v1` next to this repo, also run `npm run check:landing-sync` after touching shared landing components.

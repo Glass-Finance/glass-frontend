@@ -1,11 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   SESSION_KEYS,
   SESSION_ADJACENT_KEYS,
   SESSION_TRANSIENT_KEYS,
   KEY_TOKEN,
+  KEY_EPOCH,
   getAccessToken,
   getRefreshToken,
+  getSessionEpoch,
   readStoredUser,
   writeStoredUser,
   persistSession,
@@ -135,5 +137,83 @@ describe("sessionStorage — single owner of session keys", () => {
     localStorage.setItem(KEY_TOKEN, "tok");
     expect(getAccessToken()).toBe("tok");
     expect(getRefreshToken()).toBeNull();
+  });
+});
+
+describe("sessionStorage — a new session never inherits a previous one's tokens", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it("clears the previous session's refresh token when the new response omits it", () => {
+    // The cross-account bleed this prevents. localStorage outlives the tab and
+    // the browser restart, so a second sign-in whose response carries no
+    // refreshToken used to leave the FIRST account's token in place — and the
+    // first 401 would then exchange it for a fresh access token for that
+    // first account, silently acting as the wrong user.
+    localStorage.setItem(KEY_TOKEN, "account-a-access");
+    localStorage.setItem("refreshToken", "account-a-refresh");
+
+    persistSession({ accessToken: "account-b-access" });
+
+    expect(localStorage.getItem(KEY_TOKEN)).toBe("account-b-access");
+    expect(localStorage.getItem("refreshToken")).toBeNull();
+  });
+
+  it("replaces every identity field when a new session is persisted", () => {
+    localStorage.setItem(KEY_TOKEN, "a-access");
+    localStorage.setItem("refreshToken", "a-refresh");
+    localStorage.setItem("userId", "a-user");
+    localStorage.setItem("userEmail", "a@example.com");
+
+    persistSession({
+      accessToken: "b-access",
+      refreshToken: "b-refresh",
+      userId: "b-user",
+      email: "b@example.com",
+    });
+
+    expect(localStorage.getItem(KEY_TOKEN)).toBe("b-access");
+    expect(localStorage.getItem("refreshToken")).toBe("b-refresh");
+    expect(localStorage.getItem("userId")).toBe("b-user");
+    expect(localStorage.getItem("userEmail")).toBe("b@example.com");
+  });
+
+  it("never stores the literal string 'undefined' as a token", () => {
+    // The original contract: client.js treats a truthy "undefined" refresh
+    // token as a real token and sends it to the backend.
+    persistSession({ accessToken: "undefined", refreshToken: "undefined" });
+
+    expect(localStorage.getItem(KEY_TOKEN)).toBeNull();
+    expect(localStorage.getItem("refreshToken")).toBeNull();
+  });
+
+  it("invalidates the session generation even when the epoch write fails", () => {
+    // A logout that cannot write the new generation must not leave an
+    // in-flight refresh matching the old one — that refresh would write its
+    // tokens straight back over the session logout() just ended.
+    localStorage.setItem(KEY_TOKEN, "tok");
+    localStorage.setItem(KEY_EPOCH, "3");
+    const before = getSessionEpoch();
+    expect(before).toBe(3);
+
+    const originalSetItem = Storage.prototype.setItem;
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(function (key, value) {
+      if (key === KEY_EPOCH) throw new DOMException("QuotaExceededError");
+      return originalSetItem.call(this, key, value);
+    });
+
+    try {
+      clearSessionStorage();
+
+      // The generation must have moved on. Over-refusing (an in-flight
+      // operation seeing a mismatch it does not need to see) is the safe
+      // direction; a resurrected session is not.
+      expect(getSessionEpoch()).not.toBe(before);
+      expect(localStorage.getItem(KEY_TOKEN)).toBeNull();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
