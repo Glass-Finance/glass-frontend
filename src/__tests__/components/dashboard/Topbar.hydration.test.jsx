@@ -3,11 +3,11 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Topbar from "../../../components/dashboard/Topbar";
 
-// Regression: the account menu's name line used to render the literal string
+// Regression: the account block's name line used to render the literal string
 // "Loading..." while AuthContext's GET /user/me was in flight, so the signed-in
 // member's name appeared to be "Loading...". getInitials already handled the
 // same gap deliberately ("?" derived from the email), so the two halves of the
-// menu disagreed about what "no user yet" means.
+// account block disagreed about what "no user yet" means.
 //
 // The hydration gap is now placeholder bars, which also stops the header
 // changing height once the real name arrives.
@@ -55,7 +55,7 @@ beforeEach(() => {
   });
 });
 
-describe("Topbar account menu — pre-hydration", () => {
+describe("Topbar account — pre-hydration", () => {
   it("does not render the literal string 'Loading...' as the member's name", () => {
     // user is undefined until GET /user/me resolves.
     useAuth.mockReturnValue({ user: undefined, logout: vi.fn() });
@@ -96,7 +96,7 @@ describe("Topbar account menu — pre-hydration", () => {
   });
 });
 
-describe("Topbar account menu — hydrated", () => {
+describe("Topbar account — hydrated", () => {
   it("renders the real name and email, with no bars and no busy flag", () => {
     useAuth.mockReturnValue({
       user: { firstName: "ada", lastName: "lovelace", email: "ada@example.com" },
@@ -120,5 +120,53 @@ describe("Topbar account menu — hydrated", () => {
     // a duplicate-node bug.
     expect(screen.getAllByText("grace@example.com")).toHaveLength(2);
     expect(document.body.textContent).not.toContain("Loading...");
+  });
+});
+
+// The account block used to be a disclosure menu whose only item was
+// "Settings", pointing at a hub that mixes personal, finance and
+// community-scoped destinations. That was two levels of indirection away from
+// a click on the member's own face, and a second "Settings" entry beside the
+// sidebar's own, landing somewhere else. It is now a direct link to the
+// personal profile page -- the same model the member app's header photo
+// already uses (/member/profile).
+describe("Topbar account — direct link to the personal profile", () => {
+  it("links the account block to /dashboard/settings/account/profile", () => {
+    useAuth.mockReturnValue({
+      user: { firstName: "ada", lastName: "lovelace", email: "ada@example.com" },
+      logout: vi.fn(),
+    });
+
+    renderTopbar();
+
+    const link = screen.getByRole("link", { name: /your profile/i });
+    expect(link.getAttribute("href")).toBe("/dashboard/settings/account/profile");
+  });
+
+  it("renders the link even before the profile has hydrated", () => {
+    // The link must not appear only once /user/me resolves, or the header
+    // would lose its account affordance for the length of that request.
+    useAuth.mockReturnValue({ user: undefined, logout: vi.fn() });
+
+    renderTopbar();
+
+    const link = screen.getByRole("link", { name: /your profile/i });
+    expect(link.getAttribute("href")).toBe("/dashboard/settings/account/profile");
+  });
+
+  it("opens no dropdown menu and offers no duplicate Settings entry", () => {
+    useAuth.mockReturnValue({
+      user: { firstName: "ada", lastName: "lovelace", email: "ada@example.com" },
+      logout: vi.fn(),
+    });
+
+    renderTopbar();
+
+    // No menu role, no menu items, and no "Log out" stranded in the topbar --
+    // sign-out lives on the sidebar rail (desktop) and in the drawer's
+    // labelled Log Out row (mobile).
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(screen.queryByRole("menuitem")).toBeNull();
+    expect(screen.queryByRole("button", { name: /log ?out/i })).toBeNull();
   });
 });
