@@ -57,8 +57,6 @@ function MemberActionsMenu({ open, onToggle, onClose, busy, actions }) {
   );
 }
 
-const FALLBACK_MEMBER_ROLE = { id: "MEMBER", name: "Member" };
-
 export default function MemberAccess() {
   // useActiveCommunityId() returns the community slug (preferred over id)
   // since both the Sidebar and CommunitiesHome set ?community= to the slug.
@@ -71,7 +69,16 @@ export default function MemberAccess() {
   const { data: rolesData, isLoading: rolesLoading } = useRoles();
   const { data: community, isLoading: communityLoading } = useCommunity(communitySlug);
   const updateSettings = useUpdateCommunitySettings(communitySlug);
-  const memberRoleId = findRoleId(rolesData, "COMMUNITY_MEMBER") ?? FALLBACK_MEMBER_ROLE.id;
+  // Both role ids come from the server's own role list, and BOTH are
+  // required to be resolved — no fallback id.
+  //
+  // The fallback that used to be here ("MEMBER") is not a backend role code:
+  // the canonical code is COMMUNITY_MEMBER (utils/communityRole.js). When the
+  // role list had not loaded yet, demote would send roleId:"MEMBER" and the
+  // backend would reject it, so the demotion failed silently instead of
+  // being disabled up front. Promote was already gated this way; demote now
+  // matches it.
+  const memberRoleId = findRoleId(rolesData, "COMMUNITY_MEMBER");
   const adminRoleId = findRoleId(rolesData, "COMMUNITY_ADMIN");
 
   const inviteLink = communitySlug ? `${APP_ORIGIN}/member/join?community=${communitySlug}` : null;
@@ -185,6 +192,11 @@ export default function MemberAccess() {
             Couldn't find an Admin role on the server — Promote is disabled until this is resolved.
           </p>
         )}
+        {!rolesLoading && !memberRoleId && (
+          <p className="text-xs text-danger mb-3">
+            Couldn't find a Member role on the server — Demote is disabled until this is resolved.
+          </p>
+        )}
 
         <div className="flex flex-col">
           {isLoading ? (
@@ -232,6 +244,7 @@ export default function MemberAccess() {
                       isAdminRole(member)
                         ? {
                             label: "Demote to Member",
+                            disabled: !memberRoleId,
                             onClick: () => setPendingAction({ member, type: "demote" }),
                           }
                         : {
@@ -288,11 +301,23 @@ export default function MemberAccess() {
             const { member, type } = pendingAction;
             setActionError("");
             if (type === "demote") {
+              // Belt and braces: the menu entry is disabled when the role id
+              // is unresolved, but never send an undefined roleId — the
+              // backend would reject it and the demotion would fail with no
+              // explanation.
+              if (!memberRoleId) {
+                setActionError("Couldn't find a Member role on the server. Try again in a moment.");
+                return;
+              }
               updateMember.mutate(
                 { memberId: member.id, payload: { roleId: memberRoleId } },
                 { onSuccess: () => setPendingAction(null) },
               );
             } else if (type === "promote") {
+              if (!adminRoleId) {
+                setActionError("Couldn't find an Admin role on the server. Try again in a moment.");
+                return;
+              }
               updateMember.mutate(
                 { memberId: member.id, payload: { roleId: adminRoleId } },
                 {

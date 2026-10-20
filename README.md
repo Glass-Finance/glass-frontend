@@ -153,6 +153,13 @@ Token refresh is single-flight with cross-tab lease coordination (`src/api/refre
 
 ---
 
+## Security
+
+Report security issues privately — see [`SECURITY.md`](SECURITY.md). Please do
+not open a public issue for a vulnerability.
+
+---
+
 ## Documentation
 
 Detailed docs live in [`docs/`](docs/):

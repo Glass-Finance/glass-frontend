@@ -84,6 +84,15 @@ function clearSession() {
   clearSessionStorage();
 }
 
+// Fields that carry PRIVILEGE standing on the user object.
+//
+// Admin standing is derived server-side — from the auth response at login
+// (buildUser) and from GET /user/me at hydration (hydrateUserProfile) — and
+// from nowhere else. These three are the fields the route guards read, so
+// they are stripped from any client-supplied patch (see updateUser) rather
+// than trusted with a comment as their only protection.
+const PRIVILEGE_FIELDS = ["role", "isAdmin", "isPlatformAdmin"];
+
 // Callers (SignIn pages' routeAfterAuth) need an accurate isAdmin on the
 // object login()/setSession() resolve with, immediately — not from a
 // separate async refresh that might not have landed yet. So the admin
@@ -318,7 +327,17 @@ export function AuthProvider({ children }) {
   const updateUser = useCallback((patch) => {
     setUser((prev) => {
       if (!prev) return prev;
-      const updated = { ...prev, ...patch };
+      // Privilege fields are STRIPPED, not merely discouraged. The comment
+      // above says they must never be set through here — but a comment is not
+      // a control, and this is the only place the user object is assembled
+      // from an arbitrary patch. ProtectedRoute reads `isAdmin` straight off
+      // this object, so a client-written flag would be honoured exactly as
+      // though the backend had granted it. Admin standing is derived
+      // server-side at login/restore (buildUser, hydrateUserProfile) and
+      // nowhere else.
+      const safePatch = { ...patch };
+      for (const field of PRIVILEGE_FIELDS) delete safePatch[field];
+      const updated = { ...prev, ...safePatch };
       writeStoredUser(updated);
       return updated;
     });
@@ -377,7 +396,22 @@ export function AuthProvider({ children }) {
     const ud = parseUserData(profile);
     setUser((prev) => {
       if (!prev) return prev; // logged out while this was in flight
-      const role = profile.platformRole ?? prev.role;
+      // A missing server role is UNKNOWN, not "keep the previous one".
+      //
+      // `prev.role` comes from the `glass_user` snapshot in localStorage,
+      // which is client-writable — devtools, an extension, XSS, or anyone
+      // with the browser open can set it. Falling back to it here would let a
+      // tampered value re-grant platform-admin standing the moment the
+      // server omits the field, and this same state update is the one that
+      // keeps `sessionVerified` true, so the guard would render the admin
+      // shell on it.
+      //
+      // The backend's UserDto always carries platformRole (it is a declared
+      // property of GET /user/me), so an absent one is a malformed response,
+      // not a normal case. Failing closed costs a routing decision, not
+      // access: isPlatformAdminRole("") is false, so the user is routed as a
+      // non-admin and the backend stays authoritative either way.
+      const role = profile.platformRole ?? "";
       const isPlatformAdmin = isPlatformAdminRole(role);
       const updated = {
         ...prev,
@@ -523,7 +557,15 @@ export function AuthProvider({ children }) {
   // ── Derive role helpers ────────────────────────────────────────────────────
   // Global platform admins and per-community admins both have desktop
   // dashboard access. isPlatformAdmin remains separate for platform-only UI.
-  const isPlatformAdmin = user?.isPlatformAdmin ?? isPlatformAdminRole(user?.role);
+  //
+  // Derived from the role CODE, never from a boolean stored on the user
+  // object. Both builders (buildUser at login, hydrateUserProfile at
+  // hydration) set that boolean from the same exact-set check, so deriving
+  // it again here changes nothing for a legitimate session — but it stops
+  // the guards reading a field that a client could write into the
+  // `glass_user` snapshot. platformRole.js fails closed on anything that is
+  // not an exact match.
+  const isPlatformAdmin = isPlatformAdminRole(user?.role);
   const isAdmin = isPlatformAdmin || (user?.isAdmin ?? false);
   const isMember = !isAdmin;
 
