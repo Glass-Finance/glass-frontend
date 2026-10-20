@@ -944,10 +944,10 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
 
             {/* Figma's mobile drawer ends on a labelled red Log Out row
             (node 326:18675: #db0000, 14/500, no stroke). The desktop rail has
-            always been icon-only here and the topbar account menu carries its
-            own text entry, so this row exists only under the drawer. Tertiary
-            with a danger label is a documented §2.1 label colour, not a
-            bespoke button. */}
+            always been icon-only here and the topbar account block is a
+            profile link, not a sign-out entry, so this row exists only under
+            the drawer. Tertiary with a danger label is a documented §2.1 label
+            colour, not a bespoke button. */}
             <div className="px-2 pb-3 md:hidden">
               <Button
                 variant="tertiary"

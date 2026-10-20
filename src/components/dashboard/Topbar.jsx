@@ -2,25 +2,16 @@
  * Topbar.jsx
  * Wired to real auth + notifications.
  *
- * Reads:  useAuth() → user, logout
+ * Reads:  useAuth() → user
  *         useNotifications() → GET /api/v1/notifications, GET .../unread-count
  * Actions: Bell → opens notification dropdown panel
- *          User avatar → profile menu (Settings / Log out)
+ *          Account avatar → the member's own profile page
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../ui/Button";
 import { MobileBackButton } from "../ui/MobileBackButton";
-import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  Bell,
-  Loader2,
-  Menu,
-  HelpCircle,
-  LogOut,
-  Settings,
-  ChevronDown,
-} from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Search, Bell, Loader2, Menu, HelpCircle } from "lucide-react";
 import { useAuth } from "../../store/AuthContext";
 import { useAllNotifications } from "../../hooks/useNotifications";
 import { useActiveCommunityId } from "../../hooks/useActiveCommunityId";
@@ -40,7 +31,7 @@ import { resolveIsPayingAdmin, isCommunityAdmin } from "../../utils/communityRol
 // with placeholder bars -- this used to return the literal string "Loading..."
 // and paint that into the header as if it were the member's name. getInitials
 // already handles the same gap by design ("?" from the email), so the two
-// halves of the account menu no longer disagree about what "no user yet" means.
+// halves of the account block no longer disagree about what "no user yet" means.
 function getDisplayName(user) {
   if (user?.firstName) {
     // Pascal-cased: this is the signed-in member's own name, and whatever
@@ -64,11 +55,8 @@ export default function Topbar({
   onOpenTour,
 }) {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const communityId = useActiveCommunityId();
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
 
   // Panel uses all-community notifications so the dropdown is universal
   const { notifications, isLoading, unreadCount, markRead, markAllRead, clearAll, isClearingAll } =
@@ -93,18 +81,6 @@ export default function Topbar({
 
   // Close the dropdown on outside click
   useClickOutside(panelRef, () => setPanelOpen(false), panelOpen);
-  useClickOutside(userMenuRef, () => setUserMenuOpen(false), userMenuOpen);
-
-  async function handleLogout() {
-    setLoggingOut(true);
-    try {
-      await logout();
-      navigate("/sign-in", { replace: true });
-    } finally {
-      setLoggingOut(false);
-      setUserMenuOpen(false);
-    }
-  }
 
   // ── Search — GET /communities/{id}/search, debounced (backend requires
   // 2+ chars and returns a capped top-10 preview per category). ───────────
@@ -467,82 +443,62 @@ export default function Topbar({
           />
         )}
 
-        {/* Divider + account menu — desktop only. Figma's mobile topbar (node
+        {/* Divider + account — desktop only. Figma's mobile topbar (node
         352:19421) ends at the bell, and below md the drawer's own labelled
-        Log Out row is the sign-out path, so the avatar menu would only
-        duplicate it. */}
+        Log Out row is the sign-out path, so the account block would only
+        duplicate it.
+
+        The avatar is a direct link to the member's OWN profile, not a menu.
+        "Click your face → your account" is what every other shell in the
+        product already does: the member app's header photo goes to
+        /member/profile (Home.jsx), and the notification router sends personal
+        events there too (notificationTypes.js). The menu this replaced held a
+        single "Settings" item that opened a hub mixing personal, finance and
+        community-scoped destinations — two levels of indirection away from the
+        click, and a second Settings entry alongside the sidebar's own, with a
+        different landing page for the same label.
+
+        Sign-out is not lost with the menu: the sidebar rail carries the
+        icon-only logout on desktop and the drawer carries the labelled Log
+        Out row below md, both of which were already there. */}
         <div className="hidden md:flex md:items-center md:gap-4">
           {/* Divider */}
           <div className="w-px h-6 bg-[var(--color-hairline)]" />
 
-          {/* User menu — Settings + Log out (POST /auth/logout lives in AuthContext) */}
-          <div className="relative" ref={userMenuRef}>
-            <button
-              onClick={() => setUserMenuOpen((o) => !o)}
-              aria-haspopup="menu"
-              aria-expanded={userMenuOpen}
-              aria-label="Account menu"
-              className="flex items-center gap-2 bg-transparent border-none cursor-pointer hover:opacity-80 transition-opacity p-0"
-            >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-accent-indigo flex items-center justify-center text-white font-bold text-xs flex-shrink-0 select-none overflow-hidden">
-                {user?.profileImage?.url ? (
-                  <PulseImg src={user.profileImage.url} alt="" className="w-full h-full" />
-                ) : (
-                  initials
-                )}
-              </div>
-              <div aria-busy={!user || undefined} className="text-left hidden sm:block">
-                {user ? (
-                  <>
-                    <p className="text-xs font-bold text-ink leading-tight">{displayName}</p>
-                    <p className="text-[11px] text-gray-400 leading-tight">{email}</p>
-                  </>
-                ) : (
-                  // Sized to the two lines above so the header keeps its height
-                  // across the hydration gap. Decorative (Skeleton is
-                  // aria-hidden), with aria-busy on this container doing the
-                  // announcing.
-                  <>
-                    <Skeleton className="h-3 w-[92px] rounded" />
-                    <Skeleton className="h-2.5 w-[120px] rounded mt-1" />
-                  </>
-                )}
-              </div>
-              <ChevronDown
-                size={14}
-                className={`text-gray-400 hidden sm:block transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {userMenuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-100 bg-white shadow-lg py-1.5 z-50"
-              >
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    navigate("/dashboard/settings");
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-transparent border-none cursor-pointer hover:bg-gray-50 text-left"
-                >
-                  <Settings size={14} className="text-gray-400" />
-                  Settings
-                </button>
-                <div className="h-px bg-gray-100 my-1" />
-                <button
-                  role="menuitem"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-danger bg-transparent border-none cursor-pointer hover:bg-danger-wash text-left disabled:opacity-50"
-                >
-                  <LogOut size={14} />
-                  {loggingOut ? "Signing out…" : "Log out"}
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Account — the personal profile page. Ungated by community: this
+          route is a direct child of /dashboard (App.jsx), not behind
+          CommunityAdminGuard, and the page itself has no community
+          dependency — it works off /user/me alone. */}
+          <Link
+            to="/dashboard/settings/account/profile"
+            aria-label="Your profile"
+            className="flex items-center gap-2 no-underline cursor-pointer hover:opacity-80 transition-opacity p-0"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-accent-indigo flex items-center justify-center text-white font-bold text-xs flex-shrink-0 select-none overflow-hidden">
+              {user?.profileImage?.url ? (
+                <PulseImg src={user.profileImage.url} alt="" className="w-full h-full" />
+              ) : (
+                initials
+              )}
+            </div>
+            <div aria-busy={!user || undefined} className="text-left hidden sm:block">
+              {user ? (
+                <>
+                  <p className="text-xs font-bold text-ink leading-tight">{displayName}</p>
+                  <p className="text-[11px] text-gray-400 leading-tight">{email}</p>
+                </>
+              ) : (
+                // Sized to the two lines above so the header keeps its height
+                // across the hydration gap. Decorative (Skeleton is
+                // aria-hidden), with aria-busy on this container doing the
+                // announcing.
+                <>
+                  <Skeleton className="h-3 w-[92px] rounded" />
+                  <Skeleton className="h-2.5 w-[120px] rounded mt-1" />
+                </>
+              )}
+            </div>
+          </Link>
         </div>
       </div>
     </header>
