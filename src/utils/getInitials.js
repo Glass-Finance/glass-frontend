@@ -1,4 +1,4 @@
-// Avatar-initials fallback, shared by the dashboard account menu
+// Avatar-initials fallback, shared by the dashboard account block
 // (components/dashboard/Topbar.jsx) and the member app header
 // (components/memberApp/ProfileAvatar.jsx) so the two can't drift.
 //
