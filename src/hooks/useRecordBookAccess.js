@@ -33,6 +33,10 @@ export function useRecordBookAccess() {
     update: can("update"),
     delete: can("delete"),
     import: can("import"),
+    // community.recordbook.export is a separate permission from
+    // community.recordbook.read, so a reader without it must not be offered
+    // the export button. The backend enforces it either way.
+    export: can("export"),
     usage: eligible && codes.has("community.ai.usage.read"),
   };
 }

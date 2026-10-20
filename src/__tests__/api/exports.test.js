@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import client from "../../api/client";
-import { exportMyObligations, exportMyTransactions } from "../../api/exports";
+import {
+  exportMyObligations,
+  exportMyTransactions,
+  exportCommunityRecords,
+  exportAdminCommunityRecords,
+} from "../../api/exports";
 
 // The two member-scoped export triggers. Paths are literal so CI's
 // `npm run audit:endpoints --strict` can prove they're deployed — GET
@@ -35,5 +40,29 @@ describe("member exports", () => {
     expect(url).toBe("/finance/transactions/me/export");
     expect(body).toBeNull();
     expect(config.params).toEqual({ status: "SUCCESS", format: "XLSX" });
+  });
+});
+
+describe("community record export", () => {
+  it("POSTs the record export with the list filters and no body", () => {
+    // The backend uses the LIST filters and sort, and "page number and size do
+    // not limit the export" — so the filters travel as query params and the
+    // whole matching set is exported, not the visible page.
+    exportCommunityRecords("my community", { source: "FILE_IMPORT", search: "dues" });
+    expect(client.post).toHaveBeenCalledWith("/communities/my community/records/export", null, {
+      params: { source: "FILE_IMPORT", search: "dues", format: "CSV" },
+    });
+  });
+
+  it("defaults to CSV and accepts an explicit format", () => {
+    exportCommunityRecords("c", {}, "PDF");
+    expect(client.post.mock.calls[0][2].params.format).toBe("PDF");
+  });
+
+  it("keeps the platform-admin mirror on its own admin path", () => {
+    // platform.recordbook.export, and it does NOT require community
+    // membership — a different scope, not a different argument.
+    exportAdminCommunityRecords("my community", {});
+    expect(client.post.mock.calls[0][0]).toBe("/admin/communities/my community/records/export");
   });
 });
