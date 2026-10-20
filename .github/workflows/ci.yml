@@ -126,11 +126,13 @@ jobs:
       # The action passes --fail itself, so only the result filter is here.
       # The CLI version is pinned alongside the action SHA: the action runs
       # the scanner with --no-update, so a floating image would silently keep
-      # using an old detector set.
+      # using an old detector set. The image tag carries NO `v` prefix --
+      # ghcr.io publishes `3.99.3`, not `v3.99.3`, and a wrong tag fails the
+      # job with "manifest unknown" rather than scanning anything.
       - name: Scan for leaked credentials
         uses: trufflesecurity/trufflehog@e63326d6545de8f425d93ce24078c6e68d83f70e # v3.99.3
         with:
-          version: v3.99.3
+          version: "3.99.3"
           extra_args: --results=verified,unknown
 
   e2e:
