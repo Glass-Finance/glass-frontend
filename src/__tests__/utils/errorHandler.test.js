@@ -61,6 +61,17 @@ describe("getErrorMessage", () => {
     );
   });
 
+  // The backend answers 401 for a resend to an address with no account, and
+  // its body ("Invalid Request") says nothing a person can act on. The
+  // status + path carry the real meaning.
+  it("reads a 401 on the resend endpoint as 'no account for that email'", () => {
+    const error = {
+      response: { status: 401, data: { message: "error", description: "Invalid Request" } },
+      config: { url: "/auth/verify/resend" },
+    };
+    expect(getErrorMessage(error)).toBe("We couldn't find an account for that email address.");
+  });
+
   it("returns a connection-lost message when the request never got a response", () => {
     const error = { request: {} };
     expect(getErrorMessage(error)).toBe(

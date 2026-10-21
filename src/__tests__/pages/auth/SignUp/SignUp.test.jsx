@@ -113,7 +113,7 @@ describe("SignUp full flow", () => {
 
     // Step 3: session from the register response is stored before the OTP
     // screen renders (SignUp.jsx's handleRegistered contract).
-    await screen.findByText("Verification Code Sent");
+    await screen.findByText("Check Your Email");
     expect(register).toHaveBeenCalledWith({
       email: EMAIL,
       firstName: "Sulaimon",

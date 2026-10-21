@@ -59,9 +59,20 @@ export function isMonitoringEnabled() {
 // every one of those would drown out the signal. Only report network
 // failures (no response at all) and 5xx server errors, which are the cases
 // where something actually broke.
+//
+// A 429 is the exception: it is the API's own limiter answering, which is a
+// statement about OUR capacity rather than about what the person typed. The
+// auth limiters are per-IP, and a phone on mobile data shares one public IP
+// with every other subscriber behind the same carrier NAT -- so a single
+// unlucky device can be refused for reasons that have nothing to do with it
+// (and, before the OTP screens reported their own send failures, that
+// refusal left no trace at all). Report it: a silently rate-limited signup
+// is exactly the failure that otherwise goes unnoticed until someone
+// complains that no code arrived.
 function isWorthReporting(error) {
   const status = error?.response?.status;
   if (status === undefined) return true; // network error / no response
+  if (status === 429) return true; // our limiter, not the caller's mistake
   return status >= 500;
 }
 

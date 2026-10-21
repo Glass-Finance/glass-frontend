@@ -58,7 +58,7 @@ describe("Join's initial step selection", () => {
       JSON.stringify({ email: "pending@example.com" }),
     );
     renderJoin("/member/join");
-    expect(screen.getByText("Verification Code Sent")).toBeDefined();
+    expect(screen.getByText("Check Your Email")).toBeDefined();
     expect(screen.getByText("pending@example.com")).toBeDefined();
   });
 
