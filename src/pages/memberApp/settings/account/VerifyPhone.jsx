@@ -79,6 +79,10 @@ export default function VerifyPhone() {
     setSending(true);
     try {
       await requestPhoneUpdate.mutateAsync({ phoneNumber: trimmed });
+      setOtp(["", "", "", "", "", ""]);
+      setOtpError("");
+      setResendMessage("");
+      setResendCount((c) => c + 1);
       setStep("otp");
     } catch (err) {
       setFieldError(getErrorMessage(err, "Couldn't send a code to that number. Please try again."));
@@ -206,7 +210,10 @@ export default function VerifyPhone() {
               <OtpBoxes
                 key={resendCount}
                 value={otp}
-                onChange={setOtp}
+                onChange={(next) => {
+                  setOtp(next);
+                  setOtpError("");
+                }}
                 length={6}
                 autoFocus
                 renderBoxes={renderDashedOtpBoxes}

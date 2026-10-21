@@ -29,6 +29,11 @@ vi.mock("../../../utils/errorHandler", () => ({ notifyError: notifyErrorMock }))
 vi.mock("../../../utils/generateReceipt", () => ({
   downloadReceiptPdf: downloadReceiptPdfMock,
 }));
+vi.mock("../../../components/common/QRCodeCanvas", () => ({
+  default: ({ value, size, color }) => (
+    <canvas data-testid="receipt-qr" data-value={value} data-size={size} data-color={color} />
+  ),
+}));
 
 const TX = { id: "tx1", reference: "REF-1", amount: 5000, status: "Successful" };
 
@@ -88,6 +93,15 @@ describe("ReceiptModal export actions", () => {
     clickSpy.mockRestore();
     delete globalThis.File;
     delete globalThis.navigator.share;
+  });
+
+  it("encodes the displayed transaction ID and renders the torn bottom edge", () => {
+    renderModal();
+
+    expect(screen.getByTestId("receipt-qr").getAttribute("data-value")).toBe("REF-1");
+    expect(screen.getByTestId("receipt-qr").getAttribute("data-size")).toBe("96");
+    expect(screen.getByTestId("receipt-qr").getAttribute("data-color")).toBe("#000000");
+    expect(screen.getByTestId("receipt-bottom-edge").children).toHaveLength(11);
   });
 
   describe("handleSaveImage", () => {

@@ -92,11 +92,12 @@ describe("renderDashedOtpBoxes", () => {
       />,
     );
     const box = screen.getByLabelText("Digit 1 of 6");
-    // Phone default 40px (h-10/max-w-10), desktop override 64px (h-16/max-w-16)
+    // Fixed 40px phone boxes and 64px desktop boxes (not just maximum widths).
+    expect(box.className).toContain("w-10");
     expect(box.className).toContain("h-10");
-    expect(box.className).toContain("max-w-10");
+    expect(box.className).toContain("flex-shrink-0");
+    expect(box.className).toContain("md:w-16");
     expect(box.className).toContain("md:h-16");
-    expect(box.className).toContain("md:max-w-16");
   });
 
   it("marks only the caret box for the focus ring", () => {

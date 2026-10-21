@@ -6,6 +6,7 @@ import ctaLogoUrl from "../../assets/cta/ctalogo.webp";
 import { toTitleCase } from "../../utils/format";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { notifyError } from "../../utils/errorHandler";
+import QRCodeCanvas from "./QRCodeCanvas";
 import {
   formatNaira,
   splitNaira,
@@ -104,7 +105,7 @@ function DetailRow({ label, children, last }) {
 }
 
 // ── ReceiptCard — rendered as real JSX for the in-app preview ────────────────
-// Rules: no border-radius on the outer card or logo, no overlapping sections.
+// The outer card and logo stay square; the ticket scallops intentionally overlap its edges.
 
 function ReceiptCard({
   tx,
@@ -123,6 +124,7 @@ function ReceiptCard({
   const statusColor = isSuccess ? "var(--color-white)" : isFailed ? "#FCA5A5" : "#FDE68A";
 
   const refValue = tx?.reference ?? tx?.id ?? "—";
+  const qrValue = tx?.reference ?? tx?.id;
   const maskedEmail = maskEmail(payerEmail);
   const amountParts = splitNaira(tx?.amount);
 
@@ -396,6 +398,25 @@ function ReceiptCard({
         </DetailRow>
       </div>
 
+      {qrValue != null && qrValue !== "" && (
+        <div
+          role="img"
+          aria-label="QR code for transaction ID"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: 4,
+            padding: "12px 28px 16px",
+          }}
+        >
+          <QRCodeCanvas value={String(qrValue)} size={96} color="#000000" />
+          <span style={{ fontSize: 9, color: "#64748B", letterSpacing: "0.3px" }}>
+            SCAN FOR TRANSACTION ID
+          </span>
+        </div>
+      )}
+
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <div
         style={{
@@ -431,6 +452,32 @@ function ReceiptCard({
         <span style={{ fontSize: 10, color: "#94A3B8" }}>
           Generated {formatDateTime(new Date())}
         </span>
+      </div>
+
+      <div
+        aria-hidden="true"
+        data-testid="receipt-bottom-edge"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          padding: "0 12px",
+          marginTop: -8,
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        {Array.from({ length: 11 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: "var(--color-white)",
+              flexShrink: 0,
+            }}
+          />
+        ))}
       </div>
     </div>
   );

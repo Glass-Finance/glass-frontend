@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import QRCode from "qrcode";
 import { formatNaira as sharedFormatNaira, toTitleCase } from "./format";
 
 function formatNaira(amount) {
@@ -248,11 +249,32 @@ export async function downloadReceiptPdf(tx, { payerName, payerEmail } = {}) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(30, 58, 138);
-  const refLines = doc.splitTextToSize(String(tx.reference ?? tx.id ?? "—"), W - margin * 2 - 8);
+  const transactionId = tx.reference ?? tx.id;
+  const refLines = doc.splitTextToSize(String(transactionId ?? "—"), W - margin * 2 - 8);
   doc.text(refLines, margin, y + 12);
   y += (refLines.length - 1) * 14 + 32;
 
+  if (transactionId != null && transactionId !== "") {
+    const qrDataUrl = await QRCode.toDataURL(String(transactionId), {
+      width: 128,
+      margin: 1,
+      color: { dark: "#000000", light: "#FFFFFF" },
+    });
+    const qrSize = 64;
+    const qrX = W - margin - qrSize;
+    doc.addImage(qrDataUrl, "PNG", qrX, y, qrSize, qrSize);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text("SCAN FOR TRANSACTION ID", qrX + qrSize / 2, y + qrSize + 10, {
+      align: "center",
+    });
+    y += qrSize + 24;
+  }
+
   // Footer
+  doc.setFillColor(250, 251, 255);
+  doc.rect(margin - 8, y - 12, W - (margin - 8) * 2, 48, "F");
   doc.setDrawColor(241, 245, 249);
   doc.setLineWidth(0.5);
   doc.line(margin, y, W - margin, y);
@@ -265,6 +287,14 @@ export async function downloadReceiptPdf(tx, { payerName, payerEmail } = {}) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(148, 163, 184);
   doc.text(`Generated ${formatDateTime(new Date())}`, W - margin, y, { align: "right" });
+
+  doc.setFillColor(255, 255, 255);
+  const bottomDotCount = 14;
+  const bottomDotMargin = 24;
+  const bottomDotSpan = (W - bottomDotMargin * 2) / (bottomDotCount - 1);
+  for (let i = 0; i < bottomDotCount; i++) {
+    doc.circle(bottomDotMargin + bottomDotSpan * i, y + 28, 7, "F");
+  }
 
   doc.save(receiptFilename(tx, "pdf"));
 }

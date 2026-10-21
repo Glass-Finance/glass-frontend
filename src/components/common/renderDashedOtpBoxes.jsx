@@ -15,34 +15,35 @@
 // Box size follows the Figma "DIgital input Field" component per viewport:
 // 40×40 on phones (iPhone frames in "Members Sign Up" / "Complete Your
 // Profile"), 64×64 at md+ (MacBook frame in "Create Your Account"). Figma
-// gaps too: 16/12 on phones, 8 (current behaviour) at md+. The caret box
-// (activeIndex) carries `otp-box-active`, which OtpBoxes styles with the
-// --color-focus ring while the hidden input has focus.
+// box dimensions stay fixed; available mobile spacing is distributed between
+// them, while desktop retains compact 8px gaps. The caret box (activeIndex)
+// carries `otp-box-active`, which OtpBoxes styles with the --color-focus ring
+// while the hidden input has focus.
 const OTP_LENGTH = 6;
 
 export function renderDashedOtpBoxes(boxDigits, activeIndex) {
   return (
     <div className="flex items-center justify-between gap-3 md:gap-2 pointer-events-none">
-      <div className="flex gap-4 md:gap-2 flex-1 min-w-0">
+      <div className="flex flex-1 min-w-0 justify-between gap-2">
         {boxDigits.slice(0, 3).map((d, i) => (
           <div
             key={i}
             aria-label={`Digit ${i + 1} of ${OTP_LENGTH}`}
-            className={`flex-1 h-10 md:h-16 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 min-w-0 max-w-10 md:max-w-16 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+            className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
           >
             {d}
           </div>
         ))}
       </div>
       <span className="text-gray-400 text-base md:text-xl font-light flex-shrink-0">—</span>
-      <div className="flex gap-4 md:gap-2 flex-1 min-w-0">
+      <div className="flex flex-1 min-w-0 justify-between gap-2">
         {boxDigits.slice(3, 6).map((d, i) => {
           const idx = i + 3;
           return (
             <div
               key={idx}
               aria-label={`Digit ${idx + 1} of ${OTP_LENGTH}`}
-              className={`flex-1 h-10 md:h-16 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 min-w-0 max-w-10 md:max-w-16 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+              className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
             >
               {d}
             </div>
