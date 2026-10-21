@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import CrispRouteBridge from "../../../components/common/CrispRouteBridge";
 
@@ -51,6 +51,34 @@ describe("CrispRouteBridge", () => {
     renderAt("/dashboard/home");
     expect(crisp.chat.show).toHaveBeenCalled();
     expect(crisp.chat.hide).not.toHaveBeenCalled();
+  });
+
+  it("hides the chat while the dashboard mobile drawer is open", () => {
+    renderAt("/dashboard/home");
+    vi.clearAllMocks();
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent("glass:dashboard-mobile-drawer", { detail: true }));
+    });
+
+    expect(crisp.chat.hide).toHaveBeenCalled();
+    expect(crisp.chat.show).not.toHaveBeenCalled();
+  });
+
+  it("keeps the chat hidden on sensitive pages after the drawer closes", () => {
+    renderAt("/dashboard/verify-identity");
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent("glass:dashboard-mobile-drawer", { detail: true }));
+    });
+    vi.clearAllMocks();
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent("glass:dashboard-mobile-drawer", { detail: false }));
+    });
+
+    expect(crisp.chat.hide).toHaveBeenCalled();
+    expect(crisp.chat.show).not.toHaveBeenCalled();
   });
 
   it("pushes the current page as agent context, debounced", () => {
