@@ -51,7 +51,7 @@ Shared working agreements across the frontend (`Glass-Finance/glass-waitlist`) a
 - Two projects: `desktop-chromium` (admin/public) and `mobile-chromium` / Pixel 7 (member app, `MemberDeviceGuard`). Each test runs in exactly one project via `test.skip(testInfo.project.name !== ...)`.
 - Harness: local Vite on `127.0.0.1:4173` with injected public `VITE_*` (including `VITE_TEST_MODE=true`). No real backend, provider, or secrets.
 - Preferred mocking: shared `e2e/support.js` catch-all dispatcher (personas, `/api/v1` CORS, Paystack stub, third-party aborts). Inline `page.route` only for endpoint-specific cases; consolidating onto `support.js` is welcome.
-- Run: `npm run test:e2e`. CI job is the isolated `e2e` job in `.github/workflows/ci.yml` (not inline in the build job).
+- Run: `npm run test:e2e`. CI job is the isolated `e2e` job in `.github/workflows/ci.yml` (not inline in the build job). That workflow has three jobs: `build` ("Lint & Build"), `secrets` ("Secret scan", TruffleHog over the pushed commits) and `e2e`.
 
 ## Tooling
 
@@ -59,6 +59,8 @@ Shared working agreements across the frontend (`Glass-Finance/glass-waitlist`) a
 - **LF line endings only** (`.gitattributes`); `.editorconfig` respected.
 - **ESLint** includes `jsx-a11y` recommended minus five debt-listed rules (see `docs/testing-strategy.md`).
 - Dependency audit: `npm audit --audit-level=high` in CI; keep it at 0 high+ when possible.
+- Endpoint audit: `npm run audit:endpoints -- --strict` in CI; a frontend call the backend does not have fails the build.
+- Service worker: `npm run verify:pwa` in CI; it drives the built `dist/sw.js` through a mocked scope.
 
 ## Parallel work — avoiding collisions
 
@@ -70,11 +72,10 @@ Shared working agreements across the frontend (`Glass-Finance/glass-waitlist`) a
 ## Quick checklist before a PR
 
 ```bash
-npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build
+npm audit --audit-level=high && npm run format:check && npm run lint && npm run typecheck \
+  && npm run test:coverage && npm run audit:endpoints -- --strict && npm run build && npm run verify:pwa
 # if touching e2e or payments:
 npm run test:e2e
-# if adding tests:
-npm run test:coverage
 # if landing components changed and v1 is cloned:
 npm run check:landing-sync
 ```

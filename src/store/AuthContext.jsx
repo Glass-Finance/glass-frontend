@@ -568,8 +568,8 @@ export function AuthProvider({ children }) {
   const isAdmin = isPlatformAdmin || (user?.isAdmin ?? false);
   const isMember = !isAdmin;
 
-  // Memoised, not a fresh literal on every render. useAuth() is consumed in
-  // 38 files across the app and there is no React.memo anywhere in the
+  // Memoised, not a fresh literal on every render. useAuth() is imported in
+  // 35 files across the app and there is no React.memo anywhere in the
   // codebase, so an unstable provider value re-renders every one of those
   // subtrees on any AuthProvider state change — including changes that leave
   // `user` and `token` identical (a `loading` flip during restore, say).
@@ -623,7 +623,7 @@ export function AuthProvider({ children }) {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 // react-refresh/only-export-components wants this in its own file so Fast
 // Refresh doesn't reset AuthProvider's state on every edit here -- true, but
-// useAuth is imported in 31 files across the app, all touching auth. Moving
+// useAuth is imported in 35 files across the app, all touching auth. Moving
 // it isn't a safe mechanical change to make without visually verifying every
 // call site, and the downside of leaving it is a dev-server-only HMR
 // nicety, not a production bug. Deliberately left as the standard

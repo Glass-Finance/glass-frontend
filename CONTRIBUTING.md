@@ -23,7 +23,7 @@ simplification is often the thing that breaks them.
 
 ## Testing and checks
 
-Add focused Vitest/Testing Library coverage for changed logic and user-visible states. Mock API modules at the boundary; never require production credentials. Touching a payment flow? Extend the E2E coverage in `e2e/` too — it pins same-`idempotencyKey` retry behaviour through the real browser. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`. If you cloned `glass-waitlist-v1` next to this repo, also run `npm run check:landing-sync` after touching shared landing components.
+Add focused Vitest/Testing Library coverage for changed logic and user-visible states. Mock API modules at the boundary; never require production credentials. Touching a payment flow? Extend the E2E coverage in `e2e/` too — it pins same-`idempotencyKey` retry behaviour through the real browser. Before opening a PR, run the same checks CI does, in the same order: `npm audit --audit-level=high`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run audit:endpoints -- --strict`, `npm run build` and `npm run verify:pwa`. If you cloned `glass-waitlist-v1` next to this repo, also run `npm run check:landing-sync` after touching shared landing components.
 
 ## Git workflow
 

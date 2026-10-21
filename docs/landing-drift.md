@@ -114,8 +114,8 @@ need it too (it is not currently a shared path, so the checker does not see it).
 ## Known gap: `docs/design-system.md` is not checked
 
 It is deliberately **not** in the script's `SHARED_ROOTS`. It is an adapted fork, not a
-mirror: the app carries a §9.7 for dashboard settings rows that do not exist on the marketing
-site, which is why the footer watermark is §9.7 there and §9.8 here. A byte-identity rule
+mirror: the app carries a §9.8 for dashboard settings rows that do not exist on the marketing
+site, which is why the footer watermark is §9.7 there and §9.9 here. A byte-identity rule
 could never pass for it. It is covered by a warning block inside the document instead — so it
 has no automated guard at all, and its drift is invisible to this check. Worth a periodic
 manual read if the marketing site keeps diverging.

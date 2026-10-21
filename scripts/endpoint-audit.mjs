@@ -54,14 +54,18 @@ const INFRA_ROUTE_LIST = [
 // Frontend calls whose backend route does not exist yet, and why that is
 // tolerated. Anything added here needs a comment justifying the wait; an
 // entry with no justification is just a way to hide a bug.
-const PENDING_BACKEND_LIST = [
-  [
-    "GET /user/crisp-token",
-    "Crisp session-continuity token; the backend has not deployed it. " +
-      "useCrispToken maps 404 → null on purpose, so chat still loads " +
-      "without token-bound continuity.",
-  ],
-];
+//
+// Currently empty. The entry that used to be here — GET /user/crisp-token —
+// is gone because the frontend stopped calling it: the backend mints no
+// chat-specific token, and useCrispToken reads the account's stable
+// `externalReference` off the GET /user/me response instead (see
+// src/hooks/useCrispToken.js). With no call site the entry matched nothing,
+// so the audit never reported it as PENDING, and its stated reason ("useCrispToken
+// maps 404 → null") described a request the hook no longer makes.
+//
+// A future call to a route the backend has not deployed belongs here, with
+// its reason, added when the call site is added — not before.
+const PENDING_BACKEND_LIST = [];
 
 // Frontend call sites that build a trailing path segment from a local
 // variable, so the literal alone can't be matched. Each entry expands one

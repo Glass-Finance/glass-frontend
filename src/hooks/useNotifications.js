@@ -8,9 +8,8 @@ import { resolveCommunity, buildCommunityMap } from "../utils/notificationConten
 
 // While the SSE stream is live it invalidates these queries the moment a
 // notification event lands, so fast polling is redundant — keep only a slow
-// safety-net poll (the stream's event names aren't fully documented, so a
-// missed event type still surfaces within a few minutes). When the stream
-// is down, fall back to the original 30s cadence.
+// safety-net poll, so a missed event type still surfaces within a few
+// minutes. When the stream is down, fall back to the original 30s cadence.
 const POLL_STREAM_UP = 1000 * 60 * 5;
 const POLL_STREAM_DOWN = 1000 * 30;
 

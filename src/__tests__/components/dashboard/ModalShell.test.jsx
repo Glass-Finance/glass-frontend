@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ModalShell from "../../../components/dashboard/ModalShell";
 
-// Guards DESIGN-SYSTEM.md §2 for the shared dashboard modal chrome, imported
+// Guards docs/design-system.md §2 for the shared dashboard modal chrome, imported
 // by 17 files. Its two close-button variants (the one in the titled header row
 // and the absolutely positioned one used when a caller supplies its own
 // heading) had no test coverage at all, which is how both kept a rounded-lg

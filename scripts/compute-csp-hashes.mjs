@@ -2,7 +2,7 @@
 // built index.html (i.e. one with no src attribute) -- run after `npm run
 // build` whenever the structured-data or Pendo bootstrap script in
 // index.html changes, and paste the matching hash into vercel.json's
-// Content-Security-Policy-Report-Only script-src.
+// Content-Security-Policy script-src.
 //
 // Usage: node scripts/compute-csp-hashes.mjs
 import { readFileSync } from "fs";

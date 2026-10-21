@@ -17,7 +17,7 @@
 // side is ever re-swept.
 //
 // Render at the Figma scale: 24px in a member settings row, 32px in an admin
-// settings row (DESIGN-SYSTEM.md §2.2a icon boxes, §3).
+// settings row (docs/design-system.md §2.2a icon boxes, §3).
 //
 // Source nodes: see the comment on each component.
 

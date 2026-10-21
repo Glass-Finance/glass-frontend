@@ -16,7 +16,7 @@ import { forwardRef } from "react";
 // you get the back chevron.
 //
 // Radius 999 here is the fourth `rounded-full` exception recorded in
-// DESIGN-SYSTEM.md §1.5 alongside toggle tracks, badges and landing CTAs --
+// docs/design-system.md §1.5 alongside toggle tracks, badges and landing CTAs --
 // Figma draws the circle deliberately, so it is not a violation of the 4px
 // rule in §2.1.
 
@@ -54,7 +54,7 @@ export const MobileBackButton = forwardRef(function MobileBackButton(
       aria-label={ariaLabel}
       // Surface-container is the file's #ffffff @ 0.6 glass fill; the 1px
       // #000000 @ 0.1 stroke is border-black/10. Hover/active darken the
-      // glass the same way the button roles do (DESIGN-SYSTEM.md §2.3).
+      // glass the same way the button roles do (docs/design-system.md §2.3).
       className={[
         "inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full",
         "bg-surface-container border border-black/10 text-ink cursor-pointer",

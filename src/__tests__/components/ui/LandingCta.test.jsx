@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { LandingCta } from "../../../components/ui/LandingCta";
 
-// Guards DESIGN-SYSTEM.md §2.2b — the landing CTA pill. Literal on
+// Guards docs/design-system.md §2.2b — the landing CTA pill. Literal on
 // purpose: the Figma values live in the spec first, and this test is
 // what fails when the two drift.
 describe("LandingCta — design system conformance", () => {

@@ -149,7 +149,7 @@ describe("JoinRequests approve/reject flow", () => {
   });
 });
 
-// DESIGN-SYSTEM.md §2.1 confirm-pair conformance (sweep batch C3): the
+// docs/design-system.md §2.1 confirm-pair conformance (sweep batch C3): the
 // cancel/reject action is the transparent outline role, never a filled
 // pill; the confirm action is primary. Classes are asserted literally --
 // if the spec changes, the spec file changes first.
