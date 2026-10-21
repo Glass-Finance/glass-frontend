@@ -46,9 +46,7 @@ describe("Member app email update OTP", () => {
     expect(requestEmailUpdate).toHaveBeenCalledWith({ email: "new@example.com" });
 
     fireEvent.click(screen.getByRole("button", { name: "Resend" }));
-    await waitFor(() =>
-      expect(requestEmailUpdate).toHaveBeenCalledTimes(2),
-    );
+    await waitFor(() => expect(requestEmailUpdate).toHaveBeenCalledTimes(2));
 
     fireEvent.change(screen.getByLabelText("Verification code"), {
       target: { value: "123456" },
