@@ -6,6 +6,7 @@ const { docMock, jsPDFMock } = vi.hoisted(() => {
   const doc = {
     internal: { pageSize: { getWidth: () => 595, getHeight: () => 842 } },
     addImage: vi.fn(),
+    circle: vi.fn(),
     line: vi.fn(),
     rect: vi.fn(),
     roundedRect: vi.fn(),
@@ -87,7 +88,8 @@ describe("downloadReceiptPdf", () => {
       ]),
     );
     expect(docMock.text.mock.calls.map(([text]) => text)).not.toContain("glasspay.app");
-    expect(docMock.line.mock.calls.length).toBeGreaterThan(100);
+    expect(docMock.circle).toHaveBeenCalledTimes(10);
+    expect(docMock.line.mock.calls.length).toBeGreaterThan(4);
     expect(docMock.save).toHaveBeenCalledWith("glass-receipt-GLS202500482.pdf");
   });
 });

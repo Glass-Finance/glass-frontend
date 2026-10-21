@@ -4,24 +4,32 @@ import { toTitleCase } from "../../utils/format";
 import QRCodeCanvas from "./QRCodeCanvas";
 import { formatHeaderDate, maskEmail, splitNaira, statusLabel } from "./receiptUtils";
 
-function TicketEdge({ bottom = false }) {
-  const path = Array.from({ length: 10 }, (_, index) => {
-    const x = index * 70;
-    return bottom
-      ? `C${x + 18} 2 ${x + 18} 22 ${x + 35} 22 C${x + 52} 22 ${x + 52} 2 ${x + 70} 2`
-      : `C${x + 18} 22 ${x + 18} 2 ${x + 35} 2 C${x + 52} 2 ${x + 52} 22 ${x + 70} 22`;
-  }).join(" ");
-
+function ReceiptCutoutEdge() {
   return (
-    <svg
+    <div
       aria-hidden="true"
-      data-testid={bottom ? "receipt-bottom-edge" : "receipt-top-edge"}
-      viewBox="0 0 700 24"
-      preserveAspectRatio="none"
-      style={{ display: "block", width: "100%", height: 24, flexShrink: 0 }}
+      data-testid="receipt-bottom-edge"
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        height: 12,
+        margin: "0 -19px",
+      }}
     >
-      <path d={`M0 ${bottom ? 2 : 22} ${path}`} fill="none" stroke="#E1E2E5" strokeWidth="2" />
-    </svg>
+      {Array.from({ length: 10 }, (_, index) => (
+        <span
+          key={index}
+          style={{
+            width: 24,
+            height: 24,
+            flexShrink: 0,
+            borderRadius: "50%",
+            background: "#F0F4FF",
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -75,8 +83,6 @@ export default function ReceiptCard({ tx, payerName, payerEmail, cardRef, onQrRe
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, sans-serif',
       }}
     >
-      <TicketEdge />
-
       <header
         style={{
           display: "flex",
@@ -179,7 +185,7 @@ export default function ReceiptCard({ tx, payerName, payerEmail, cardRef, onQrRe
         </div>
       )}
 
-      <TicketEdge bottom />
+      <ReceiptCutoutEdge />
     </div>
   );
 }

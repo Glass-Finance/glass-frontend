@@ -158,7 +158,7 @@ export default function JoinRequests() {
           <Button variant="tertiary" size="sm" fullWidth={false} onClick={() => navigate(-1)}>
             <ChevronLeft size={13} /> Back
           </Button>
-          <span className="text-sm text-gray-300 mx-2 align-middle">›</span> Join Requests
+          <span className="text-sm text-gray-300 mx-2 align-middle">‹</span> Join Requests
         </h1>
         <p className="text-sm text-gray-400">
           Review who wants to join before letting them into your community.
