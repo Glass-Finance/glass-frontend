@@ -8,7 +8,7 @@ import QRCode from "qrcode";
  * that want a themed QR code should read the resolved value
  * (`getComputedStyle`) and pass a concrete colour string.
  */
-export default function QRCodeCanvas({ value, size = 160, color = "#002FA7" }) {
+export default function QRCodeCanvas({ value, size = 160, color = "#002FA7", onReady, onError }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -17,9 +17,22 @@ export default function QRCodeCanvas({ value, size = 160, color = "#002FA7" }) {
       width: size,
       margin: 1,
       color: { dark: color, light: "#00000000" }, // fully transparent — blends with whatever's behind it, not just one hardcoded page color
-    }).catch(() => {});
-  }, [value, size, color]);
+    })
+      .then(() => onReady?.())
+      .catch((error) => {
+        if (onError) onError(error);
+        else console.error("Unable to render QR code", error);
+      });
+  }, [value, size, color, onReady, onError]);
 
   if (!value) return null;
-  return <canvas ref={canvasRef} width={size} height={size} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      width={size}
+      height={size}
+      aria-label="QR code for transaction ID"
+      data-testid="receipt-qr-code"
+    />
+  );
 }
