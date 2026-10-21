@@ -657,7 +657,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
             they were; only the paddings carry a md: variant here. */}
             <div className="relative py-1.5 md:py-3.5 md:pb-[13px] px-4 md:px-3 border-b border-[var(--color-hairline)] flex items-center justify-between gap-2 min-h-11 md:min-h-14">
               {activeCommunity ? (
-                <div className="min-w-0 flex-1 flex items-center gap-2">
+                <div className="min-w-0 flex-1 flex items-start gap-2 md:items-center">
                   {/* Community logo -- 32x32, radius 4 (node 326:18711). The
                   desktop panel never had one, so this stays mobile-only. */}
                   <span className="md:hidden flex-shrink-0 w-8 h-8 rounded-g-1 overflow-hidden bg-surface-sunken">
@@ -679,40 +679,34 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
                   records why that was scaled back from the inspector's literal
                   reading. */}
                   <div className="min-w-0 flex-1 flex flex-col items-start gap-0.5 md:flex-row md:items-center md:gap-2">
-                    <div className="text-sm md:text-xs font-medium text-black leading-[1.3] break-words">
+                    <div className="max-w-full text-sm md:text-xs font-medium text-black leading-[1.3] break-words">
                       {activeCommunity.name}
                     </div>
-                    {/* The Figma inspector's literal 69x32/text-sm reading was
-                    measured on the badge in isolation -- applied verbatim next
-                    to this sidebar's much smaller 12px community name, it read
-                    as oversized and out of place rather than matching Figma
-                    "by eye". Scaled back down; kept the radius-4px/#FFF1D6 fix
-                    from that same spec, since neither of those was in question. */}
-                    <span
-                      className={`flex-shrink-0 text-xs md:text-[10px] font-bold rounded-g-1 py-0.5 px-2 ${isCommunityAdmin(activeCommunity) ? "text-[#e85d04] bg-[#FFF1D6]" : "text-success-strong bg-success-wash"}`}
-                    >
-                      {activeCommunity.owned
-                        ? "Owner"
-                        : isCommunityAdmin(activeCommunity)
-                          ? "Admin"
-                          : "Member"}
-                    </span>
+                    <div className="flex items-center gap-1 md:contents">
+                      {/* Keep the role and community switcher below the name
+                          on phones so neither control steals heading width. */}
+                      <span
+                        className={`flex-shrink-0 text-xs md:text-[10px] font-bold rounded-g-1 py-0.5 px-2 ${isCommunityAdmin(activeCommunity) ? "text-[#e85d04] bg-[#FFF1D6]" : "text-success-strong bg-success-wash"}`}
+                      >
+                        {activeCommunity.owned
+                          ? "Owner"
+                          : isCommunityAdmin(activeCommunity)
+                            ? "Admin"
+                            : "Member"}
+                      </span>
+                      <Button
+                        variant="tertiary"
+                        size="icon-sm"
+                        aria-label="Switch community"
+                        title="Switch community"
+                        aria-expanded={switcherOpen}
+                        onClick={() => setSwitcherOpen((v) => !v)}
+                        className="flex-shrink-0 md:hidden text-ink/60"
+                      >
+                        <ChevronDown size={18} />
+                      </Button>
+                    </div>
                   </div>
-                  {/* Figma's header chevron (node 393:20237). With the rail
-                  hidden below md this -- not the rail's avatar tiles -- is how
-                  a mobile admin reaches any community other than the active
-                  one, so it opens the switcher dropdown below. */}
-                  <Button
-                    variant="tertiary"
-                    size="icon-sm"
-                    aria-label="Switch community"
-                    title="Switch community"
-                    aria-expanded={switcherOpen}
-                    onClick={() => setSwitcherOpen((v) => !v)}
-                    className="flex-shrink-0 md:hidden text-ink/60"
-                  >
-                    <ChevronDown size={18} />
-                  </Button>
                 </div>
               ) : (
                 <div className="min-w-0 flex-1">
