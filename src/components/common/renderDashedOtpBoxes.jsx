@@ -12,38 +12,34 @@
 // components breaks Fast Refresh (react-refresh/only-export-components),
 // which is why the component and this renderer are not co-located.
 //
-// Box size follows the Figma "DIgital input Field" component per viewport:
-// 40×40 on phones (iPhone frames in "Members Sign Up" / "Complete Your
-// Profile"), 64×64 at md+ (MacBook frame in "Create Your Account"). Figma
-// box dimensions stay fixed; available mobile spacing is distributed between
-// them, while desktop retains compact 8px gaps. The caret box (activeIndex)
-// carries `otp-box-active`, which OtpBoxes styles with the --color-focus ring
-// while the hidden input has focus.
+// Box size follows Figma at md+ (64×64); compact modal layouts use 36×36 on
+// phones and 40×40 from sm, keeping all six boxes inside narrow dialogs.
+// The active box changes its border color while the hidden input is focused.
 const OTP_LENGTH = 6;
 
 export function renderDashedOtpBoxes(boxDigits, activeIndex) {
   return (
-    <div className="flex items-center justify-between gap-3 md:gap-2 pointer-events-none">
-      <div className="flex flex-1 min-w-0 justify-between gap-2">
+    <div className="mx-auto flex w-full max-w-[300px] items-center justify-between gap-2 pointer-events-none md:max-w-[420px]">
+      <div className="flex flex-1 min-w-0 justify-between">
         {boxDigits.slice(0, 3).map((d, i) => (
           <div
             key={i}
             aria-label={`Digit ${i + 1} of ${OTP_LENGTH}`}
-            className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
           >
             {d}
           </div>
         ))}
       </div>
       <span className="text-gray-400 text-base md:text-xl font-light flex-shrink-0">—</span>
-      <div className="flex flex-1 min-w-0 justify-between gap-2">
+      <div className="flex flex-1 min-w-0 justify-between">
         {boxDigits.slice(3, 6).map((d, i) => {
           const idx = i + 3;
           return (
             <div
               key={idx}
               aria-label={`Digit ${idx + 1} of ${OTP_LENGTH}`}
-              className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
             >
               {d}
             </div>

@@ -83,7 +83,7 @@ describe("renderDashedOtpBoxes", () => {
     expect(renderDashedOtpBoxes.length).toBe(2);
   });
 
-  it("sizes boxes for phone and desktop (Figma: 40px mobile, 64px desktop)", () => {
+  it("keeps phone boxes compact and fixed, with Figma sizing on desktop", () => {
     render(
       <OtpBoxes
         value={["1", "2", "", "", "", ""]}
@@ -92,15 +92,17 @@ describe("renderDashedOtpBoxes", () => {
       />,
     );
     const box = screen.getByLabelText("Digit 1 of 6");
-    // Fixed 40px phone boxes and 64px desktop boxes (not just maximum widths).
-    expect(box.className).toContain("w-10");
-    expect(box.className).toContain("h-10");
+    // 36px narrow-phone, 40px standard-phone, and 64px desktop box sizes.
+    expect(box.className).toContain("w-9");
+    expect(box.className).toContain("h-9");
     expect(box.className).toContain("flex-shrink-0");
+    expect(box.className).toContain("sm:w-10");
+    expect(box.className).toContain("sm:h-10");
     expect(box.className).toContain("md:w-16");
     expect(box.className).toContain("md:h-16");
   });
 
-  it("marks only the caret box for the focus ring", () => {
+  it("marks only the caret box for the focus border", () => {
     render(
       <OtpBoxes
         value={["1", "2", "", "", "", ""]}
@@ -114,7 +116,7 @@ describe("renderDashedOtpBoxes", () => {
     expect(screen.getByLabelText("Digit 4 of 6").className).not.toContain("otp-box-active");
   });
 
-  it("wires the OtpBoxes root for the focus-within ring selector", () => {
+  it("wires the OtpBoxes root for the focus-within border selector", () => {
     const { container } = render(
       <OtpBoxes
         value={["", "", "", "", "", ""]}

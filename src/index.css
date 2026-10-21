@@ -416,18 +416,13 @@ textarea:focus-visible {
 }
 
 /* ── OTP caret box ─────────────────────────────────────────────────────────
-   OtpBoxes' digit boxes are plain divs; the only focusable element in the
-   row is its single hidden <input>. Paint the design-system focus ring
-   (§2.1: --color-focus, 2px, 2px offset) on the caret box — the one that
-   receives the next keystroke — whenever that hidden input holds focus, so
-   the user can see where digits are landing. Deliberately :focus-within and
-   not :focus-visible: the input is focused by tapping the row (and by
-   autoFocus) on exactly the mobile flows where this indicator matters, and
-   text inputs match :focus-visible on mouse click anyway. Unlayered so the
-   box's own border utilities cannot out-rank it. */
+   OtpBoxes' digit boxes are plain divs; the single hidden input receives
+   focus. Change the active box's existing border to the focus color instead
+   of drawing an outer ring, so the focused state stays within the box edge. */
 .otp-input-root:focus-within .otp-box-active {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
+  border-color: var(--color-focus) !important;
+  outline: none;
+  box-shadow: none;
 }
 
 /* ── Input focus: border colour change, not a ring ──────────────────────────
