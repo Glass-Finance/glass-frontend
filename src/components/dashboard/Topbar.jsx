@@ -242,6 +242,7 @@ export default function Topbar({
             <Search size={13} className="text-gray-400 flex-shrink-0" />
           )}
           <input
+            aria-label="Search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => {

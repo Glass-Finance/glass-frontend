@@ -55,6 +55,14 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      # Every form control must have an accessible name. jsx-a11y cannot catch
+      # this -- its label rule checks that a <label> HAS a control, not that
+      # every control HAS a label, and native <input> elements sit outside
+      # its control-has-associated-label rule entirely. The repo shipped with
+      # 80 unnamed controls across 33 files for exactly that reason.
+      - name: Input accessible-name check
+        run: npm run check:input-labels
+
       - name: Lint
         run: npm run lint
 

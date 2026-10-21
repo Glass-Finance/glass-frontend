@@ -456,6 +456,7 @@ export default function Members() {
             <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-surface-container-border w-full sm:flex-1 sm:min-w-0 sm:max-w-xs focus-within:border-[#002FA7] transition-colors">
               <Search size={12} className="text-gray-400" />
               <input
+                aria-label="Search members"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search members…"
@@ -559,6 +560,7 @@ export default function Members() {
                   <th className={MEMBER_COLUMNS[0]}>
                     <input
                       type="checkbox"
+                      aria-label="Select all members"
                       checked={selected.length === filtered.length && filtered.length > 0}
                       onChange={(e) =>
                         setSelected(e.target.checked ? filtered.map((m) => m.id) : [])
@@ -613,6 +615,7 @@ export default function Members() {
                         <td className="hidden sm:table-cell px-5 py-3">
                           <input
                             type="checkbox"
+                            aria-label={`Select ${memberName(m) || memberEmail(m) || "member"}`}
                             checked={selected.includes(m.id)}
                             onChange={() => toggleSelect(m.id)}
                           />

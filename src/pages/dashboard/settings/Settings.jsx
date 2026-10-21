@@ -370,6 +370,7 @@ export default function Settings() {
           />
           <input
             type="text"
+            aria-label="Search settings"
             placeholder="Find A Setting"
             value={searchQuery}
             onChange={(e) => {

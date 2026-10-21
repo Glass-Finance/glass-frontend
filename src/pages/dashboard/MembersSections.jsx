@@ -58,8 +58,14 @@ export function QuickAddMemberModal({
 
         <div className="flex flex-col gap-3.5">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+            <label
+              htmlFor="invite-member-email"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
+              Email
+            </label>
             <input
+              id="invite-member-email"
               type="email"
               required
               value={email}

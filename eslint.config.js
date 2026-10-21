@@ -131,10 +131,10 @@ export default defineConfig([
       // positives as unused.
       "react/jsx-uses-vars": "error",
       // Accessibility — jsx-a11y recommended minus the five rules that have
-      // large pre-existing backlogs (label-has-associated-control 94,
+      // large pre-existing backlogs (label-has-associated-control 44,
       // click-events-have-key-events 51, no-static-element-interactions 51,
-      // no-autofocus 17, no-noninteractive-element-interactions 11 — 224
-      // findings across 76 files, measured 2026-10-20). The rest of
+      // no-autofocus 17, no-noninteractive-element-interactions 11 — 174
+      // findings across 71 files, measured 2026-10-21). The rest of
       // recommended (alt-text, ARIA validity, roles, etc.) stays error-level
       // so new UI can't regress. Re-enable the five as their debt is paid
       // down — see docs/testing-strategy.md, which records how to re-measure

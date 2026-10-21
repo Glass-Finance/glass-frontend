@@ -64,8 +64,11 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <label className="text-label font-medium text-gray-700">Email Address</label>
+          <label htmlFor="signup-email" className="text-label font-medium text-gray-700">
+            Email Address
+          </label>
           <SignUpTextInput
+            id="signup-email"
             type="email"
             value={email}
             onChange={handleFieldChange(setEmail)}

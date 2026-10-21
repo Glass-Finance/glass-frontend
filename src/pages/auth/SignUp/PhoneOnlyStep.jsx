@@ -62,8 +62,11 @@ export default function PhoneOnlyStep({ initialPhone, onNext, onCancel }) {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <label className="text-label font-medium text-gray-700">Phone Number</label>
+          <label htmlFor="signup-phone" className="text-label font-medium text-gray-700">
+            Phone Number
+          </label>
           <SignUpTextInput
+            id="signup-phone"
             type="tel"
             value={phone}
             onChange={handleChange}

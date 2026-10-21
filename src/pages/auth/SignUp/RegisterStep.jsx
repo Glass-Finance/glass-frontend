@@ -120,8 +120,11 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
       <form onSubmit={handleSubmit} className="flex flex-col gap-12">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-label font-medium text-gray-700">First Name</label>
+            <label htmlFor="signup-first-name" className="text-label font-medium text-gray-700">
+              First Name
+            </label>
             <SignUpTextInput
+              id="signup-first-name"
               type="text"
               name="firstName"
               value={form.firstName}
@@ -134,8 +137,11 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
             <SignUpFieldError message={fieldErrors.firstName} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-label font-medium text-gray-700">Last Name</label>
+            <label htmlFor="signup-last-name" className="text-label font-medium text-gray-700">
+              Last Name
+            </label>
             <SignUpTextInput
+              id="signup-last-name"
               type="text"
               name="lastName"
               value={form.lastName}
@@ -150,9 +156,12 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-label font-medium text-gray-700">Create Password</label>
+          <label htmlFor="signup-password" className="text-label font-medium text-gray-700">
+            Create Password
+          </label>
           <div className="relative">
             <SignUpTextInput
+              id="signup-password"
               key={showPassword ? "text" : "password"}
               type={showPassword ? "text" : "password"}
               name="password"
@@ -180,9 +189,12 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-label font-medium text-gray-700">Confirm Password</label>
+          <label htmlFor="signup-confirm-password" className="text-label font-medium text-gray-700">
+            Confirm Password
+          </label>
           <div className="relative">
             <SignUpTextInput
+              id="signup-confirm-password"
               type={showConfirm ? "text" : "password"}
               name="confirmPassword"
               value={form.confirmPassword}

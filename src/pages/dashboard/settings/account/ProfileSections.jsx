@@ -45,10 +45,14 @@ export function DeleteAccountModal({
               This will permanently delete your account and all associated data from Glass. This
               cannot be undone.
             </p>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="delete-account-confirm"
+              className="block text-xs font-medium text-gray-700 mb-1.5"
+            >
               Type <strong>DELETE</strong> to confirm
             </label>
             <input
+              id="delete-account-confirm"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               placeholder="DELETE"

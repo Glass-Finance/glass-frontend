@@ -80,8 +80,14 @@ export default function DuplicatePlanModal({ plan, onClose, onDuplicate, duplica
 
         <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">New Plan Name</label>
+            <label
+              htmlFor="duplicate-plan-name"
+              className="block text-xs font-medium text-gray-700 mb-1.5"
+            >
+              New Plan Name
+            </label>
             <input
+              id="duplicate-plan-name"
               className={inputCls}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -91,9 +97,15 @@ export default function DuplicatePlanModal({ plan, onClose, onDuplicate, duplica
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">URL slug</label>
+            <label
+              htmlFor="duplicate-plan-slug"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
+              URL slug
+            </label>
             <div className="relative">
               <input
+                id="duplicate-plan-slug"
                 className={inputCls + " pr-8"}
                 value={slug}
                 onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
@@ -118,10 +130,14 @@ export default function DuplicatePlanModal({ plan, onClose, onDuplicate, duplica
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="duplicate-plan-start-date"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Start Date <span className="text-danger">*</span>
               </label>
               <input
+                id="duplicate-plan-start-date"
                 type="date"
                 className={inputCls}
                 value={startDate}
@@ -131,10 +147,14 @@ export default function DuplicatePlanModal({ plan, onClose, onDuplicate, duplica
             </div>
             {!isRecurring && (
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="duplicate-plan-due-date"
+                  className="block text-xs font-medium text-gray-700 mb-1"
+                >
                   Due Date <span className="text-danger">*</span>
                 </label>
                 <input
+                  id="duplicate-plan-due-date"
                   type="date"
                   className={inputCls}
                   value={dueDate}

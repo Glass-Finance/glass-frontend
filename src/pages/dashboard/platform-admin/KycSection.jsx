@@ -154,6 +154,8 @@ function KycDetailModal({ attemptId, onClose }) {
               </label>
             )}
             <TextInput
+              label="User-visible reason"
+              hideLabel
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="User-visible reason…"

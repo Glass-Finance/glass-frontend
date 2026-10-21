@@ -402,6 +402,7 @@ export default function AddMemberModal({ onClose, communityId, communitySlug }) 
                       ref={fileRef}
                       type="file"
                       accept=".csv"
+                      aria-label="Upload members CSV file"
                       className="hidden"
                       onChange={(e) => handleFile(e.target.files[0])}
                     />
@@ -429,6 +430,7 @@ export default function AddMemberModal({ onClose, communityId, communitySlug }) 
                     <div className="flex gap-2">
                       <input
                         type="url"
+                        aria-label="CSV file URL"
                         value={fileUrl}
                         onChange={(e) => {
                           setFileUrl(e.target.value);
@@ -550,6 +552,7 @@ export default function AddMemberModal({ onClose, communityId, communitySlug }) 
                     ))}
                     <input
                       type="text"
+                      aria-label="Add member email"
                       value={emailInput}
                       onChange={(e) => {
                         setEmailInput(e.target.value);
@@ -573,6 +576,7 @@ export default function AddMemberModal({ onClose, communityId, communitySlug }) 
                   </p>
                   <input
                     type="text"
+                    aria-label="Phone number"
                     value={phoneNumbers}
                     onChange={(e) => setPhoneNumbers(e.target.value)}
                     placeholder="Enter Phone Number"

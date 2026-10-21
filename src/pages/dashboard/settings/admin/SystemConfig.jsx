@@ -144,6 +144,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
             ) : (
               <input
                 type={config.valueType === "NUMBER" ? "number" : "text"}
+                aria-label={`${config.label ?? "Config"} value`}
                 value={form.value}
                 onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
                 className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
@@ -154,8 +155,14 @@ function EditModal({ config, onClose, onSave, isSaving }) {
 
           {/* Name */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Display Name</label>
+            <label
+              htmlFor="system-config-display-name"
+              className="block text-xs font-semibold text-gray-700 mb-1.5"
+            >
+              Display Name
+            </label>
             <input
+              id="system-config-display-name"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
@@ -284,6 +291,7 @@ export default function SystemConfig() {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             />
             <input
+              aria-label="Search configs"
               type="text"
               placeholder="Search configs…"
               value={search}

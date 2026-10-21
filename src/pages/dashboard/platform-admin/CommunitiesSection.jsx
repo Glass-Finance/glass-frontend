@@ -62,11 +62,15 @@ function CommissionModal({ community, onClose }) {
         {!useDefault && (
           <>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <label
+                htmlFor="commission-rate"
+                className="block text-xs font-semibold text-gray-700 mb-1.5"
+              >
                 Rate{" "}
                 <span className="font-normal text-gray-400">(basis points — 100 bps = 1%)</span>
               </label>
               <input
+                id="commission-rate"
                 type="number"
                 min="0"
                 max="10000"
@@ -82,10 +86,14 @@ function CommissionModal({ community, onClose }) {
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <label
+                htmlFor="commission-cap"
+                className="block text-xs font-semibold text-gray-700 mb-1.5"
+              >
                 Cap <span className="font-normal text-gray-400">(₦, leave blank for no cap)</span>
               </label>
               <input
+                id="commission-cap"
                 type="number"
                 min="0"
                 value={cap}
