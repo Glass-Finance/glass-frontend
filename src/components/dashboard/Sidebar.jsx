@@ -477,14 +477,14 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
           taller than the real visible viewport and cut off Member View /
           the user info strip pinned to its bottom. */}
       <div
-        className={`fixed md:sticky top-0 left-0 h-dvh z-[60] w-full md:w-auto flex-shrink-0 flex transition-transform duration-300 ${
+        className={`fixed md:sticky top-0 left-0 h-dvh z-[60] w-[min(360px,88vw)] md:w-auto flex-shrink-0 flex transition-transform duration-300 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* ── Blue rail ───────────────────────────────────────────────────────
             Desktop only. Figma's mobile drawer (node 326:18701) is a single
-            full-width panel with no rail: its nav pills start at x=18, which
-            the rail's 56px would swallow whole, and the community row's own
+            panel with no rail: its nav pills start at x=18, which the rail's
+            56px would swallow whole, and the community row's own
             chevron (node 393:20237) is what carries the switcher down here.
             `hidden md:flex`, never `flex hidden` -- both set display, and
             Tailwind v4 gives same-property utilities no guaranteed order. */}
@@ -831,9 +831,8 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
                       // Simpler than an inner wrapper element, and avoids the
                       // negative-margin trap from the last attempt at this. Per
                       // direct visual feedback against the rendered Figma design:
-                      // roughly 70% of the row when active, not edge to edge (an
-                      // earlier "Fill" reading of an isolated inspector panel) and
-                      // not content-hugging either (an even earlier attempt).
+                      // full-width rows keep the active state aligned with
+                      // every other destination in the narrower mobile drawer.
                       //
                       // Mobile reads Figma's drawer pills (node 326:18652): r4,
                       // an 8px icon/label gap, a 14/500 label and a 20px glyph,
@@ -841,7 +840,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
                       // The row keeps p-2.5 rather than Figma's 2px so the tap
                       // target stays ~40px. Desktop is untouched: 14px gap,
                       // 13px glyph, 12/500.
-                      className={`flex items-center gap-2 md:gap-3.5 p-2.5 rounded-g-1 tracking-normal text-sm md:text-xs mb-3 md:mb-1.5 transition-all duration-150 whitespace-nowrap font-medium border-none ${isActive ? "w-[70%]" : "w-full"} ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${
+                      className={`flex items-center gap-2 md:gap-3.5 p-2.5 rounded-g-1 tracking-normal text-sm md:text-xs mb-3 md:mb-1.5 transition-all duration-150 whitespace-nowrap font-medium border-none w-full ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${
                         isDisabled
                           ? "bg-transparent text-ink-faint"
                           : isActive
@@ -926,9 +925,9 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
                   setMemberViewHint(true);
                   setTimeout(() => setMemberViewHint(false), 3500);
                 }}
-                className="w-full flex items-center gap-2 py-2.5 px-2.5 rounded-lg border-none cursor-pointer bg-transparent text-ink-muted font-medium text-xs transition-all duration-150 whitespace-nowrap hover:bg-surface-sunken hover:text-brand"
+                className="w-full flex items-center gap-2 md:gap-2.5 py-2.5 px-2.5 rounded-g-1 border-none cursor-pointer bg-transparent text-ink-muted font-medium text-sm md:text-xs transition-all duration-150 whitespace-nowrap hover:bg-surface-sunken hover:text-brand"
               >
-                <Smartphone size={13} className="flex-shrink-0" />
+                <Smartphone size={13} className="flex-shrink-0 w-5 h-5 md:w-[13px] md:h-[13px]" />
                 <span className="flex-1 text-left">Member View</span>
               </button>
 

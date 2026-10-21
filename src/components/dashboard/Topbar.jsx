@@ -198,25 +198,25 @@ export default function Topbar({
   }
 
   return (
-    // 48px below md, 56px from md up. Figma's mobile topbar (node 352:19421)
-    // is exactly 48 tall; the desktop header stays at the shipped h-14.
-    <header className="h-12 md:h-14 bg-surface-container border-b border-surface-container-border flex items-center gap-6 px-4 md:px-8 sticky top-0 z-50 flex-shrink-0">
+    // Keep the mobile header at 56px so its 48px touch targets have breathing
+    // room and the brand mark reads clearly on a phone.
+    <header className="h-14 bg-surface-container border-b border-surface-container-border flex items-center gap-4 md:gap-6 px-3 md:px-8 sticky top-0 z-50 flex-shrink-0">
       {/* Hamburger — mobile only (sidebar is off-canvas below md) */}
       <Button
         variant="tertiary"
-        size="icon-md"
+        size="icon-lg"
         data-tour="mobile-menu-button"
         onClick={onMenuClick}
         className="flex-shrink-0 md:hidden"
         aria-label="Open menu"
       >
-        <Menu size={19} />
+        <Menu size={22} />
       </Button>
 
       {/* Glass wordmark — mobile only, centred. Figma's mobile topbar is
       burger · mark+wordmark · round bell with the brand block sitting in the
       middle; the desktop header carries no brand of its own because the rail
-      already does. Same 28px mark + text pairing as memberApp/SideDrawer. */}
+      already does. */}
       <div className="flex-1 flex items-center justify-center min-w-0 md:hidden">
         <button
           type="button"
@@ -224,8 +224,8 @@ export default function Topbar({
           aria-label="Glass — your communities"
           className="flex items-center gap-1 p-0 bg-transparent border-none cursor-pointer"
         >
-          <img src="/Glass.webp" alt="" className="w-7 h-7 object-contain block" />
-          <span className="text-base font-normal text-ink">Glass</span>
+          <img src="/Glass.webp" alt="" className="w-8 h-8 object-contain block" />
+          <span className="text-lg font-normal text-ink">Glass</span>
         </button>
       </div>
 
@@ -373,7 +373,7 @@ export default function Topbar({
       {/* Right */}
       <div className="relative ml-auto flex items-center gap-4" ref={panelRef}>
         {/* Help — replay the first-launch dashboard tour. Hidden below md:
-        Figma's mobile topbar (node 352:19421) carries only burger, brand and
+        the mobile topbar carries only burger, brand and
         bell, and nothing else. The tour button is the only trigger for the
         dashboard tour, so it is not dropped on a phone -- it moves into both
         drawers as a "Take the tour" row (Sidebar.jsx, MobileTourRow). */}
@@ -402,7 +402,7 @@ export default function Topbar({
             aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`}
             title="Notifications"
           >
-            <Bell size={16} />
+            <Bell size={20} />
           </MobileBackButton>
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-danger border-2 border-white flex items-center justify-center text-white text-[9px] font-bold px-0.5 pointer-events-none">
@@ -443,8 +443,8 @@ export default function Topbar({
           />
         )}
 
-        {/* Divider + account — desktop only. Figma's mobile topbar (node
-        352:19421) ends at the bell, and below md the drawer's own labelled
+        {/* Divider + account — desktop only. The mobile topbar ends at the
+        bell, and below md the drawer's own labelled
         Log Out row is the sign-out path, so the account block would only
         duplicate it.
 
