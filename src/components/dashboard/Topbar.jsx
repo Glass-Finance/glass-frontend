@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../ui/Button";
 import { MobileBackButton } from "../ui/MobileBackButton";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Search, Bell, Loader2, Menu, HelpCircle } from "lucide-react";
 import { useAuth } from "../../store/AuthContext";
 import { useAllNotifications } from "../../hooks/useNotifications";
@@ -41,22 +41,6 @@ function getDisplayName(user) {
   return user?.email ?? "";
 }
 
-function getMobilePageTitle(pathname) {
-  const titles = [
-    ["/dashboard/home", "Your Communities"],
-    ["/dashboard/admin", "Dashboard"],
-    ["/dashboard/members", "Members"],
-    ["/dashboard/payments", "Payments"],
-    ["/dashboard/groups", "Groups"],
-    ["/dashboard/notifications", "Notifications"],
-    ["/dashboard/join-requests", "Join Requests"],
-    ["/dashboard/transactions", "Transactions"],
-    ["/dashboard/records", "Records"],
-    ["/dashboard/settings", "Settings"],
-  ];
-  return titles.find(([path]) => pathname.startsWith(path))?.[1] ?? "Glass";
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function Topbar({
   searchPlaceholder = "Search members, payments, receipts...",
@@ -71,7 +55,6 @@ export default function Topbar({
   onOpenTour,
 }) {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const { user } = useAuth();
   const communityId = useActiveCommunityId();
 
@@ -89,8 +72,6 @@ export default function Topbar({
     }
     return map;
   }, [communitiesData]);
-  const activeCommunityName = communityMap.get(communityId)?.name;
-  const mobilePageTitle = getMobilePageTitle(pathname);
   const [panelOpen, setPanelOpen] = useState(false);
   const panelRef = useRef(null);
 
@@ -232,17 +213,17 @@ export default function Topbar({
         <Menu size={22} />
       </Button>
 
-      {/* Show the current page and community together so the compact phone
-          shell retains the context otherwise supplied by the desktop h1. */}
-      <div className="flex-1 flex flex-col items-center justify-center min-w-0 md:hidden">
-        <span className="text-sm font-semibold leading-tight text-ink truncate max-w-full">
-          {mobilePageTitle}
-        </span>
-        {activeCommunityName && !isCommunitiesHome && (
-          <span className="text-xs leading-tight text-ink-muted truncate max-w-full">
-            {activeCommunityName}
-          </span>
-        )}
+      {/* Glass wordmark — mobile only, centred. */}
+      <div className="flex-1 flex items-center justify-center min-w-0 md:hidden">
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/home")}
+          aria-label="Glass — your communities"
+          className="flex items-center gap-1 p-0 bg-transparent border-none cursor-pointer"
+        >
+          <img src="/Glass.webp" alt="" className="w-8 h-8 object-contain block" />
+          <span className="text-lg font-normal text-ink">Glass</span>
+        </button>
       </div>
 
       {/* Search */}
