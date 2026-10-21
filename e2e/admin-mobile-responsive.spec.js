@@ -189,6 +189,14 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(page.getByRole("button", { name: "Close menu" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Switch community" })).toBeVisible();
     await expect(page.getByText("Take the tour")).toBeVisible();
+    const communityHeading = page
+      .getByRole("button", { name: "Switch community" })
+      .locator("xpath=../preceding-sibling::div[1]");
+    await expect(communityHeading).toHaveText("Kings College");
+    expect(
+      await communityHeading.evaluate((el) => el.parentElement.getBoundingClientRect().width),
+    ).toBeGreaterThan(180);
+    await page.waitForTimeout(350);
     await page.screenshot({ path: test.info().outputPath("admin-mobile-drawer.png") });
 
     await page.getByRole("button", { name: "Switch community" }).click();
