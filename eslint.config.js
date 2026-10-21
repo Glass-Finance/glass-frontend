@@ -172,12 +172,29 @@ export default defineConfig([
     // opts out of every one of those rules, so the convention needs to be a
     // gate rather than a sentence in AGENTS.md.
     files: ["src/**/*.{js,jsx}"],
-    ignores: RAW_BUTTON_DEBT,
+    // RAW_BUTTON_DEBT is the production debt list. `src/__tests__/**` is
+    // excluded outright: a test that renders a raw <button> is asserting on
+    // markup, not shipping UI, and `ui/Button` is not what is under test
+    // there. With the selector corrected, 16 test files tripped this rule —
+    // every one of them a fixture, and none of them production code.
+    ignores: [...RAW_BUTTON_DEBT, "src/__tests__/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
-          selector: "JSXElement[name.name='button']",
+          // JSXOpeningElement, not JSXElement: a JSXElement node has no
+          // `name` property (it has openingElement/children/closingElement),
+          // so "JSXElement[name.name='button']" matches NOTHING and the rule
+          // is silently inert -- the config loads, --print-config shows the
+          // rule enabled, and no raw button is ever reported. The `name`
+          // property lives on the opening element, whose name is a
+          // JSXIdentifier carrying the string.
+          //
+          // Verified by running the candidate selectors against a probe file,
+          // and by exercising the ratchet: a new file with a raw <button>
+          // fails, a file in RAW_BUTTON_DEBT passes, and removing a file
+          // from that list makes it fail.
+          selector: "JSXOpeningElement[name.name='button']",
           message:
             "Use ui/Button (src/components/ui/Button.jsx) instead of a raw <button>. If a raw button is genuinely required, add the file to RAW_BUTTON_DEBT in eslint.config.js with a reason.",
         },
