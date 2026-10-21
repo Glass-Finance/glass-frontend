@@ -52,22 +52,23 @@ npm run dev            # starts on http://localhost:3000
 
 ## Scripts
 
-| Command                      | Description                                           |
-| ---------------------------- | ----------------------------------------------------- |
-| `npm run dev`                | Start Vite dev server                                 |
-| `npm run build`              | Production build (runs env guard first)               |
-| `npm run preview`            | Serve the production build locally                    |
-| `npm run lint`               | ESLint                                                |
-| `npm run format`             | Prettier write                                        |
-| `npm run format:check`       | Prettier check                                        |
-| `npm run typecheck`          | TypeScript check                                      |
-| `npm run test`               | Vitest (single run)                                   |
-| `npm run test:watch`         | Vitest (watch mode)                                   |
-| `npm run test:coverage`      | Vitest with coverage thresholds                       |
-| `npm run test:e2e`           | Playwright E2E                                        |
-| `npm run audit:endpoints`    | Frontend calls vs backend OpenAPI                     |
-| `npm run check:landing-sync` | Diff shared landing components against marketing repo |
-| `npm run probe:idempotency`  | Live double-charge probe (needs credentials)          |
+| Command                      | Description                                                        |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `npm run dev`                | Start Vite dev server                                              |
+| `npm run build`              | Production build (runs env guard first)                            |
+| `npm run preview`            | Serve the production build locally                                 |
+| `npm run lint`               | ESLint                                                             |
+| `npm run format`             | Prettier write                                                     |
+| `npm run format:check`       | Prettier check                                                     |
+| `npm run typecheck`          | TypeScript check                                                   |
+| `npm run test`               | Vitest (single run)                                                |
+| `npm run test:watch`         | Vitest (watch mode)                                                |
+| `npm run test:coverage`      | Vitest with coverage thresholds                                    |
+| `npm run test:e2e`           | Playwright E2E                                                     |
+| `npm run verify:pwa`         | Drive the built service worker through a mocked scope              |
+| `npm run audit:endpoints`    | Frontend calls vs backend OpenAPI (`-- --strict` to fail on drift) |
+| `npm run check:landing-sync` | Diff shared landing components against marketing repo              |
+| `npm run probe:idempotency`  | Live double-charge probe (needs credentials)                       |
 
 ---
 
@@ -141,10 +142,11 @@ Token refresh is single-flight with cross-tab lease coordination (`src/api/refre
 ## Contributing
 
 1. Create a short-lived `feature/` or `fix/` branch from `main`.
-2. Run the full validation suite before opening a PR:
+2. Run the full validation suite before opening a PR, in the order `.github/workflows/ci.yml` runs it:
 
    ```bash
-   npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build
+   npm audit --audit-level=high && npm run format:check && npm run lint && npm run typecheck \
+     && npm run test:coverage && npm run audit:endpoints -- --strict && npm run build && npm run verify:pwa
    ```
 
 3. Open a PR into `main` using the repo template (summary, test plan, checklist).
@@ -169,7 +171,15 @@ Detailed docs live in [`docs/`](docs/):
 - [`docs/kyc.md`](docs/kyc.md) — Smile ID KYC integration
 - [`docs/payments.md`](docs/payments.md) — Payment flow, idempotency
 - [`docs/account-verification.md`](docs/account-verification.md) — Account/phone verification
+- [`docs/community-record-book.md`](docs/community-record-book.md) — Community record book
+- [`docs/design-system.md`](docs/design-system.md) — Design source of truth (colours, radii, buttons)
+- [`docs/pwa.md`](docs/pwa.md) — Installable app shell and service worker
+- [`docs/cloudinary.md`](docs/cloudinary.md) — Image delivery
+- [`docs/landing-drift.md`](docs/landing-drift.md) — What `check:landing-sync` reports
 - [`docs/testing-strategy.md`](docs/testing-strategy.md) — Testing approach
 - [`docs/architecture.md`](docs/architecture.md) — Architecture overview
 - [`docs/error-handling.md`](docs/error-handling.md) — Error handling patterns
 - [`docs/data-fetching.md`](docs/data-fetching.md) — React Query data fetching patterns
+- [`docs/team-conventions.md`](docs/team-conventions.md) — How the team works
+- [`docs/decisions/`](docs/decisions/) — Architecture decision records
+- [`docs/runbooks/`](docs/runbooks/) — Operational runbooks

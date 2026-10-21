@@ -30,7 +30,7 @@ export default function ConfirmDialog({
       {/* Both actions go through ui/Button, so the destructive path gets
               the same radius, weight and five states as the benign one. The
               Cancel button used to be a filled grey pill (rounded-xl,
-              bg-gray-100, font-semibold) — the role collapse DESIGN-SYSTEM.md
+              bg-gray-100, font-semibold) — the role collapse docs/design-system.md
               §4.3 calls out. It's the outline-neutral role now. */}
       <Button
         type="button"

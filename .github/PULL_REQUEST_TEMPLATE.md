@@ -25,11 +25,14 @@
 
 ## Engineering checklist
 
+- [ ] `npm audit --audit-level=high`
 - [ ] `npm run format:check`
 - [ ] `npm run lint`
 - [ ] `npm run typecheck`
-- [ ] `npm run test`
+- [ ] `npm run test:coverage`
+- [ ] `npm run audit:endpoints -- --strict`
 - [ ] `npm run build`
+- [ ] `npm run verify:pwa`
 - [ ] Documentation updated where behavior or architecture changed
 - [ ] Dependency changes are explained, or intentionally deferred
 

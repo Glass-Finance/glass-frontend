@@ -213,9 +213,10 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
             className="w-full flex items-center gap-4 pl-9 pr-6 py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
           >
             {/* Figma 'navMenuIcons/*' lead glyph. 24px, down from Figma's 32px
-              and scaled with the row copy (18/16 -> 14/12). The file only
-              draws glyphs for eight of the ten rows; Notifications and
-              Identity Verification are drawn in AdminMenuIcons.jsx to match. */}
+              and scaled with the row copy (18/16 -> 14/12). Every one of the
+              eleven rows has a glyph; this file draws most of them, and
+              Notifications and Identity Verification are drawn in
+              AdminMenuIcons.jsx to match. */}
             <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
               {RowIcon ? <RowIcon size={24} /> : null}
             </div>

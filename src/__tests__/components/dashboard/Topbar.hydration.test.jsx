@@ -29,7 +29,7 @@ vi.mock("../../../hooks/useCommunities", () => ({
   useCommunities: () => useCommunities(),
 }));
 // The search hook owns a React Query of its own; stub it so this file keeps
-// testing the account menu without standing up a QueryClient.
+// testing the topbar without standing up a QueryClient.
 vi.mock("../../../hooks/useCommunitySearch", () => ({
   useCommunitySearch: () => useCommunitySearch(),
 }));

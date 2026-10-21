@@ -50,7 +50,7 @@ export default function Footer() {
     <footer className="relative isolate overflow-hidden bg-brand-ink text-white">
       {/* Decorative Glass mark, centred on the whole footer. Not a Figma node
           (1:1374 draws no watermark) — owner-approved extension, see
-          DESIGN-SYSTEM.md §9.8. Stops are the sanctioned brand blue and deep
+          docs/design-system.md §9.8. Stops are the sanctioned brand blue and deep
           navy; the mask is what cuts the stepped line through the plate.
           Hidden below md: on a phone the mark outgrows the footer and its cut
           line collides with the nav columns, so the footer stays flat there. */}

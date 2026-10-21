@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Bell, X } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 
-// Guards DESIGN-SYSTEM.md §2. These assertions are deliberately literal:
+// Guards docs/design-system.md §2. These assertions are deliberately literal:
 // if the Figma spec changes, the spec file changes first and this test is
 // the thing that should then fail and be updated with it.
 describe("Button — design system conformance", () => {
@@ -26,10 +26,10 @@ describe("Button — design system conformance", () => {
     ["lg", "py-4", "px-8", "h-14", "text-[16px]"],
     ["xl", "py-5", "px-10", "h-16", "text-[16px]"],
     // Owner-directed decouplings: Figma's box with a 12px label. Padding and
-    // height still come from Figma -- only `text` differs. DESIGN-SYSTEM.md §2.
+    // height still come from Figma -- only `text` differs. docs/design-system.md §2.
     ["sm-tight", "py-2", "px-4", "h-10", "text-[12px]"],
     // Second owner-directed decoupling: same h40 box, 8px label. Sits below
-    // the scale's 12px floor on purpose -- see DESIGN-SYSTEM.md §2.2d.
+    // the scale's 12px floor on purpose -- see docs/design-system.md §2.2d.
     ["sm-tighter", "py-2", "px-4", "h-10", "text-[8px]"],
   ])("size %s maps to its padding/height/label", (size, py, px, h, text) => {
     render(<Button size={size}>Go</Button>);

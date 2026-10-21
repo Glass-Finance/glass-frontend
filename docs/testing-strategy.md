@@ -6,7 +6,7 @@ Vitest runs in a jsdom environment through `vite.config.js`. Testing Library is 
 
 Tests are colocated under `src/__tests__/` and use `*.test.js` or `*.test.jsx`. The suite is primarily unit and component-level; it does not replace manual verification against the real backend because this repository has no local backend or sandbox.
 
-**Unit suite:** 197 test files, 1888 tests (2026-10-20).
+**Unit suite:** 198 test files, 1900 tests — 1899 passing, 1 skipped (2026-10-20).
 
 ## Type checking
 
@@ -54,7 +54,7 @@ Update the numbers here and in the comment in `eslint.config.js` in the same com
 
 `npm run test:coverage` runs Vitest with the v8 provider over `src/**/*.{js,jsx}`. Test files (`src/__tests__/**`), entry points (`src/main.jsx`, `src/App.jsx`), and dev-only pages (`src/pages/dev/**`) are excluded; `e2e/**` is excluded from Vitest entirely (Playwright owns it). Reports are written to `coverage/` in `text`, `text-summary`, `html`, `lcov`, and `json-summary` formats — the summaries for quick reading, `html` for local drill-down, `lcov` for badges/future CI reporting.
 
-Baseline, measured on the suite as it stands (2026-10-20): **statements 48.64%, branches 49.46%, functions 43.57%, lines 49.72%** — with `src/utils/**` at 65.00 / 72.12 / 71.32 / 64.47 and `src/api/**` at 77.86 / 82.52 / 45.75 / 84.58 (statements / branches / functions / lines).
+Baseline, measured on the suite as it stands (2026-10-20): **statements 48.72%, branches 49.45%, functions 43.68%, lines 49.81%** — with `src/utils/**` at 65.00 / 72.12 / 71.32 / 64.47 and `src/api/**` at 77.86 / 82.52 / 45.75 / 84.58 (statements / branches / functions / lines).
 
 The figures previously recorded here (32.11% statements and so on) were measured during the original testing sprints and had been overtaken by the suite without the baseline being re-taken. Regenerate them from `coverage/coverage-summary.json` after any run that moves the numbers materially.
 
@@ -72,7 +72,7 @@ Raise them when adding tests, never lower them to make CI green.
 
 ## Expectations
 
-Add focused tests for changed pure logic, hook behavior, route guards, and user-visible error or loading states. Mock API modules at the boundary. Keep tests deterministic and independent of real credentials or production services. Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:coverage`, `npm run test:e2e`, and `npm run build` before opening a PR.
+Add focused tests for changed pure logic, hook behavior, route guards, and user-visible error or loading states. Mock API modules at the boundary. Keep tests deterministic and independent of real credentials or production services. Run the CI gates before opening a PR, in the order `.github/workflows/ci.yml` runs them: `npm audit --audit-level=high`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run audit:endpoints -- --strict`, `npm run build`, `npm run verify:pwa`. Add `npm run test:e2e` when the change touches the e2e specs or payments.
 
 ## End-to-end
 
@@ -109,7 +109,7 @@ Each test executes in exactly one project: the specs carry `test.skip(testInfo.p
 - `e2e/support.js` — a single catch-all dispatcher (used by the auth/admin/callback/initiation specs): every request whose pathname starts with `/api/v1` is answered right here, whether the app's API base is the absolute `https://api.glasspay.app` or a same-origin `/api/v1` (CORS headers and preflights are handled for the absolute case); the Paystack authorization URL is served a local stub page; our own dev server passes through; everything else outside it (Pendo, Google Identity Services, Sentry, Vercel, Cloudinary) is aborted. Personas seed sessions with a sessionStorage guard so hard navigations (the session-expiry redirect) cannot resurrect cleared tokens, and first-run dashboard tours are suppressed via their localStorage seen-flag (UI preference, not behavior under test).
 - Inline `page.route` mocks inside `guards.spec.js`, `landing.spec.js`, and `payment-idempotency.spec.js` — endpoint-specific fixtures plus selective third-party aborts.
 
-**CI.** The dedicated `e2e` job in `.github/workflows/ci.yml` runs in isolation alongside the build job: `npm ci` → `npx playwright install --with-deps chromium` → `npm run test:e2e`, with retries, first-retry traces, an HTML report, and the `playwright-report/` artifact uploaded (7-day retention) on failure. The build job separately gates format, lint, typecheck, the Vitest suite, `npm audit --audit-level=high`, the production build (which requires `VITE_API_BASE_URL`/`VITE_TEST_MODE` and smoke-checks the shipped bundle), and `npm run verify:pwa` — which executes the built service worker in a mocked `ServiceWorkerGlobalScope` and drives real fetch events through it, so a broken worker fails the pull request instead of production.
+**CI.** The workflow has three jobs. The dedicated `e2e` job runs in isolation alongside the build job: `npm ci` → `npx playwright install --with-deps chromium` → `npm run test:e2e`, with retries, first-retry traces, an HTML report, and the `playwright-report/` artifact uploaded (7-day retention) on failure. The `secrets` job ("Secret scan") runs TruffleHog over the commits in the push or pull request and fails the run on a verified credential. The build job separately gates `npm audit --audit-level=high`, format, lint, typecheck, `npm run test:coverage` (the coverage-floor gate — `npm run test` alone never evaluates them), `npm run audit:endpoints -- --strict`, the production build (which requires `VITE_API_BASE_URL`/`VITE_TEST_MODE` and smoke-checks the shipped bundle), and `npm run verify:pwa` — which executes the built service worker in a mocked `ServiceWorkerGlobalScope` and drives real fetch events through it, so a broken worker fails the pull request instead of production. A per-ref concurrency group cancels a superseded run rather than letting two race for the same ref.
 
 ## Gaps for later sprints
 

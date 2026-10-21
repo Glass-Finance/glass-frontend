@@ -6,10 +6,11 @@ import client from "./client";
 //
 // Shapes verified against the live backend OpenAPI (api.glasspay.app/v3/api-docs).
 // Every route here is already deployed. Before this module the frontend called
-// none of them, which is exactly why PaymentAudience.GROUP is still absent from
-// the payments audience options: a GROUP-audience payment link needs groupIds,
-// and there was no way to create or repair one. See the note on AUDIENCE_OPTIONS
-// in pages/dashboard/payments/constants.js before adding it.
+// none of them, which is why PaymentAudience.GROUP was absent from the payments
+// audience options: a GROUP-audience payment link needs groupIds, and there was
+// no way to create or repair one. GROUP is offered now that the groups
+// endpoints it depends on exist — see the note on AUDIENCE_OPTIONS in
+// pages/dashboard/payments/constants.js before changing either side.
 //
 // `{communityIdentifier}` accepts a slug or an id, same as the rest of the
 // community APIs, so callers pass whatever useActiveCommunityId() resolved.

@@ -20,7 +20,7 @@ import {
   IconDropdown,
 } from "../../../components/ui/icons/SettingsIcons";
 
-// Row icons are the file's own glyphs (DESIGN-SYSTEM.md §3), not lucide
+// Row icons are the file's own glyphs (docs/design-system.md §3), not lucide
 // stand-ins. Identity Verification is the one app-added row Figma does not
 // draw, so it keeps a lucide glyph -- there is no Figma icon to match.
 const SECTIONS = [

@@ -83,13 +83,17 @@ report something:
 - **Secret scanning and push protection** are enabled, so a leaked credential
   is blocked at push time and flagged in the repository.
 - **Private vulnerability reporting** is enabled (see above).
-- **Dependabot** runs weekly for npm, and security updates are applied
-  separately from routine version bumps.
+- **Dependabot** runs weekly for npm, and weekly for `github-actions` — the
+  latter is what keeps the SHA-pinned workflow actions current. Security
+  updates are applied separately from routine version bumps.
 - **CodeQL** runs on every push and pull request. Alerts are triaged as part
   of the normal review flow; the rationale for an accepted alert is recorded
   in `docs/decisions/` so a decision is never silently dropped.
-- **Branch protection** on `main` requires a pull request and a green CI run,
-  so no change reaches production unreviewed.
+- **Branch protection is not enabled on `main`** (`protected: false`, and no
+  repository rulesets). The "pull request plus a green CI run" rule is a team
+  convention, not a GitHub-enforced setting, so a direct push to `main` is not
+  blocked by GitHub today. Treat the CI gates as the real control until
+  protection is turned on.
 
 ## Security documentation
 

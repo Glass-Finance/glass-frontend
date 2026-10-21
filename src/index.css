@@ -34,7 +34,7 @@
   --color-brand-tint: #e6eeff;
   --color-hairline: #e0e0eb;
 
-  /* DESIGN-SYSTEM.md §1/§2 — tokens extracted from the Figma file
+  /* docs/design-system.md §1/§2 — tokens extracted from the Figma file
      "Glass Design By AQ" on 2026-10-07. Read that first before adding a
      colour, radius or button prop; it lists the values that are banned
      precisely because they used to live here unremarked. */
@@ -72,7 +72,7 @@
 
   /* Figma's corner-radius scale: four values, nothing else. 4px is used by
      every button at every state -- where Figma conflicts with itself on
-     hover radius, the smaller value wins (DESIGN-SYSTEM.md §2.1).
+     hover radius, the smaller value wins (docs/design-system.md §2.1).
      Deliberately NOT --radius-xs/sm/md/lg: those are Tailwind's built-in
      scale, and remapping them to 12/16 would enlarge every card and input
      that already uses rounded-md/rounded-lg. These are additive. */
@@ -247,11 +247,11 @@
   /* Ink — the neutral text ramp, darkest to lightest.
 
      --color-ink was #111111, which §1.6 bans as off-palette text; Figma's
-     text dark is #000000. Blast radius: this token alone has ~333 call
+     text dark is #000000. Blast radius: this token alone has ~419 call
      sites, so every piece of body text shifts by 17/255 on red. The change
      is barely visible on its own, which is precisely why it was worth
      doing by token rather than call site — there is no reason for any of
-     those 333 places to carry a colour Figma does not contain. */
+     those 419 places to carry a colour Figma does not contain. */
   --color-ink: #000000;
   --color-ink-strong: #374151;
   --color-ink-muted: #6b7280;
@@ -285,7 +285,7 @@
 
   /* Accents used for non-semantic emphasis.
 
-     DESIGN-SYSTEM.md §1.6 bans Tailwind's indigo and violet: neither
+     docs/design-system.md §1.6 bans Tailwind's indigo and violet: neither
      #4f46e5 nor #7c3aed is in the Figma file. These are repointed rather
      than renamed, so the ~24 call sites (avatars, receipt gradients, chart
      strokes, plan badges) move together and stay on-palette:
@@ -314,7 +314,7 @@
   --color-success-strong: #008000;
   --color-success-deep: #15803d;
   --color-success-bright: #0ece7b;
-  /* Repointed from #e11d48 (Tailwind rose-500), which DESIGN-SYSTEM.md §1.6
+  /* Repointed from #e11d48 (Tailwind rose-500), which docs/design-system.md §1.6
      bans: the app had five reds for one role and this was the last one
      standing, after #dc2626, #7f1d1d, bg-red-600 and bg-danger-bright were
      migrated. 19 call sites -- overdue-plan chips, status dots, filter
@@ -325,7 +325,7 @@
   --color-danger-bright-2: #ef4444;
 
   /* ---------------------------------------------------------------------------
-     Status fills, from the Figma file's own observed usage (DESIGN-SYSTEM.md
+     Status fills, from the Figma file's own observed usage (docs/design-system.md
      §1). These are the values the design file actually reaches for, and they
      replace the Tailwind palette that was sitting here:
        #008000 435 nodes — the file's dominant green
@@ -387,7 +387,7 @@
    `outline-none` for visual reasons, which otherwise leaves keyboard focus
    with no indicator at all. */
 :focus-visible {
-  /* --color-focus (#0f53ff), not --color-brand. DESIGN-SYSTEM.md §2.3:
+  /* --color-focus (#0f53ff), not --color-brand. docs/design-system.md §2.3:
      Figma's Focused state is a #0f53ff stroke. Reusing brand blue made
      keyboard focus invisible on the navy landing/dark sections. */
   outline: 2px solid var(--color-focus);
@@ -459,7 +459,7 @@ body {
 
 /* Font utilities */
 /* --font-dm / --font-playfair / --font-urbanist retired 2026-10-09: the
-   Figma file is Inter-only (DESIGN-SYSTEM.md §7) and nothing used them. */
+   Figma file is Inter-only (docs/design-system.md §7) and nothing used them. */
 
 /* Shared page background — used by every full-screen state/onboarding page
    that shows this artwork, so the asset is only referenced from one place. */
@@ -731,7 +731,7 @@ section {
 }
 
 /* Long-form legal document text (Privacy Policy, Terms of Service).
-     Was #111827, a Tailwind gray-900 that DESIGN-SYSTEM.md §1.6 bans as
+     Was #111827, a Tailwind gray-900 that docs/design-system.md §1.6 bans as
      off-palette text; Figma's text dark is #000000. --color-ink is the
      app's existing name for it. */
 .legal-prose h2 {

@@ -12,15 +12,11 @@ _Glass Design By AQ_ via the REST API. **When code disagrees with that file,
 the code is wrong** — unless its section 0 says otherwise. Do not "tidy" a
 value to match a Tailwind default; match the document.
 
-It is mirrored at `../DESIGN-SYSTEM.md` at the workspace root. Keep the two in
-sync when either changes.
-
-> **That mirror does not currently exist.** `AGENTS.md` claims it does, but
-> there is no `DESIGN-SYSTEM.md` at the repo root or the workspace root, and
-> `docs/design-system.md` does not reference one. Treat `docs/design-system.md`
-> as the only real copy, and do not create the mirror in order to satisfy the
-> documentation. Raising this with the architecture lead is worthwhile — the
-> claim is in `AGENTS.md`, so the fix belongs there first.
+It is the only copy. `DESIGN-SYSTEM.md` has never existed at the repo root or
+the workspace root, and `docs/design-system.md` does not reference one — an
+earlier version of this file, and of AGENTS.md, claimed otherwise and asked for
+the two to be kept in sync. Both have been corrected. If you meet a
+`DESIGN-SYSTEM.md` reference anywhere else, it means this file.
 
 ## Figma access is unavailable
 

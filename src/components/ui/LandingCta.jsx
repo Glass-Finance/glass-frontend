@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-// DESIGN-SYSTEM.md §2.2b — the landing CTA: the near-white pill the Figma
+// docs/design-system.md §2.2b — the landing CTA: the near-white pill the Figma
 // landing frames draw for nav/hero/CTA-band/footer CTAs (#fafbfc fill,
 // r=60 -> rounded-full, h=50, Inter 500 15px black label). This is NOT
 // one of the six product roles in §2.1 and must never be reached for via

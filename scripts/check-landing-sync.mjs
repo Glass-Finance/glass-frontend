@@ -60,14 +60,14 @@ const SHARED_ROOTS = [
 // otherwise it silently stops covering anything.
 //
 // NOTE: docs/design-system.md is a known fork and is deliberately NOT in
-// SHARED_ROOTS. It renumbers sections (the app carries a 9.7 for dashboard
+// SHARED_ROOTS. It renumbers sections (the app carries a 9.8 for dashboard
 // settings rows that do not exist on the marketing site), so it can never be
 // byte-identical. It is covered by its own in-file warning block instead.
 const INTENTIONALLY_DIVERGENT = {
   "vercel.json":
     "Deployment headers differ by design: the marketing site redirects /sign-in, /invite, " +
-    "etc. to app.glasspay.app and carries a report-only CSP; the app carries the endpoint " +
-    "audit rewrite and the enforcing CSP with sha256 hashes. Same file name, different job.",
+    "etc. to app.glasspay.app and carries a report-only CSP; the app carries the enforcing " +
+    "CSP with sha256 hashes. Same file name, different job.",
 
   "eslint.config.js":
     "Plugin major skew: react-refresh 0.4.x here vs 0.5.x in the marketing repo, and the " +

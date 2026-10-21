@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ConfirmSheet from "../../../components/memberApp/ConfirmSheet";
 
-// Guards DESIGN-SYSTEM.md §2 for the member app's shared bottom-sheet
+// Guards docs/design-system.md §2 for the member app's shared bottom-sheet
 // confirm — behind every destructive member action (leave community, remove
 // saved card, turn off auto-pay). It had no test coverage at all, which is how
 // a rounded-xl pill at weight 600 with no pressed or focus-visible state
@@ -39,7 +39,7 @@ describe("ConfirmSheet — design system conformance", () => {
     expect(confirmBtn().className).toContain("bg-brand");
   });
 
-  // The role collapse from DESIGN-SYSTEM.md §4.3: Cancel must be the outline
+  // The role collapse from docs/design-system.md §4.3: Cancel must be the outline
   // role (transparent + 10% black stroke), never a filled pill.
   it("Cancel is the transparent outline role, not a filled pill", () => {
     render(<ConfirmSheet {...defaults} />);

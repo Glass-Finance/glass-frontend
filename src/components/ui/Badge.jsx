@@ -1,4 +1,4 @@
-// Badge components implementing DESIGN-SYSTEM.md §9.1 — the Figma status,
+// Badge components implementing docs/design-system.md §9.1 — the Figma status,
 // role and payment-frequency chips. The wash/label pairs are taken straight
 // from the file's Status Badge (1:12211), Role Badge (1:12205) and Payment
 // Frequency Badge (1:12311) component sets; do not invent pairings here.
