@@ -107,7 +107,7 @@ rules:
 
 | Part                  | Below `md` (phones)                                                        | `md` and up (desktop)                             |
 | --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
-| Nav rail              | `hidden`; 88vw drawer capped at 360px (no rail behind it)                  | `hidden md:flex` rail + 220px panel               |
+| Nav rail              | `hidden`; 84vw drawer capped at 320px (no rail behind it)                  | `hidden md:flex` rail + 220px panel               |
 | Drawer header         | 32×32 community logo + chevron switcher + ✕ close                          | Community name + Owner/role chip                  |
 | Topbar                | `h-14`, 48×48 burger · 32px Glass mark · 48×48 round bell                  | `h-14`, community switcher + search + help        |
 | Page header           | `hidden md:flex` — the shell already carries community context             | h1 + subtitle + quick actions                     |
@@ -137,10 +137,11 @@ paginated either way — the chips are the phone's affordance, not a replacement
 desktop Filter button.
 
 **Mobile drawer sizing exception:** The Figma drawer frame is full width, but the shipped
-community-admin drawer uses `min(360px, 88vw)` so the page remains visible behind the
+community-admin drawer uses `min(320px, 84vw)` so the page remains visible behind the
 scrim and the navigation does not take over the entire phone screen. All drawer navigation
-rows use the same full width; active state is communicated by fill and color rather than a
-different row width.
+rows use the same full width and 48px vertical pitch; active state is communicated by fill
+and color rather than a different row width. The floating support launcher is hidden while
+the drawer is open so it cannot cover the account or logout controls.
 
 ---
 

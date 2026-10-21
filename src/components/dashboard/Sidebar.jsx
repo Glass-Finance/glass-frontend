@@ -202,6 +202,15 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
     onCloseMobile?.();
   }, [onCloseMobile]);
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("glass:dashboard-mobile-drawer", { detail: mobileOpen }));
+    return () => {
+      if (mobileOpen) {
+        window.dispatchEvent(new CustomEvent("glass:dashboard-mobile-drawer", { detail: false }));
+      }
+    };
+  }, [mobileOpen]);
+
   // Active route segment: /dashboard/admin → "home", /dashboard/payments →
   // "payments", etc. (matches the flat ?community= convention, not slugs-in-path)
   const pathParts = location.pathname.split("/").filter(Boolean);
@@ -477,7 +486,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
           taller than the real visible viewport and cut off Member View /
           the user info strip pinned to its bottom. */}
       <div
-        className={`fixed md:sticky top-0 left-0 h-dvh z-[60] w-[min(360px,88vw)] md:w-auto flex-shrink-0 flex transition-transform duration-300 ${
+        className={`fixed md:sticky top-0 left-0 h-dvh z-[60] w-[min(320px,84vw)] md:w-auto flex-shrink-0 flex transition-transform duration-300 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -840,7 +849,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
                       // The row keeps p-2.5 rather than Figma's 2px so the tap
                       // target stays ~40px. Desktop is untouched: 14px gap,
                       // 13px glyph, 12/500.
-                      className={`flex items-center gap-2 md:gap-3.5 p-2.5 rounded-g-1 tracking-normal text-sm md:text-xs mb-3 md:mb-1.5 transition-all duration-150 whitespace-nowrap font-medium border-none w-full ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${
+                      className={`flex items-center gap-2 md:gap-3.5 p-2.5 rounded-g-1 tracking-normal text-sm md:text-xs mb-2 md:mb-1.5 transition-all duration-150 whitespace-nowrap font-medium border-none w-full ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${
                         isDisabled
                           ? "bg-transparent text-ink-faint"
                           : isActive

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Crisp } from "crisp-sdk-web";
 
@@ -28,6 +28,15 @@ const isSensitive = (path) =>
 export default function CrispRouteBridge() {
   const { pathname } = useLocation();
   const websiteId = import.meta.env.VITE_CRISP_WEBSITE_ID;
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const handleDrawerChange = (event) => {
+      setMobileDrawerOpen(event.detail === true);
+    };
+    window.addEventListener("glass:dashboard-mobile-drawer", handleDrawerChange);
+    return () => window.removeEventListener("glass:dashboard-mobile-drawer", handleDrawerChange);
+  }, []);
 
   useEffect(() => {
     if (!websiteId) return;
@@ -38,7 +47,7 @@ export default function CrispRouteBridge() {
     // never reach the top-level ErrorBoundary and replace the whole app with
     // an error page: degrade to "widget not updated" instead.
     try {
-      if (isSensitive(pathname)) Crisp.chat.hide();
+      if (isSensitive(pathname) || mobileDrawerOpen) Crisp.chat.hide();
       else Crisp.chat.show();
     } catch (error) {
       console.error("[crisp] chat visibility update failed", error);
@@ -54,7 +63,7 @@ export default function CrispRouteBridge() {
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [pathname, websiteId]);
+  }, [pathname, websiteId, mobileDrawerOpen]);
 
   return null;
 }
