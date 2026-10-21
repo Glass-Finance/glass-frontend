@@ -30,12 +30,25 @@ vi.mock("../../../utils/generateReceipt", () => ({
   downloadReceiptPdf: downloadReceiptPdfMock,
 }));
 vi.mock("../../../components/common/QRCodeCanvas", () => ({
-  default: ({ value, size, color }) => (
-    <canvas data-testid="receipt-qr" data-value={value} data-size={size} data-color={color} />
+  default: ({ value, size, color, onReady }) => (
+    <canvas
+      data-testid="receipt-qr"
+      data-value={value}
+      data-size={size}
+      data-color={color}
+      ref={() => onReady?.()}
+    />
   ),
 }));
 
-const TX = { id: "tx1", reference: "REF-1", amount: 5000, status: "Successful" };
+const TX = {
+  id: "tx1",
+  reference: "REF-1",
+  amount: 5000,
+  status: "Successful",
+  communityName: "Glass Community",
+  planName: "Monthly Plan",
+};
 
 /** Minimal canvas stand-in — jsdom has no usable canvas implementation. */
 function fakeCanvas({
@@ -95,13 +108,21 @@ describe("ReceiptModal export actions", () => {
     delete globalThis.navigator.share;
   });
 
-  it("encodes the displayed transaction ID and renders the torn bottom edge", () => {
+  it("matches the new receipt details and encodes the displayed transaction ID", () => {
     renderModal();
 
     expect(screen.getByTestId("receipt-qr").getAttribute("data-value")).toBe("REF-1");
-    expect(screen.getByTestId("receipt-qr").getAttribute("data-size")).toBe("96");
+    expect(screen.getByTestId("receipt-qr").getAttribute("data-size")).toBe("128");
     expect(screen.getByTestId("receipt-qr").getAttribute("data-color")).toBe("#000000");
-    expect(screen.getByTestId("receipt-bottom-edge").children).toHaveLength(11);
+    expect(screen.getByText("Recipient Community:")).toBeTruthy();
+    expect(screen.getByText("Payment Plan:")).toBeTruthy();
+    expect(screen.getByText("Transaction ID:")).toBeTruthy();
+    expect(screen.getByText(/Paid by:/)).toBeTruthy();
+    expect(screen.getByTestId("receipt-top-edge")).toBeTruthy();
+    expect(screen.getByTestId("receipt-bottom-edge")).toBeTruthy();
+    expect(screen.queryByText("glasspay.app")).toBeNull();
+    expect(screen.queryByText("Transaction Type")).toBeNull();
+    expect(screen.queryByText("Transaction Fee")).toBeNull();
   });
 
   describe("handleSaveImage", () => {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { notifyError } from "../../utils/errorHandler";
 import { useCountdown, formatCountdown } from "../../hooks/useCountdown";
 import OtpBoxes from "./OtpBoxes";
+import { renderDashedOtpBoxes } from "./renderDashedOtpBoxes";
 import { Button } from "../ui/Button";
 import SuccessBadge from "./SuccessBadge";
 import ModalShell from "../dashboard/ModalShell";
@@ -117,30 +118,7 @@ export default function EmailChangeModal({
           onChange={setOtp}
           length={6}
           autoFocus
-          renderBoxes={(digits, activeIndex) => (
-            <div className="flex items-center gap-4 justify-center pointer-events-none">
-              {digits.slice(0, 3).map((d, i) => (
-                <div
-                  key={i}
-                  className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 flex items-center justify-center text-base md:text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-disabled"}`}
-                >
-                  {d}
-                </div>
-              ))}
-              <span className="text-gray-400 text-lg font-medium px-1 flex-shrink-0">—</span>
-              {digits.slice(3, 6).map((d, i) => {
-                const idx = i + 3;
-                return (
-                  <div
-                    key={idx}
-                    className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 flex items-center justify-center text-base md:text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-disabled"}`}
-                  >
-                    {d}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          renderBoxes={renderDashedOtpBoxes}
         />
 
         {error && <p className="text-sm text-danger text-center -mt-2">{error}</p>}
