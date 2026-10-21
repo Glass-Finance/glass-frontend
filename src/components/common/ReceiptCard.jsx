@@ -25,7 +25,7 @@ function TicketEdge({ bottom = false }) {
   );
 }
 
-function ReceiptRow({ label, children, last = false }) {
+function ReceiptRow({ label, children }) {
   return (
     <div
       style={{
@@ -34,7 +34,6 @@ function ReceiptRow({ label, children, last = false }) {
         alignItems: "baseline",
         gap: 12,
         padding: "10px 0",
-        borderBottom: last ? "none" : "1px dashed #C8C9CD",
       }}
     >
       <span style={{ color: "#686868", fontSize: 14, flexShrink: 0 }}>{label}</span>
@@ -110,7 +109,22 @@ export default function ReceiptCard({ tx, payerName, payerEmail, cardRef, onQrRe
             fontWeight: 500,
           }}
         >
-          {status === "Successful" && <Check size={17} strokeWidth={3} />}
+          {status === "Successful" && (
+            <span
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: statusColor,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Check size={11} strokeWidth={3} color="#FFFFFF" />
+            </span>
+          )}
           {status}
         </div>
         <div style={{ color: "#6B6B6B", fontSize: 15, marginTop: 18 }}>
@@ -123,9 +137,7 @@ export default function ReceiptCard({ tx, payerName, payerEmail, cardRef, onQrRe
         <ReceiptRow label="Payment Plan:">
           {toTitleCase(tx?.planName ?? tx?.description) || "—"}
         </ReceiptRow>
-        <ReceiptRow label="Transaction ID:" last>
-          {transactionId ?? "—"}
-        </ReceiptRow>
+        <ReceiptRow label="Transaction ID:">{transactionId ?? "—"}</ReceiptRow>
       </div>
 
       <div
