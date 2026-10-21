@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 import Sidebar from "../../../components/dashboard/Sidebar";
@@ -85,12 +85,18 @@ function LocationProbe() {
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 }
 
-function renderSidebar({ communities, path = "/dashboard/notifications", search = "" } = {}) {
+function renderSidebar({
+  communities,
+  path = "/dashboard/notifications",
+  search = "",
+  mobileOpen = false,
+  onCloseMobile,
+} = {}) {
   useCommunities.mockReturnValue({ data: { communities }, isLoading: false });
   return render(
     <MemoryRouter initialEntries={[`${path}${search}`]}>
       <LocationProbe />
-      <Sidebar mobileOpen={false} />
+      <Sidebar mobileOpen={mobileOpen} onCloseMobile={onCloseMobile} />
       <Routes>
         <Route path="/dashboard/home" element={<div>Communities overview</div>} />
         <Route path="/dashboard/notifications" element={<div>Notifications destination</div>} />
@@ -129,6 +135,49 @@ beforeEach(() => {
 });
 
 afterEach(cleanup);
+
+describe("Sidebar communities overview — mobile drawer", () => {
+  it("shows admin communities and opens the selected community dashboard", async () => {
+    const user = userEvent.setup();
+    const onCloseMobile = vi.fn();
+    renderSidebar({
+      communities: [OWNED_A, PROMOTED_ADMIN, PLAIN_MEMBER],
+      path: "/dashboard/home",
+      mobileOpen: true,
+      onCloseMobile,
+    });
+
+    expect(screen.getByText("Your Communities")).toBeTruthy();
+    expect(screen.getByRole("navigation", { name: "Your communities" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Alumni/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Union/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Society/ })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: /^Alumni/ }));
+
+    await waitFor(() => {
+      expect(currentUrl()).toBe("/dashboard/admin?community=comm-a");
+    });
+    expect(storedSlug()).toBe("comm-a");
+    expect(onCloseMobile).toHaveBeenCalled();
+  });
+
+  it("shows an empty state when the user has no communities to manage", () => {
+    renderSidebar({
+      communities: [PLAIN_MEMBER],
+      path: "/dashboard/home",
+      mobileOpen: true,
+    });
+
+    expect(screen.getByText("No communities to manage yet.")).toBeTruthy();
+  });
+
+  it("does not add the mobile chooser to the desktop overview rail", () => {
+    renderSidebar({ communities: [OWNED_A], path: "/dashboard/home" });
+
+    expect(screen.queryByRole("navigation", { name: "Your communities" })).toBeNull();
+  });
+});
 
 describe("Sidebar community context — multiple admin communities, nothing resolved", () => {
   // The core hazard: [0] is backend ordering, not user intent. Acting on it
