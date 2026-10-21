@@ -782,11 +782,12 @@ section {
   text-decoration-thickness: 2px;
 }
 
-/* Scoped one-notch downscale for the admin dashboard (Sidebar/Topbar/every
-   dashboard page) -- DashboardLayout toggles this class on <html> only
+/* Scoped one-notch desktop downscale for the admin dashboard
+   (Sidebar/Topbar/every dashboard page) -- DashboardLayout toggles this class on <html> only
    while it's mounted. Every Tailwind text-* and rem-based spacing/sizing
    utility (p-4, gap-4, w-8 h-8 icon bubbles, etc.) is relative to the root
-   font-size, so this shrinks all of them together in one place -- was
+   font-size, so this shrinks all of them together on desktop -- phones reset
+   the root to 16px below, keeping rem-based text-xs at the 12px floor -- was
    tried first as `zoom` on the dashboard's own root div, but that div is
    sized with vw/dvh (h-dvh w-screen), and non-standard `zoom` doesn't
    recompute what 100vw/100dvh mean, so the zoomed box just rendered
@@ -797,6 +798,12 @@ section {
    icon sizes are trimmed directly instead. */
 html.dashboard-compact {
   font-size: 93.75%; /* 16px -> 15px */
+}
+
+@media (max-width: 767px) {
+  html.dashboard-compact {
+    font-size: 100%;
+  }
 }
 
 /* Neutral scrollbar for scrollable panels (e.g. CreatePlanModal's step

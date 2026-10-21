@@ -96,7 +96,7 @@ export const STEPS = [
   {
     icon: Settings,
     title: "You're all set",
-    body: "That covers the basics. You can always replay this tour from the help icon next to your notifications.",
+    body: "That covers the basics. You can replay this tour any time from the dashboard menu.",
     target: null,
   },
 ];
@@ -142,7 +142,7 @@ export const COMMUNITIES_HOME_STEPS = [
   {
     icon: HelpCircle,
     title: "That's the overview",
-    body: "You can replay this any time from the help icon next to your notifications.",
+    body: "You can replay this any time from the dashboard menu.",
     target: null,
   },
 ];

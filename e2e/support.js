@@ -327,28 +327,30 @@ export async function installNetworkMock(page, scenario) {
   });
 }
 
-// Per-page init scripts. The first-run dashboard tour overlay renders
-// fixed-inset z-[100] and swallows every dashboard click, so its
-// localStorage seen-flag is seeded in all tests — it is a UI preference
-// flag, not behavior under test. Session seeding is guarded by a
+// Per-page init scripts. The non-modal first-run tour prompt adds extra
+// dashboard UI, so its seen flag is seeded by default; tests of the prompt
+// opt out. Session seeding is guarded by a
 // sessionStorage marker because init scripts rerun on every hard navigation:
 // after clearSessionAndRedirect wipes the tokens (session-expiry journey),
 // the guard must keep the redirect from resurrecting the session.
-export async function preparePage(page, persona = null) {
-  await page.addInitScript((seed) => {
-    try {
-      localStorage.setItem("glass_dashboard_tour_seen", "1");
-      if (!seed) return;
-      if (sessionStorage.getItem("glass_e2e_seeded") === "1") return;
-      sessionStorage.setItem("glass_e2e_seeded", "1");
-      localStorage.setItem("accessToken", seed.accessToken);
-      localStorage.setItem("refreshToken", seed.refreshToken);
-      localStorage.setItem("userId", seed.id);
-      localStorage.setItem("userEmail", seed.email);
-      localStorage.setItem("glass_user", JSON.stringify(seed.user));
-      localStorage.setItem("glass_session_epoch", "1");
-    } catch {
-      // Storage unavailable — nothing to seed.
-    }
-  }, persona);
+export async function preparePage(page, persona = null, { seedTour = true } = {}) {
+  await page.addInitScript(
+    ({ seed, shouldSeedTour }) => {
+      try {
+        if (shouldSeedTour) localStorage.setItem("glass_dashboard_tour_seen", "1");
+        if (!seed) return;
+        if (sessionStorage.getItem("glass_e2e_seeded") === "1") return;
+        sessionStorage.setItem("glass_e2e_seeded", "1");
+        localStorage.setItem("accessToken", seed.accessToken);
+        localStorage.setItem("refreshToken", seed.refreshToken);
+        localStorage.setItem("userId", seed.id);
+        localStorage.setItem("userEmail", seed.email);
+        localStorage.setItem("glass_user", JSON.stringify(seed.user));
+        localStorage.setItem("glass_session_epoch", "1");
+      } catch {
+        // Storage unavailable — nothing to seed.
+      }
+    },
+    { seed: persona, shouldSeedTour: seedTour },
+  );
 }

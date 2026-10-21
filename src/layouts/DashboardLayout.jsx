@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
 import DashboardTour from "../components/dashboard/DashboardTour";
+import { Button } from "../components/ui/Button";
 import {
   DASHBOARD_TOUR_SEEN_KEY,
   COMMUNITIES_HOME_STEPS,
@@ -23,38 +24,42 @@ export default function DashboardLayout() {
   // opens it lives in the sibling Topbar, not Sidebar itself.
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [tourPromptOpen, setTourPromptOpen] = useState(false);
 
-  // Scoped one-notch text/spacing downscale for just the dashboard -- see
-  // the html.dashboard-compact rule in index.css for why this is a root
-  // font-size class instead of `zoom` on this layout's own div. Toggled on
-  // <html> (not this component's own root) since font-size has to be set
-  // above every rem-based Tailwind utility to cascade into them; removed on
-  // unmount so navigating to auth/marketing/member routes isn't affected.
+  // Scoped desktop text/spacing downscale for the dashboard -- see the
+  // html.dashboard-compact rule in index.css. The phone breakpoint retains a
+  // 16px root for legibility; the class is removed on unmount so other routes
+  // are unaffected.
   useEffect(() => {
     document.documentElement.classList.add("dashboard-compact");
     return () => document.documentElement.classList.remove("dashboard-compact");
   }, []);
 
-  // Auto-show the first-launch walkthrough once per browser; the help icon
-  // in Topbar lets it be replayed on demand afterward.
+  // Offer the first-launch walkthrough without covering the dashboard.
   useEffect(() => {
     try {
       // Reads localStorage, an external system -- genuinely needs an
       // effect, not a render-time value.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (!localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY)) setTourOpen(true);
+      if (!localStorage.getItem(DASHBOARD_TOUR_SEEN_KEY)) setTourPromptOpen(true);
     } catch {
-      // localStorage unavailable (e.g. private browsing) — just skip the tour
+      // Keep the tour available for this visit when storage is unavailable.
+      setTourPromptOpen(true);
     }
   }, []);
 
-  function closeTour() {
-    setTourOpen(false);
+  function dismissTourPrompt() {
+    setTourPromptOpen(false);
     try {
       localStorage.setItem(DASHBOARD_TOUR_SEEN_KEY, "1");
     } catch {
       /* ignore */
     }
+  }
+
+  function closeTour() {
+    setTourOpen(false);
+    dismissTourPrompt();
   }
 
   // Auto-Pay prompt handoff for the redirect-based (Paystack-hosted) admin
@@ -140,6 +145,40 @@ export default function DashboardLayout() {
               there only fills the content's own height, leaving a plain gray
               gap below on shorter pages like Settings). */}
           <main className="flex-1 overflow-y-auto">
+            {tourPromptOpen && (
+              <section
+                aria-label="Dashboard tour"
+                className="mx-4 mt-4 flex flex-col gap-3 rounded-xl border border-surface-container-border bg-surface-container p-4 sm:mx-6 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="m-0 text-sm font-semibold text-ink">New to Glass?</p>
+                  <p className="m-0 mt-1 text-sm text-ink-muted">
+                    Take a quick tour, or explore the dashboard at your own pace.
+                  </p>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <Button
+                    variant="tertiary"
+                    size="sm-tight"
+                    fullWidth={false}
+                    onClick={dismissTourPrompt}
+                  >
+                    Not now
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm-tight"
+                    fullWidth={false}
+                    onClick={() => {
+                      dismissTourPrompt();
+                      setTourOpen(true);
+                    }}
+                  >
+                    Take a tour
+                  </Button>
+                </div>
+              </section>
+            )}
             <Outlet />
           </main>
         </div>
