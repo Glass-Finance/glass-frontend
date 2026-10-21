@@ -33,7 +33,10 @@ export default defineConfig({
         background_color: "#F7F8FC",
         display: "standalone",
         scope: "/",
-        start_url: "/",
+        // The app host redirects "/" to the marketing site. Launch the
+        // installed app at its member sign-in entry, which routes verified
+        // sessions to the right member/admin destination.
+        start_url: "/member/app-sign-in",
         shortcuts: [
           {
             name: "My Communities",

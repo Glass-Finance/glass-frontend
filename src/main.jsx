@@ -8,6 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import App from "./App.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { InstallPromptProvider } from "./hooks/useInstallPrompt.js";
 
 // Self-hosted fonts (replacing a Google Fonts CSS @import that silently
 // never shipped -- @import "tailwindcss" in index.css expands to real CSS
@@ -148,7 +149,9 @@ createRoot(document.getElementById("root")).render(
           */}
           <CrispChat />
           <ErrorBoundary>
-            <App />
+            <InstallPromptProvider>
+              <App />
+            </InstallPromptProvider>
           </ErrorBoundary>
           <RealtimeBridge />
           <SpeedInsights />

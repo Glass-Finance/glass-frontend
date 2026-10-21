@@ -2,8 +2,6 @@ import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LoadingScreen from "./components/LoadingScreen";
 import CrispRouteBridge from "./components/common/CrispRouteBridge";
-import InstallPrompt from "./components/InstallPrompt";
-import IosInstallInstructions from "./components/IosInstallInstructions";
 import PwaUpdateReload from "./pwa/PwaUpdateReload";
 import { isAppHost, MARKETING_ORIGIN } from "./utils/deviceRedirect";
 
@@ -155,8 +153,6 @@ function App() {
         (KYC/payment/bank-data pages) and pushes page context for agents. */}
       <CrispRouteBridge />
       <Suspense fallback={<LoadingScreen />}>
-        <InstallPrompt />
-        <IosInstallInstructions />
         {/* Applies a service-worker reload that was deferred while the user
             was mid-payment. Must be inside the Router to read the route. */}
         <PwaUpdateReload />
