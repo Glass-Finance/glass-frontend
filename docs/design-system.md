@@ -77,7 +77,7 @@ Four values. Anything else (`rounded-md` 6, `rounded-2xl` 16, arbitrary `[10px]`
 > r=999 — a true 48×48 circle; see §2.2c) — the file uses pills there deliberately. It stays
 > banned on product buttons, cards, inputs and modals.
 
-> Note: an earlier version of `design-audit.md` claimed a `6` in the scale. There is no 6.
+> Note: an earlier draft of this section claimed a `6` in the scale. There is no 6.
 > One `Dialog` node carries r=24, outside the scale — provisional, see §9.3.
 
 ### 1.6 Banned values
@@ -361,7 +361,7 @@ overlay on the fill**, not a scale transform.
 **Sweep complete (C1–C8, 2026-10-08 → 2026-10-10).** Re-measured 2026-10-10, both repos.
 Batch history: batch 1 shared components (ModalShell/ConfirmDialog/ConfirmSheet), then
 C2 toast/chips, C3 destructive, C4 icon-onlys, C5 memberApp, C6 dashboard, C7 auth +
-onboarding (app PRs #146–#151), C8 v1 leftovers (v1 PR #26). Evidence trail: `design-audit.md`.
+onboarding (app PRs #146–#151), C8 v1 leftovers (v1 PR #26).
 
 Every role-mappable button is now on `ui/Button`. What remains as raw `<button>` is the
 **deliberate leave-list**: composite rows/list-items, dropdown-option menus, tab groups,
@@ -383,7 +383,14 @@ dark-navy Sidebar rail, numeric pagination, muted See-All links, destructive tex
 | `#0f53ff`                       | 0              | 1 (token definition, `index.css:45`) |
 | `bg-danger`/`text-danger` sites | —              | **101**                              |
 
-Radius breakdown of the 122 remaining raw buttons (±4-line window):
+**Re-measured 2026-10-21** (the three countable rows only — the rest of the
+table and the breakdown below are the 2026-10-10 sweep's): raw `<button>`
+(excl. tests) **125**, `<Button>` call sites **447**, `<LandingCta>` call sites
+**10**. The live leave-list is `RAW_BUTTON_DEBT` in `eslint.config.js`: 65
+files, every one of which still uses a raw `<button>`, and a new file that
+reaches for one fails lint.
+
+Radius breakdown of the 122 remaining raw buttons (2026-10-10 sweep, ±4-line window):
 `rounded-full` 23 · `rounded-xl` 23 · `rounded-lg` 21 · `rounded-2xl` 12 ·
 `rounded-md` 8 · `rounded-[10px]` 7 · `rounded-sm` 2. These are the leave-list
 composites and mocks — not un-migrated CTAs. `focus-visible` present in 6

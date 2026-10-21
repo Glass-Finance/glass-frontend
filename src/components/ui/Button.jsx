@@ -1,15 +1,17 @@
 import { forwardRef } from "react";
 
-// Implements the six button roles and six sizes in DESIGN-SYSTEM.md §2,
-// extracted from the Figma file "Glass Design By AQ". Read that section
-// before changing anything here -- it records the exact padding, height,
-// label size, radius and state values, and which hex values are banned.
+// Implements the seven button roles and ten sizes in docs/design-system.md §2,
+// extracted from the Figma file "Glass Design By AQ" — the five roles in the
+// §2.1 matrix plus success and warning, and the five sizes in §2.2 plus the
+// tight-label and icon-only extensions. Read that section before changing
+// anything here -- it records the exact padding, height, label size, radius
+// and state values, and which hex values are banned.
 //
-// 406 call sites use this component. Anything you add needs a reason that
+// 447 call sites use this component. Anything you add needs a reason that
 // isn't "the old one was easier".
 
 // Legacy aliases for the three roles this component shipped before
-// DESIGN-SYSTEM.md. "brand" was the old primary, "danger" the old critical,
+// docs/design-system.md. "brand" was the old primary, "danger" the old critical,
 // "secondary" a *filled* grey pill that Figma does not define -- it now maps
 // to the outline role, which is what those call sites were reaching for (they
 // were all Cancel buttons).
@@ -34,7 +36,7 @@ const SIZES = {
   // empty-state labels stop crowding the button edge. Padding and height
   // are byte-for-byte `sm` -- only `text` differs.
   // Added 2026-10-12 with the dashboard button-sizing sweep; documented in
-  // DESIGN-SYSTEM.md §2.2d as a decoupling rather than a new Figma size.
+  // docs/design-system.md §2.2d as a decoupling rather than a new Figma size.
   "sm-tight": { pad: "py-2", px: "px-4", h: "h-10", text: "text-[12px]" }, // h40 12px
   // Second owner-directed decoupling (2026-10-13). Same h40 box, label
   // dropped again to 8px, for the two settings save rows only. This sits
@@ -58,7 +60,7 @@ const SIZES = {
 // are geometrically identical sets differing only in label colour), hence
 // three entries instead of one.
 //
-// Hover/Pressed are black overlays on the fill (DESIGN-SYSTEM.md §2.3), so
+// Hover/Pressed are black overlays on the fill (docs/design-system.md §2.3), so
 // they are precomputed hexes (#002f9b / #002b8f for brand, #c20000 /
 // #ad0000 for critical) rather than element opacity: hover:opacity-90 also
 // fades the label and reads as black @10%, which is neither. Disabled keeps
@@ -77,7 +79,7 @@ const VARIANTS = {
   // button role. Added on instruction, using the fills the file itself
   // reaches for elsewhere (success #008000 at 435 nodes, warning #9a6500 at
   // 91), so they are consistent with the design rather than invented. Marked
-  // in DESIGN-SYSTEM.md §2 as an extension, not as spec.
+  // in docs/design-system.md §2 as an extension, not as spec.
   success: {
     on: "bg-success text-white hover:bg-[#007300] active:bg-[#006600]",
     off: "bg-success text-white opacity-60",
@@ -145,7 +147,7 @@ export const Button = forwardRef(function Button(
 
   const classes = [
     fullWidth && !isIconSize ? "w-full" : "",
-    // 4px radius at every state -- DESIGN-SYSTEM.md §2.1. Figma conflicts
+    // 4px radius at every state -- docs/design-system.md §2.1. Figma conflicts
     // with itself on the hover radius of some variants; the smaller value
     // wins, so there is no state-dependent radius swap. rounded-g-1 is the
     // Figma-derived token, not Tailwind's rounded-lg (8px).
@@ -155,7 +157,7 @@ export const Button = forwardRef(function Button(
     // primaryAxis/counterAxisAlignItems: CENTER, content HUG). Without this
     // the children stack as bare inline nodes and an icon+label pair sits
     // baseline-aligned with a sub-4px gap. Call sites no longer need their
-    // own `flex items-center gap-*`; see DESIGN-SYSTEM.md §2.2.
+    // own `flex items-center gap-*`; see docs/design-system.md §2.2.
     "inline-flex items-center justify-center gap-2",
     sizeSpec.pad,
     sizeSpec.px,
@@ -164,7 +166,7 @@ export const Button = forwardRef(function Button(
     "font-medium",
     "cursor-pointer",
     "transition-colors duration-150",
-    // Focused state is a #0f53ff outline (DESIGN-SYSTEM.md §2.3), driven
+    // Focused state is a #0f53ff outline (docs/design-system.md §2.3), driven
     // by the same token the global :focus-visible rule now uses.
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
     isDisabled ? "cursor-not-allowed" : "",

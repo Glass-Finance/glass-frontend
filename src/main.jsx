@@ -79,7 +79,7 @@ pendo.initialize();
  *
  * mutationCache.onError is the single place every mutation's error lands —
  * registration, payments, member management, settings updates, everywhere —
- * without each of the ~40 useMutation call sites across the app needing its
+ * without each of the ~77 useMutation call sites across the app needing its
  * own onError. A hook can still set its own onError (e.g. to roll back an
  * optimistic update) without losing this: that local handler runs first,
  * and the toast still fires here afterward, since this is the cache-level
@@ -158,7 +158,7 @@ createRoot(document.getElementById("root")).render(
             position="bottom-right"
             closeButton
             icons={{
-              // Status icon colours come from the DESIGN-SYSTEM.md status
+              // Status icon colours come from the docs/design-system.md status
               // tokens (§1.6 bans the Tailwind emerald/red/amber these
               // replaced: none of them appear in the Figma file).
               success: <CheckCircle2 size={18} className="text-success" />,

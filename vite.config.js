@@ -80,8 +80,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     // Vitest's default is 5s, which is too tight for the tests that pull
-    // modules in with `await import(...)` inside the test body -- there are 47
-    // such imports across 17 files, and they bill module loading against the
+    // modules in with `await import(...)` inside the test body -- there are 58
+    // such imports across 20 files, and they bill module loading against the
     // timeout. communityListConsumers.test.jsx does three sequential imports
     // plus async API mocking plus waitFor, and it sat right on the boundary:
     // it failed intermittently even at --maxWorkers=1, and reliably under
@@ -105,8 +105,8 @@ export default defineConfig({
       // never lower them to make CI green.
       //
       // Raised 2026-10-20. The floors were set when the suite's measured
-      // coverage was around 20%, and the suite has since grown to 48.6%
-      // statements / 49.5% branches — so a 19% floor had been gating almost
+      // coverage was around 20%, and the suite has since grown to 48.7%
+      // statements / 49.45% branches — so a 19% floor had been gating almost
       // nothing for a long time. These sit ~2 points below the measured
       // values, which is enough headroom for ordinary fluctuation while
       // still failing if coverage is allowed to slide.

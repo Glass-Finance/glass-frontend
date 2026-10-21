@@ -24,7 +24,7 @@ import { Button } from "../ui/Button";
 // scrollable body.
 // Close-button styling, shared by both variants below so they can't drift.
 // Icon-only close buttons now route through ui/Button's icon-sm size
-// (DESIGN-SYSTEM.md §2.2a adds the icon-only sizes; §6.7 resolved). The
+// (docs/design-system.md §2.2a adds the icon-only sizes; §6.7 resolved). The
 // tertiary role is the transparent, borderless treatment; aria-label is
 // mandatory because Button does not add one.
 const CLOSE_BTN = "flex-shrink-0";

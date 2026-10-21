@@ -24,7 +24,7 @@ inferences were wrong for this app and would have shipped silently:
   `https://api.glasspay.app/api/v1/...`, so the rule is dead code in production
   and only ever applied to same-origin requests.
 
-`src/sw.js` makes all four rules explicit. It is ~50 lines and audited by
+`src/sw.js` makes all four rules explicit. It is 131 lines and audited by
 `scripts/verify-pwa-sw.mjs`.
 
 ## The four rules

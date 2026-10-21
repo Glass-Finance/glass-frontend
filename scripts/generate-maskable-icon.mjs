@@ -9,8 +9,9 @@
 // logo whose bounding box already spans the canvas still pokes outside that
 // circle and gets clipped by the launcher. The mistake was invisible to a
 // casual glance and to any check that only asked "is it 512x512 and declared
-// maskable". `npm run verify:icon` measures the real geometry and is wired into
-// CI; this script keeps the asset regenerable and consistent with that check.
+// maskable". The geometry is measured by src/__tests__/pwa/maskableIcon.test.js,
+// which runs as part of npm run test:coverage; this script keeps the asset
+// regenerable and consistent with that check.
 //
 // Usage: node scripts/generate-maskable-icon.mjs
 import sharp from "sharp";

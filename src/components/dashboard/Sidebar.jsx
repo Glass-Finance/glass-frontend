@@ -81,11 +81,12 @@ const NAV = [
     shortcut: "m",
   },
   {
-    // NO `shortcut`, unlike every other item here. "Groups" wants `g`, but `g`
+    // NO `shortcut`, unlike most items here. "Groups" wants `g`, but `g`
     // is the chord prefix itself -- `g g` technically resolves, but a
     // same-letter chord reads as a mistake and would be the only binding here
-    // that does. Adding a binding means picking a new prefix or reworking the
-    // scheme for all six items, which is a separate call from shipping Groups.
+    // that does. "Records" also has none, for the same reason. Adding a
+    // binding means picking a new prefix or reworking the scheme for every
+    // item, which is a separate call from shipping either page.
     icon: UsersRound,
     label: "Groups",
     segment: "groups",

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ConfirmDialog from "../../../components/dashboard/ConfirmDialog";
 
-// Guards DESIGN-SYSTEM.md §2 for the shared confirm dialog — the single
+// Guards docs/design-system.md §2 for the shared confirm dialog — the single
 // component behind every destructive dashboard action (remove member,
 // remove payment method, turn off auto-pay, ...). It had no test coverage at
 // all, which is how its Cancel button survived as a filled grey pill
@@ -28,7 +28,7 @@ describe("ConfirmDialog — design system conformance", () => {
     expect(screen.getByRole("button", { name: /confirm/i }).className).toContain("bg-brand");
   });
 
-  // The role collapse from DESIGN-SYSTEM.md §4.3: Cancel must be the outline
+  // The role collapse from docs/design-system.md §4.3: Cancel must be the outline
   // role (transparent + 10% black stroke), never a filled grey pill.
   it("Cancel is the transparent outline role, not a filled grey pill", () => {
     render(<ConfirmDialog {...defaults} />);

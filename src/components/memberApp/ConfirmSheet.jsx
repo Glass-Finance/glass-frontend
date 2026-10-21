@@ -49,7 +49,7 @@ export default function ConfirmSheet({
           </p>
         </div>
         <div className="flex flex-col gap-2.5 mt-6">
-          {/* Both actions route through ui/Button (DESIGN-SYSTEM.md §2): the
+          {/* Both actions route through ui/Button (docs/design-system.md §2): the
               sheet previously hand-rolled rounded-xl pills at weight 600 with
               no pressed or focus-visible state at all. fullWidth is left at its
               default (true) because these sit stacked in a flex-col and were

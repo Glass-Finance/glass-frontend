@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Badge from "../../../components/ui/Badge";
 
-// Guards DESIGN-SYSTEM.md §9.1 — the Figma badge palette. Literal on
+// Guards docs/design-system.md §9.1 — the Figma badge palette. Literal on
 // purpose: when the spec changes, the spec file changes first and this
 // test is what should then fail with it.
 describe("Badge — design system conformance", () => {
