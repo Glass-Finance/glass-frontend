@@ -108,7 +108,7 @@ rules:
 | Part                  | Below `md` (phones)                                                        | `md` and up (desktop)                             |
 | --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
 | Nav rail              | `hidden`; 84vw drawer capped at 320px (no rail behind it)                  | `hidden md:flex` rail + 220px panel               |
-| Drawer header         | 32×32 community logo + chevron switcher + ✕ close                          | Community name + Owner/role chip                  |
+| Drawer header         | 32×32 community logo + name with role chip beneath + chevron + ✕ close     | Community name + Owner/role chip                  |
 | Topbar                | `h-14`, 48×48 burger · 32px Glass mark · 48×48 round bell                  | `h-14`, community switcher + search + help        |
 | Page header           | `hidden md:flex` — the shell already carries community context             | h1 + subtitle + quick actions                     |
 | Stats grid            | `grid-cols-2`, 108px min-height, `rounded-g-2`, label 12 / value 16 medium | `auto-fit minmax(190px,1fr)`, original 14/20 bold |

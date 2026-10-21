@@ -680,24 +680,26 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
                   The desktop rail keeps the original 12px -- the comment below
                   records why that was scaled back from the inspector's literal
                   reading. */}
-                  <div className="text-sm md:text-xs font-medium text-black leading-[1.3] break-words">
-                    {activeCommunity.name}
+                  <div className="min-w-0 flex-1 flex flex-col items-start gap-0.5 md:flex-row md:items-center md:gap-2">
+                    <div className="text-sm md:text-xs font-medium text-black leading-[1.3] break-words">
+                      {activeCommunity.name}
+                    </div>
+                    {/* The Figma inspector's literal 69x32/text-sm reading was
+                    measured on the badge in isolation -- applied verbatim next
+                    to this sidebar's much smaller 12px community name, it read
+                    as oversized and out of place rather than matching Figma
+                    "by eye". Scaled back down; kept the radius-4px/#FFF1D6 fix
+                    from that same spec, since neither of those was in question. */}
+                    <span
+                      className={`flex-shrink-0 text-xs md:text-[10px] font-bold rounded-g-1 py-0.5 px-2 ${isCommunityAdmin(activeCommunity) ? "text-[#e85d04] bg-[#FFF1D6]" : "text-success-strong bg-success-wash"}`}
+                    >
+                      {activeCommunity.owned
+                        ? "Owner"
+                        : isCommunityAdmin(activeCommunity)
+                          ? "Admin"
+                          : "Member"}
+                    </span>
                   </div>
-                  {/* The Figma inspector's literal 69x32/text-sm reading was
-                  measured on the badge in isolation -- applied verbatim next
-                  to this sidebar's much smaller 12px community name, it read
-                  as oversized and out of place rather than matching Figma
-                  "by eye". Scaled back down; kept the radius-4px/#FFF1D6 fix
-                  from that same spec, since neither of those was in question. */}
-                  <span
-                    className={`flex-shrink-0 text-xs md:text-[10px] font-bold rounded-g-1 py-0.5 px-2 ${isCommunityAdmin(activeCommunity) ? "text-[#e85d04] bg-[#FFF1D6]" : "text-success-strong bg-success-wash"}`}
-                  >
-                    {activeCommunity.owned
-                      ? "Owner"
-                      : isCommunityAdmin(activeCommunity)
-                        ? "Admin"
-                        : "Member"}
-                  </span>
                   {/* Figma's header chevron (node 393:20237). With the rail
                   hidden below md this -- not the rail's avatar tiles -- is how
                   a mobile admin reaches any community other than the active
