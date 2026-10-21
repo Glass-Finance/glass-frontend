@@ -440,7 +440,7 @@ export default function Settings() {
       {breadcrumb && !isPlatformAdmin && (
         <p className="text-sm text-gray-500 mb-5">
           <BreadcrumbParent parent={breadcrumb.parent} community={scopedCommunity} />
-          <span className="mx-2 text-gray-400">›</span>
+          <span className="mx-2 text-gray-400">‹</span>
           <span className="font-semibold text-gray-900">{breadcrumb.child}</span>
         </p>
       )}

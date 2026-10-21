@@ -145,7 +145,7 @@ export default function MemberDetail() {
             >
               Members
             </Button>
-            <span className="text-gray-300 mx-1">›</span> {memberName(member)}
+            <span className="text-gray-300 mx-1">‹</span> {memberName(member)}
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">
             A full picture of the members of your community

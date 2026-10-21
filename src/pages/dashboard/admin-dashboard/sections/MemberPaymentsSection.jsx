@@ -78,7 +78,7 @@ export default function MemberPaymentsSection({
         </div>
         <div className="flex items-center gap-1.5 text-xs self-end sm:self-auto">
           Sort by:
-          <Button variant="outline-neutral" size="sm" fullWidth={false} onClick={onToggleSort}>
+          <Button variant="outline-neutral" size="xs" fullWidth={false} onClick={onToggleSort}>
             {sortDir === "desc" ? "Recent" : "Oldest"}{" "}
             <ChevronDown size={11} className={sortDir === "asc" ? "rotate-180" : ""} />
           </Button>
@@ -88,7 +88,7 @@ export default function MemberPaymentsSection({
           <div className="relative">
             <Button
               variant="outline-neutral"
-              size="sm"
+              size="xs"
               fullWidth={false}
               onClick={() => setFilterOpen((o) => !o)}
               aria-expanded={filterOpen}

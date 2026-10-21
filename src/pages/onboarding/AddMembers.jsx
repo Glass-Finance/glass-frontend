@@ -473,14 +473,16 @@ export default function AddMembers() {
             </div>
 
             {tab === "upload" && (
-              <Button
-                onClick={handleSubmit}
-                disabled={urlStage === "fetching"}
-                loading={loading}
-                className="lg:w-1/2 mx-auto block mt-6"
-              >
-                {loading ? "Adding members…" : "Create Your Community"}
-              </Button>
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={urlStage === "fetching"}
+                  loading={loading}
+                  className="lg:w-1/2 mt-6"
+                >
+                  {loading ? "Adding members…" : "Create Your Community"}
+                </Button>
+              </div>
             )}
             <div className="h-[env(safe-area-inset-bottom,20px)] lg:hidden" />
           </div>

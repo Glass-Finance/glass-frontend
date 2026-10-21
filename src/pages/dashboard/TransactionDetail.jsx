@@ -72,11 +72,11 @@ export default function TransactionDetail() {
   return (
     <div className="px-4 md:px-6 py-6 overflow-y-auto h-full">
       <div className="mb-5">
-        <h1 className="text-lg font-bold text-black">
+        <h1 className="text-lg font-bold text-black flex flex-wrap items-center gap-2">
           <Button variant="tertiary" size="sm" fullWidth={false} onClick={() => navigate(-1)}>
             <ChevronLeft size={15} /> Back
           </Button>
-          <span className="text-gray-300 mx-2">›</span> Transaction Details
+          <span className="text-gray-300">‹</span> Transaction Details
         </h1>
         <p className="text-sm text-gray-400 mt-0.5">A full picture of this transaction.</p>
       </div>
@@ -117,12 +117,14 @@ export default function TransactionDetail() {
             <Row label="Community">
               <span className="inline-flex items-center gap-2">
                 {tx.communityLogo?.url && (
-                  <img
-                    src={tx.communityLogo.url}
-                    alt=""
-                    className="w-6 h-6 object-contain"
-                    loading="lazy"
-                  />
+                  <span className="w-8 h-8 shrink-0 rounded-g-1 overflow-hidden bg-surface-container border border-hairline-neutral flex items-center justify-center">
+                    <img
+                      src={tx.communityLogo.url}
+                      alt=""
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
+                  </span>
                 )}
                 {tx.communityName ?? "—"}
               </span>

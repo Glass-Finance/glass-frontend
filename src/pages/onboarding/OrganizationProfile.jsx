@@ -560,14 +560,16 @@ export default function OrganizationProfile() {
 
             {error && <p className="text-sm text-danger mb-4">{error}</p>}
 
-            <Button
-              type="submit"
-              disabled={checking || available === false}
-              loading={loading}
-              className="lg:w-1/2 mx-auto block"
-            >
-              {loading ? "Creating community..." : "Next"}
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                type="submit"
+                disabled={checking || available === false}
+                loading={loading}
+                className="lg:w-1/2"
+              >
+                {loading ? "Creating community..." : "Next"}
+              </Button>
+            </div>
             <div className="h-[env(safe-area-inset-bottom,20px)] lg:hidden" />
           </form>
         </main>

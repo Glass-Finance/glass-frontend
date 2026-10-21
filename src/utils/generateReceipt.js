@@ -30,30 +30,6 @@ function drawDashedLine(doc, x1, y, x2) {
   doc.setLineDashPattern([], 0);
 }
 
-function drawTicketEdge(doc, x, y, width, count, direction) {
-  const scallopWidth = width / count;
-  const radius = 9;
-  doc.setDrawColor(205, 207, 211);
-  doc.setLineWidth(0.8);
-  for (let i = 0; i < count; i++) {
-    const startX = x + i * scallopWidth;
-    const startY = y + (direction === "top" ? radius : -radius);
-    let previousX = startX;
-    let previousY = startY;
-    for (let step = 1; step <= 12; step++) {
-      const t = step / 12;
-      const nextX = startX + scallopWidth * t;
-      const nextY =
-        y +
-        (direction === "top" ? radius : -radius) +
-        (direction === "top" ? -1 : 1) * Math.sin(Math.PI * t) * radius * 2;
-      doc.line(previousX, previousY, nextX, nextY);
-      previousX = nextX;
-      previousY = nextY;
-    }
-  }
-}
-
 function receiptFilename(tx) {
   return `glass-receipt-${tx.reference ?? tx.id ?? Date.now()}.pdf`;
 }
@@ -82,8 +58,13 @@ export async function downloadReceiptPdf(tx, { payerName, payerEmail } = {}) {
   doc.setLineWidth(0.8);
   doc.line(left, sideTop, left, sideBottom);
   doc.line(right, sideTop, right, sideBottom);
-  drawTicketEdge(doc, left, top + 9, contentWidth, 15, "top");
-  drawTicketEdge(doc, left, bottom - 9, contentWidth, 15, "bottom");
+  doc.setFillColor(255, 255, 255);
+  const cutoutRadius = 10;
+  const cutoutCount = 10;
+  for (let i = 0; i < cutoutCount; i++) {
+    const x = left + cutoutRadius + (i * (contentWidth - cutoutRadius * 2)) / (cutoutCount - 1);
+    doc.circle(x, sideBottom, cutoutRadius, "F");
+  }
 
   doc.addImage(logo.dataUrl, logo.format, left + 18, top + 23, 42, 42);
   doc.setFont("helvetica", "normal");

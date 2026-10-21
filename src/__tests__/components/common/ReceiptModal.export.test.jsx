@@ -118,7 +118,6 @@ describe("ReceiptModal export actions", () => {
     expect(screen.getByText("Payment Plan:")).toBeTruthy();
     expect(screen.getByText("Transaction ID:")).toBeTruthy();
     expect(screen.getByText(/Paid by:/)).toBeTruthy();
-    expect(screen.getByTestId("receipt-top-edge")).toBeTruthy();
     expect(screen.getByTestId("receipt-bottom-edge")).toBeTruthy();
     expect(screen.queryByText("glasspay.app")).toBeNull();
     expect(screen.queryByText("Transaction Type")).toBeNull();

@@ -374,24 +374,26 @@ export default function PaymentProfile() {
               )}
             </div>
 
-            <Button
-              onClick={handleSave}
-              disabled={resolving || !accName.trim()}
-              loading={saving}
-              className="lg:w-1/2 mx-auto block mt-6"
-            >
-              {saving ? "Setting up…" : "Set-Up Account"}
-            </Button>
-            <Button
-              variant="tertiary"
-              size="sm"
-              fullWidth={false}
-              onClick={handleSkip}
-              disabled={saving}
-              className="mt-3"
-            >
-              Skip for now — set this up later
-            </Button>
+            <div className="flex flex-col items-center">
+              <Button
+                onClick={handleSave}
+                disabled={resolving || !accName.trim()}
+                loading={saving}
+                className="lg:w-1/2 mt-6"
+              >
+                {saving ? "Setting up…" : "Set-Up Account"}
+              </Button>
+              <Button
+                variant="tertiary"
+                size="sm"
+                fullWidth={false}
+                onClick={handleSkip}
+                disabled={saving}
+                className="mt-3"
+              >
+                Skip for now — set this up later
+              </Button>
+            </div>
             <div className="h-[env(safe-area-inset-bottom,20px)] lg:hidden" />
           </div>
         </main>
