@@ -182,6 +182,15 @@ describe("Sidebar community context — exactly one admin community", () => {
     expect(navButton("Payments").disabled).toBe(false);
   });
 
+  it("gives the mobile community name its own line above the role badge", () => {
+    renderSidebar({ communities: [{ ...OWNED_A, name: "Wesley reading club" }] });
+
+    const name = screen.getByText("Wesley reading club");
+    expect(name.parentElement.className).toContain("flex-col");
+    expect(name.parentElement.className).toContain("md:flex-row");
+    expect(screen.getByText("Owner")).toBeTruthy();
+  });
+
   it("navigates community-scoped links with that community's ?community=", async () => {
     const user = userEvent.setup();
     renderSidebar({ communities: [OWNED_A, PLAIN_MEMBER] });
