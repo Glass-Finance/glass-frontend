@@ -107,9 +107,9 @@ rules:
 
 | Part                  | Below `md` (phones)                                                        | `md` and up (desktop)                             |
 | --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
-| Nav rail              | `hidden`; drawer is a full-width panel (no rail behind it)                 | `hidden md:flex` rail + 220px panel               |
+| Nav rail              | `hidden`; 88vw drawer capped at 360px (no rail behind it)                  | `hidden md:flex` rail + 220px panel               |
 | Drawer header         | 32×32 community logo + chevron switcher + ✕ close                          | Community name + Owner/role chip                  |
-| Topbar                | `h-12`, burger · Glass mark · 48×48 round bell                             | `h-14`, community switcher + search + help        |
+| Topbar                | `h-14`, 48×48 burger · 32px Glass mark · 48×48 round bell                  | `h-14`, community switcher + search + help        |
 | Page header           | `hidden md:flex` — the shell already carries community context             | h1 + subtitle + quick actions                     |
 | Stats grid            | `grid-cols-2`, 108px min-height, `rounded-g-2`, label 12 / value 16 medium | `auto-fit minmax(190px,1fr)`, original 14/20 bold |
 | Section cards         | `rounded-g-2` (8px), `p-3`                                                 | `rounded-xl` (12px), original padding             |
@@ -135,6 +135,12 @@ Notifications stay in the mobile drawer (Figma draws four nav rows; the app has 
 Pagination and the Filter dropdown render at all widths because the table is client-side
 paginated either way — the chips are the phone's affordance, not a replacement for the
 desktop Filter button.
+
+**Mobile drawer sizing exception:** The Figma drawer frame is full width, but the shipped
+community-admin drawer uses `min(360px, 88vw)` so the page remains visible behind the
+scrim and the navigation does not take over the entire phone screen. All drawer navigation
+rows use the same full width; active state is communicated by fill and color rather than a
+different row width.
 
 ---
 
