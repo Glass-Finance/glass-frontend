@@ -33,6 +33,7 @@ Phone is **not** collected during registration (email + name/password → email 
 | Passwordless sign-in (the “One-Time Code” tab)    | Email or SMS, matching the identifier that was typed.                                                 |
 | Add / update phone number                         | SMS to the number being added.                                                                        |
 | Password reset                                    | Email.                                                                                                |
+| Change account email                              | Email to the proposed address.                                                                        |
 
 A signup therefore never sends an SMS — if someone is waiting on a text after registering, the phone number still has to be added in Settings. The delivery mechanics (who sends, what a failed send looks like) are in [`authentication.md`](authentication.md#verification-codes--who-sends-them-and-who-reports-a-failed-send).
 
@@ -43,6 +44,14 @@ Flow (same OTP mechanics for add vs update; mode is `user.phoneVerified`):
 3. Refresh session user; success badge; navigate back.
 
 Entry points: member home banner (until `phoneVerified`), member Profile, community-admin dashboard banner, dashboard Settings → Account → Profile.
+
+### Change account email
+
+Both dashboard Profile and the member app request an `EMAIL_UPDATE` code through
+`POST /api/v1/action-verification/request` with the proposed email address.
+Resending requests another challenge through the same endpoint. The code is
+confirmed with `PATCH /api/v1/user/email` and the `emailVerificationOtp` field;
+the email is not changed until that request succeeds.
 
 ### Identity verification (KYC)
 

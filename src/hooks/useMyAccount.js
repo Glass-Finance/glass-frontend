@@ -62,18 +62,15 @@ export function useUpdatePassword() {
 }
 
 // ─── Update email ─────────────────────────────────────────────────────────────
-// Two-step: call with just { email } to trigger the OTP send to the new
-// address, then again with { email, emailVerificationOtp } to confirm it.
-// Only invalidate ["me"] on the confirming call — invalidating after the
-// first call would be pointless since the email hasn't actually changed yet.
+// The OTP is requested separately through POST /action-verification/request.
+// This mutation confirms it through PATCH /user/email, so invalidate ["me"]
+// after every successful call.
 export function useUpdateEmail() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload) => updateEmail(payload),
-    onSuccess: (_data, variables) => {
-      if (variables?.emailVerificationOtp) {
-        queryClient.invalidateQueries({ queryKey: ["me"] });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
 }

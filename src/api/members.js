@@ -21,6 +21,14 @@ export const updatePassword = (payload) => client.patch("/user/password", payloa
 export const updateEmail = (payload) => client.patch("/user/email", payload);
 
 // POST /api/v1/action-verification/request — sends an OTP to a proposed new
+// email address for a signed-in user.
+export const requestEmailUpdate = ({ email }) =>
+  client.post("/action-verification/request", {
+    actionVerificationType: "EMAIL_UPDATE",
+    email,
+  });
+
+// POST /api/v1/action-verification/request — sends an OTP to a proposed new
 // phone number for a signed-in user. { phoneNumber, phoneRegion } plus the
 // fixed actionVerificationType this function exists to pin.
 export const requestPhoneUpdate = ({ phoneNumber, phoneRegion }) =>

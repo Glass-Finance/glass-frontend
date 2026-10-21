@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { resendVerification } from "../../services/authService";
 import { notifyError } from "../../utils/errorHandler";
 import { useCountdown, formatCountdown } from "../../hooks/useCountdown";
 import OtpBoxes from "./OtpBoxes";
@@ -20,14 +19,12 @@ function maskEmail(email) {
 }
 
 // Two-step modal: enter the OTP sent to the new email, then a brief success
-// confirmation. Reuses verifyEmail/resendVerification from authService —
-// the same /auth/verify endpoints the signup flow uses — on the assumption
-// that PATCH /user/email (called by the caller before mounting this) sends
-// the code the same way registration does. Untested against the live
-// backend yet; adjust here first if the real contract differs.
+// confirmation. The caller requests and resends an EMAIL_UPDATE challenge;
+// onSubmitOtp confirms it through PATCH /user/email.
 // onSubmitOtp(otpString) — called with the 6-digit code to confirm the change
 export default function EmailChangeModal({
   newEmail,
+  onResend,
   onSubmitOtp,
   onVerified,
   onWrongEmail,
@@ -68,7 +65,7 @@ export default function EmailChangeModal({
     setResending(true);
     setResendMessage("");
     try {
-      await resendVerification({ email: newEmail });
+      await onResend();
       setResendMessage("A new code has been sent.");
       setResendCount((c) => c + 1);
       setOtp(["", "", "", "", "", ""]);

@@ -8,7 +8,12 @@ import {
   useUpdatePhone,
 } from "../../../../hooks/useMyAccount";
 import { useFileUpload } from "../../../../hooks/useFileUpload";
-import { updateEmail, deleteAccount, requestAccountDeletionCode } from "../../../../api/members";
+import {
+  updateEmail,
+  requestEmailUpdate,
+  deleteAccount,
+  requestAccountDeletionCode,
+} from "../../../../api/members";
 import { getErrorMessage } from "../../../../utils/errorHandler";
 import { getEmailError } from "../../../../utils/validators";
 import { useEscapeToClose } from "../../../../hooks/useKeyboardShortcuts";
@@ -297,7 +302,7 @@ export default function Profile() {
     setEmailFieldError("");
     setEmailSending(true);
     try {
-      await updateEmail({ email: trimmed.toLowerCase() });
+      await requestEmailUpdate({ email: trimmed.toLowerCase() });
       setEmailModalOpen(true);
     } catch (err) {
       setEmailFieldError(
@@ -657,6 +662,7 @@ export default function Profile() {
       {emailModalOpen && (
         <EmailChangeModal
           newEmail={emailDraft}
+          onResend={() => requestEmailUpdate({ email: emailDraft.trim().toLowerCase() })}
           onSubmitOtp={(code) =>
             updateEmail({
               email: emailDraft.trim().toLowerCase(),

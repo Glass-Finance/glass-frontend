@@ -10,7 +10,12 @@ import {
 } from "../../../../../hooks/useMyAccount";
 import { useFileUpload } from "../../../../../hooks/useFileUpload";
 import { useAuth } from "../../../../../store/AuthContext";
-import { deleteAccount, requestAccountDeletionCode } from "../../../../../api/members";
+import {
+  deleteAccount,
+  requestAccountDeletionCode,
+  requestEmailUpdate,
+  updateEmail,
+} from "../../../../../api/members";
 
 // Account deletion is the single most irreversible Tier 1 action in the
 // app: unlike payout-account removal, there's no "add it back" path. It's
@@ -36,7 +41,13 @@ vi.mock("../../../../../store/AuthContext", () => ({
 }));
 vi.mock("../../../../../api/members", async () => {
   const actual = await vi.importActual("../../../../../api/members");
-  return { ...actual, deleteAccount: vi.fn(), requestAccountDeletionCode: vi.fn() };
+  return {
+    ...actual,
+    deleteAccount: vi.fn(),
+    requestAccountDeletionCode: vi.fn(),
+    requestEmailUpdate: vi.fn(),
+    updateEmail: vi.fn(),
+  };
 });
 
 const navigateMock = vi.fn();
@@ -51,6 +62,8 @@ beforeEach(() => {
   navigateMock.mockClear();
   requestAccountDeletionCode.mockReset();
   deleteAccount.mockReset();
+  requestEmailUpdate.mockReset();
+  updateEmail.mockReset();
 
   useMe.mockReturnValue({
     data: {
@@ -71,6 +84,8 @@ beforeEach(() => {
 
   requestAccountDeletionCode.mockResolvedValue({});
   deleteAccount.mockResolvedValue({});
+  requestEmailUpdate.mockResolvedValue({});
+  updateEmail.mockResolvedValue({});
 });
 
 function renderPage() {
@@ -80,6 +95,43 @@ function renderPage() {
     </MemoryRouter>,
   );
 }
+
+describe("Email update flow", () => {
+  it("requests an EMAIL_UPDATE code before opening the confirmation modal", async () => {
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Update email" }));
+
+    const input = document.querySelector('input[type="email"]');
+    fireEvent.change(input, { target: { value: "new@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+    await screen.findByText("Enter the Code we Sent");
+    expect(requestEmailUpdate).toHaveBeenCalledWith({ email: "new@example.com" });
+    expect(updateEmail).not.toHaveBeenCalled();
+  });
+
+  it("confirms an email update with the submitted OTP", async () => {
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Update email" }));
+
+    const input = document.querySelector('input[type="email"]');
+    fireEvent.change(input, { target: { value: "new@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+    await screen.findByText("Enter the Code we Sent");
+
+    fireEvent.change(screen.getByLabelText("Verification code"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() =>
+      expect(updateEmail).toHaveBeenCalledWith({
+        email: "new@example.com",
+        emailVerificationOtp: "123456",
+      }),
+    );
+  });
+});
 
 function openWarnStep() {
   screen.getByText("Delete").click();

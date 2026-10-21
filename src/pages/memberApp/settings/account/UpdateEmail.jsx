@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { requestEmailUpdate } from "../../../../api/members";
 import { goBackInApp } from "../../../../utils/memberBack";
 import {} from "lucide-react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
@@ -37,10 +38,8 @@ function StepHeader({ title, onBack }) {
   );
 }
 
-// Full-page replacement for the old EmailChangeModal — same underlying
-// updateEmail two-step mutation (call with { email } to trigger the OTP,
-// again with { email, emailVerificationOtp } to confirm), just as its own
-// screen per Figma instead of a modal popup.
+// Full-page email-change flow: request an EMAIL_UPDATE challenge, then confirm
+// it through PATCH /user/email.
 export default function UpdateEmail() {
   const navigate = useNavigate();
   const { data: user } = useMe();
@@ -76,9 +75,7 @@ export default function UpdateEmail() {
     setFieldError("");
     setSending(true);
     try {
-      // No OTP yet — just the new address — triggers the backend to send a
-      // code before anything actually changes.
-      await updateEmail.mutateAsync({ email: trimmed });
+      await requestEmailUpdate({ email: trimmed });
       setStep("otp");
     } catch (err) {
       setFieldError(getErrorMessage(err, "Couldn't start the email update. Please try again."));
@@ -115,7 +112,7 @@ export default function UpdateEmail() {
     setResending(true);
     setResendMessage("");
     try {
-      await updateEmail.mutateAsync({ email: email.trim().toLowerCase() });
+      await requestEmailUpdate({ email: email.trim().toLowerCase() });
       setResendMessage("A new code has been sent.");
       setResendCount((c) => c + 1);
       setOtp(["", "", "", "", "", ""]);
