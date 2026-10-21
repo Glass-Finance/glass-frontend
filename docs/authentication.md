@@ -36,6 +36,29 @@ Backend role codes (`core.community_roles`): `COMMUNITY_OWNER`, `COMMUNITY_ADMIN
 
 `phoneRegion` is optional everywhere, must be an ISO 3166-1 two-letter code when present, and defaults to `NG` server-side. E.164 (`+…`) input parses independently of region, so the frontend safely omits it; national-format numbers would be interpreted under the given/default region.
 
+### Verification codes — who sends them, and who reports a failed send
+
+There is no single "send me a code" endpoint, and **which endpoint sends depends on the flow**:
+
+| Flow                   | Endpoint                       | Who asks for it                                                                                                                                                                                                                                                |
+| ---------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registration (email)   | `POST /auth/register`          | **The backend.** The code is a side effect of registering — the account has to exist first, so there is nothing to request a code for before that call returns. `POST /auth/register` answers `201` with **no tokens** (the session comes after verification). |
+| Registration resend    | `POST /auth/verify/resend`     | The frontend. `401` here means "no account is registered under that email" (the backend uses 401, not 404, so it does not confirm which addresses exist).                                                                                                      |
+| Passwordless sign-in   | `POST /auth/otp/request`       | The frontend. Email or SMS depending on which identifier is supplied.                                                                                                                                                                                          |
+| Pre-registration phone | `POST /auth/phone/request-otp` | The frontend.                                                                                                                                                                                                                                                  |
+
+The consequence for the UI: on the registration screens the frontend **cannot** know whether the first code was actually dispatched — `POST /auth/register` reports the account, not the mail. So those screens say **“Check Your Email”** rather than asserting a code was sent, and Resend is a first-class action whose own result _is_ reported.
+
+`src/hooks/useOtpSend.js` is the one owner of "ask the backend to send me a code" across the OTP surfaces:
+
+- a failed send is **toasted** and shown inline (it used to be `silent`, so a refusal looked exactly like a slow send);
+- a `429` is honoured through its `Retry-After` header — the resend action stays locked for exactly as long as the server asked;
+- the screen reports **what actually happened**: “Sending a code to…”, “Enter the 6-digit code sent to…”, or “We couldn't send a code to…”. A failed _resend_ after a code already went out is worded differently from a send that never happened, because the person may already be holding a working code.
+
+**Backend caveat — the auth limiters are per-IP.** Measured against the live API (2026-10-21): `POST /auth/otp/request` allows 3 requests per window per IP, `POST /auth/verify/resend` 5, and `POST /auth/register` draws on the same kind of shared per-IP pool (the 10th call inside a couple of seconds was refused). Each answers `429` with `Retry-After`. A phone on mobile data shares one public IP with every other subscriber behind the same carrier NAT, so a signup can be refused for reasons that have nothing to do with the person tapping. `POST /auth/phone/request-otp` is already keyed **per number** (see its OpenAPI description) — the login/resend/register limiters should be keyed per identifier (email/phone) for the same reason. Until they are, the frontend's job is to make the refusal visible and actionable, which it now does.
+
+A `429` is also the one 4xx that `src/utils/monitoring.js` reports to Sentry: it is a statement about our capacity, not about what the person typed, and a silently rate-limited signup is otherwise invisible in production.
+
 ## Proposed/future direction
 
 Consider moving refresh-token handling to an `HttpOnly`, `Secure`, `SameSite` cookie managed by the backend, keeping access tokens out of persistent browser storage where feasible. This requires coordinated backend and deployment changes and must be threat-modeled before implementation. Do not change storage as part of documentation-only foundation work.

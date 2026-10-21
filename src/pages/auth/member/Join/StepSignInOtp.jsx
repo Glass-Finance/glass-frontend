@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { requestLoginOtp, verifyLoginOtp } from "../../../../services/authService";
 import { notifyError } from "../../../../utils/errorHandler";
 import OtpBoxes from "../../../../components/common/OtpBoxes";
 import { useCountdown, formatCountdown } from "../../../../hooks/useCountdown";
+import { useOtpSend } from "../../../../hooks/useOtpSend";
 import { Button, Button as PrimaryButton } from "../../../../components/ui/Button";
 import { ErrorMessage } from "./shared";
 import { renderDashedOtpBoxes } from "./otpBoxes";
@@ -19,55 +20,49 @@ import { OTP_LENGTH } from "./constants";
 // accountExists handling), passwordless login OTP, the same
 // requestLoginOtp/verifyLoginOtp SignIn.jsx already uses, signs them in
 // directly instead.
+//
+// This is the one OTP screen where the FRONTEND owns the send (it fires
+// POST /auth/otp/request on mount), so it is also the one screen that can
+// know a code was never dispatched. useOtpSend keeps that state honest: the
+// heading says "sending" while the request is in flight, says so plainly when
+// it failed, and never claims a code is on its way when none was sent.
 // ---------------------------------------------------------------------------
 export default function StepSignInOtp({ email, onVerified, onUseDifferentEmail }) {
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(true);
   const [error, setError] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(30);
   const [resendCount, setResendCount] = useState(0);
   const [expirySeconds, setExpirySeconds] = useState(0);
   const [otpAttempt, setOtpAttempt] = useState(0);
-  // StrictMode double-invokes effects in dev, which would otherwise fire two
-  // real OTP sends off a single mount -- same guard shape as
-  // useInviteToken/useJoinCommunityParam use for their own once-per-mount work.
-  const didAutoSend = useRef(false);
 
-  const secondsLeft = useCountdown(expirySeconds, `${email}-${resendCount}`);
-  // Guarded on resendCount so this doesn't read as "expired" before the
-  // very first send (expirySeconds/secondsLeft both start at 0).
-  const codeExpired = resendCount > 0 && secondsLeft <= 0;
-
-  async function sendCode() {
-    setSending(true);
-    setError("");
-    try {
-      const result = await requestLoginOtp({ email });
+  const {
+    sending,
+    failed,
+    everSent,
+    error: sendError,
+    cooldownSeconds,
+    send,
+  } = useOtpSend({
+    sendRequest: () => requestLoginOtp({ email }),
+    onSent: (result) => {
       const seconds = Math.max(0, Math.round((new Date(result.expiresAt) - Date.now()) / 1000));
       setExpirySeconds(seconds);
       setResendCount((c) => c + 1);
       setDigits(Array(OTP_LENGTH).fill(""));
       setOtpAttempt((a) => a + 1);
-    } catch (err) {
-      setError(notifyError(err, { context: "Send login code", silent: true }));
-    } finally {
-      setSending(false);
-    }
-  }
+    },
+    context: "Send login code",
+    fallback: "We couldn't send a code to that address. Please try again.",
+    autoSend: true,
+    // The resend action starts locked: a code cannot plausibly have failed
+    // to arrive in the first few seconds, and the API's limiter is per-IP.
+    initialCooldown: 30,
+  });
 
-  useEffect(() => {
-    if (didAutoSend.current) return;
-    didAutoSend.current = true;
-    sendCode();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(id);
-  }, [resendCooldown]);
+  const secondsLeft = useCountdown(expirySeconds, `${email}-${resendCount}`);
+  // Guarded on resendCount so this doesn't read as "expired" before the
+  // very first send (expirySeconds/secondsLeft both start at 0).
+  const codeExpired = resendCount > 0 && secondsLeft <= 0;
 
   function handleDigitChange(next) {
     setDigits(next);
@@ -110,20 +105,23 @@ export default function StepSignInOtp({ email, onVerified, onUseDifferentEmail }
     }
   }
 
-  function handleResend() {
-    if (resendCooldown > 0) return;
-    setResendCooldown(60);
-    sendCode();
-  }
-
   const allFilled = digits.every(Boolean);
+  // A failed RESEND after a code already went out means "the new one didn't
+  // arrive" -- not "no code was ever sent". The screen must not contradict
+  // the code the person may already be holding.
+  const noCodeSent = failed && !everSent;
+  const sendLabel = noCodeSent ? "Send code" : "Resend";
 
   return (
     <div className="flex flex-col gap-12">
       <div>
         <h1 className="text-headline text-gray-900 mb-5">You Already Have An Account</h1>
         <p className="text-sm text-gray-500 mb-1">
-          {sending ? "Sending a sign-in code to" : "Enter the 6-digit code sent to"}
+          {sending
+            ? "Sending a sign-in code to"
+            : noCodeSent
+              ? "We couldn't send a code to"
+              : "Enter the 6-digit code sent to"}
         </p>
         <p className="font-semibold text-sm text-gray-900 mb-1">{email}</p>
         <Button
@@ -135,6 +133,16 @@ export default function StepSignInOtp({ email, onVerified, onUseDifferentEmail }
         >
           Not you?
         </Button>
+        {failed && (
+          <div className="bg-warning-wash text-warning rounded-xl px-4 py-3 mt-3">
+            <p className="text-xs leading-relaxed">
+              <span className="font-semibold">
+                {noCodeSent ? "No code was sent." : "We couldn't send a new code."}
+              </span>{" "}
+              {sendError}
+            </p>
+          </div>
+        )}
         {resendCount > 0 && (
           <p
             className={`text-xs mt-2 ${codeExpired ? "text-danger font-medium" : "text-ink-faint"}`}
@@ -174,15 +182,15 @@ export default function StepSignInOtp({ email, onVerified, onUseDifferentEmail }
       </form>
 
       <p className="text-sm text-center text-gray-500 pb-2">
-        Didn't get a code?{" "}
+        {noCodeSent ? "Nothing was sent." : "Didn't get a code?"}{" "}
         <Button
           variant="tertiary"
           size="sm"
           fullWidth={false}
-          onClick={handleResend}
-          disabled={resendCooldown > 0 || sending}
+          onClick={send}
+          disabled={cooldownSeconds > 0 || sending}
         >
-          {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend"}
+          {cooldownSeconds > 0 ? `${sendLabel} in ${cooldownSeconds}s` : sendLabel}
         </Button>
       </p>
     </div>

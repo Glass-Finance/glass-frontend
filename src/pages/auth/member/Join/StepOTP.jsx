@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { verifyEmail, resendVerification } from "../../../../services/authService";
 import { notifyError } from "../../../../utils/errorHandler";
 import OtpBoxes from "../../../../components/common/OtpBoxes";
 import { useCountdown, formatCountdown } from "../../../../hooks/useCountdown";
+import { useOtpSend } from "../../../../hooks/useOtpSend";
 import { Button, Button as PrimaryButton } from "../../../../components/ui/Button";
 import { ErrorMessage } from "./shared";
 import { renderDashedOtpBoxes } from "./otpBoxes";
@@ -10,12 +11,23 @@ import { OTP_LENGTH, OTP_VALIDITY_SECONDS, PENDING_KEY } from "./constants";
 
 // ---------------------------------------------------------------------------
 // Step 3 — OTP  (6 boxes with dash in middle like Figma)
+//
+// The FIRST code for this step is not sent from here: POST /auth/register
+// dispatches it server-side, and the account doesn't exist until it does, so
+// there is nothing to request a code for before that call returns. The
+// frontend therefore can't tell whether that first mail actually went out —
+// which is why the heading says "Check Your Email" rather than asserting a
+// code was sent, and why Resend is a first-class action that reports whether
+// IT worked.
+//
+// (POST /auth/register also returns no session, so there is no access token
+// on this screen: the resend is an unauthenticated call, and the API's
+// limiter for it is per-IP.)
 // ---------------------------------------------------------------------------
 export default function StepOTP({ email, onVerified, onBack }) {
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(30);
   const [resendCount, setResendCount] = useState(0);
   // Separate from resendCount (which drives the 15-min expiry countdown
   // below and must only change on an actual resend) — this only forces
@@ -23,14 +35,29 @@ export default function StepOTP({ email, onVerified, onBack }) {
   // on either a resend or a failed verify attempt.
   const [otpAttempt, setOtpAttempt] = useState(0);
 
+  const {
+    sending: resending,
+    sent: resendSent,
+    failed: resendFailed,
+    error: sendError,
+    cooldownSeconds,
+    send: resend,
+  } = useOtpSend({
+    sendRequest: () => resendVerification({ email }),
+    onSent: () => {
+      setResendCount((c) => c + 1);
+      setOtpAttempt((a) => a + 1);
+      setDigits(Array(OTP_LENGTH).fill(""));
+    },
+    context: "Resend verification email",
+    fallback: "We couldn't send a new code. Please try again.",
+    // The resend action starts locked: a code cannot plausibly have failed
+    // to arrive in the first few seconds, and the API's limiter is per-IP.
+    initialCooldown: 30,
+  });
+
   const secondsLeft = useCountdown(OTP_VALIDITY_SECONDS, `${email}-${resendCount}`);
   const codeExpired = secondsLeft <= 0;
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(id);
-  }, [resendCooldown]);
 
   function handleDigitChange(next) {
     setDigits(next);
@@ -64,32 +91,12 @@ export default function StepOTP({ email, onVerified, onBack }) {
     }
   }
 
-  async function handleResend() {
-    if (resendCooldown > 0) return;
-    setResendCooldown(60);
-    setError("");
-    try {
-      await resendVerification({ email });
-      setResendCount((c) => c + 1);
-      setOtpAttempt((a) => a + 1);
-      setDigits(Array(OTP_LENGTH).fill(""));
-    } catch (err) {
-      setError(
-        notifyError(err, {
-          context: "Resend OTP",
-          fallback: "Could not resend. Please try again.",
-          silent: true,
-        }),
-      );
-    }
-  }
-
   const allFilled = digits.every(Boolean);
 
   return (
     <div className="flex flex-col gap-12">
       <div>
-        <h1 className="text-headline text-gray-900 mb-5">Verification Code Sent</h1>
+        <h1 className="text-headline text-gray-900 mb-5">Check Your Email</h1>
         <p className="text-sm text-gray-500 mb-1">Enter the 6-digit code sent to</p>
         <p className="font-semibold text-sm text-gray-900 mb-1">{email}</p>
         <Button
@@ -121,6 +128,19 @@ export default function StepOTP({ email, onVerified, onBack }) {
           or resend to get a fresh one.
         </p>
       </div>
+
+      {resendFailed && (
+        <div className="bg-warning-wash text-warning rounded-xl px-4 py-3">
+          <p className="text-xs leading-relaxed">
+            <span className="font-semibold">We couldn't send a new code.</span> {sendError}
+          </p>
+        </div>
+      )}
+      {resendSent && (
+        <p className="text-xs text-center text-gray-400" role="status">
+          A new code has been sent.
+        </p>
+      )}
 
       {/* Wrapping in a real <form> matches WebKit's own documented pattern
           for autocomplete="one-time-code" and gets the iOS keyboard's
@@ -154,7 +174,7 @@ export default function StepOTP({ email, onVerified, onBack }) {
       </form>
 
       {/* Deliberately outside the <form>: a bare <button> with no explicit
-          type defaults to type="submit" inside a form, which would have
+          type defaults to type='submit' inside a form, which would have
           triggered the form's onSubmit (and double-fired handleVerify) on
           click. */}
       <p className="text-sm text-center text-gray-500 pb-2">
@@ -164,10 +184,14 @@ export default function StepOTP({ email, onVerified, onBack }) {
           size="xs"
           fullWidth={false}
           type="button"
-          onClick={handleResend}
-          disabled={resendCooldown > 0}
+          onClick={resend}
+          disabled={cooldownSeconds > 0 || resending}
         >
-          {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend"}
+          {resending
+            ? "Resending..."
+            : cooldownSeconds > 0
+              ? `Resend in ${cooldownSeconds}s`
+              : "Resend"}
         </Button>
       </p>
     </div>

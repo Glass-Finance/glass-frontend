@@ -36,6 +36,27 @@ const STATUS_MESSAGES = {
 // (correctly absent from PRE_AUTH_PATHS, so it can't reach this branch).
 const MFA_VERIFY_PATHS = ["/auth/mfa/totp/verify-login", "/auth/mfa/recovery-code/verify-login"];
 
+// A 401 from the resend endpoint means "no account is registered under that
+// email" — the backend answers 401 (not 404) so it doesn't confirm which
+// addresses exist. Its body says nothing useful ("Invalid Request"), so the
+// status + path are read here and the body's copy is discarded.
+//
+// "Incorrect email or password." would be nonsense on a resend screen: there
+// is no password on it, and the person is usually a typo away from the right
+// address.
+const NO_ACCOUNT_PATHS = ["/auth/verify/resend"];
+
+// Resolved from the status + path alone, for the few endpoints whose body
+// copy says less than the status does. Returns null when the status and path
+// don't name a known case, so the normal server-message path still wins
+// everywhere else.
+function statusOnlyMessage(status, requestUrl) {
+  if (status === 401 && NO_ACCOUNT_PATHS.some((p) => requestUrl?.includes(p))) {
+    return "We couldn't find an account for that email address.";
+  }
+  return null;
+}
+
 // A 401 from a pre-auth endpoint (login, Google sign-in, MFA verify) means
 // "those credentials were wrong" — there's no session yet to have expired.
 // STATUS_MESSAGES[401] is written for the opposite case (an authenticated
@@ -167,6 +188,10 @@ export function getErrorMessage(error, fallback = "Something went wrong. Please 
 
   // Axios error with a response from the server
   if (error.response) {
+    // A handful of endpoints answer with a body that says less than the
+    // status does; those are resolved from the status + path first.
+    const statusOnly = statusOnlyMessage(error.response.status, error.config?.url);
+    if (statusOnly) return statusOnly;
     const serverMessage = extractServerMessage(error.response.data);
     return serverMessage
       ? rewriteIfKnownCryptic(serverMessage)

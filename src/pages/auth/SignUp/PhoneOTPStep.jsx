@@ -2,6 +2,7 @@ import { useState } from "react";
 import { requestPhoneOtp, verifyPhoneOtp } from "../../../services/authService";
 import { notifyError } from "../../../utils/errorHandler";
 import { useCountdown, formatCountdown } from "../../../hooks/useCountdown";
+import { useOtpSend } from "../../../hooks/useOtpSend";
 import OtpBoxes from "../../../components/common/OtpBoxes";
 import { Button } from "../../../components/ui/Button";
 
@@ -17,13 +18,32 @@ const OTP_VALIDITY_SECONDS = 15 * 60;
 // after the user's already been navigated to this screen. This step only
 // verifies via POST /auth/phone/verify-otp, which returns the confirmToken
 // register() needs.
+//
+// A RESEND is this screen's to make (POST /auth/phone/request-otp), so its
+// result is reported honestly: a failed resend is toasted and shown here, and
+// a rate-limited one waits exactly as long as the server asked.
 export default function PhoneOTPStep({ phone, onVerified, onBack }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [resending, setResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState("");
   const [resendCount, setResendCount] = useState(0);
+
+  const {
+    sending: resending,
+    sent: resendSent,
+    failed: resendFailed,
+    error: sendError,
+    cooldownSeconds,
+    send: resend,
+  } = useOtpSend({
+    sendRequest: () => requestPhoneOtp({ phoneNumber: phone }),
+    onSent: () => {
+      setResendCount((c) => c + 1);
+      setOtp(["", "", "", "", "", ""]);
+    },
+    context: "Resend phone OTP",
+    fallback: "We couldn't send a new code. Please try again.",
+  });
 
   const secondsLeft = useCountdown(OTP_VALIDITY_SECONDS, `${phone}-${resendCount}`);
   const codeExpired = secondsLeft <= 0;
@@ -47,32 +67,10 @@ export default function PhoneOTPStep({ phone, onVerified, onBack }) {
     }
   };
 
-  const handleResend = async () => {
-    setResending(true);
-    setResendMessage("");
-    try {
-      await requestPhoneOtp({ phoneNumber: phone });
-      setResendMessage("A new code has been sent.");
-      setResendCount((c) => c + 1);
-      setOtp(["", "", "", "", "", ""]);
-      setError("");
-    } catch (err) {
-      setResendMessage(
-        notifyError(err, {
-          context: "Resend phone OTP",
-          fallback: "Could not resend. Please try again.",
-          silent: true,
-        }),
-      );
-    } finally {
-      setResending(false);
-    }
-  };
-
   return (
     <div className="w-full max-w-xl flex flex-col md:mt-14 mb-auto gap-12">
       <div>
-        <h1 className="text-headline text-gray-900 mb-3 font-sans">Verification Code Sent</h1>
+        <h1 className="text-headline text-gray-900 mb-3 font-sans">Check Your Phone</h1>
         <p className="text-sm text-gray-500 mb-0.5">Enter the 6-digit code that was sent to</p>
         <p className="text-sm font-semibold text-gray-900">{phone}</p>
         <Button variant="tertiary" size="sm" fullWidth={false} onClick={onBack} className="mt-1">
@@ -135,13 +133,28 @@ export default function PhoneOTPStep({ phone, onVerified, onBack }) {
             variant="tertiary"
             size="sm"
             fullWidth={false}
-            onClick={handleResend}
-            disabled={resending}
+            onClick={resend}
+            disabled={resending || cooldownSeconds > 0}
           >
-            {resending ? "Resending..." : "Resend"}
+            {resending
+              ? "Resending..."
+              : cooldownSeconds > 0
+                ? `Resend in ${cooldownSeconds}s`
+                : "Resend"}
           </Button>
         </p>
-        {resendMessage && <p className="text-center text-xs text-gray-400 mt-1">{resendMessage}</p>}
+        {resendSent && (
+          <p className="text-center text-xs text-gray-400 mt-1" role="status">
+            A new code has been sent.
+          </p>
+        )}
+        {resendFailed && (
+          <div className="bg-warning-wash text-warning rounded-xl px-4 py-3 mt-2">
+            <p className="text-xs leading-relaxed">
+              <span className="font-semibold">We couldn't send a new code.</span> {sendError}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
