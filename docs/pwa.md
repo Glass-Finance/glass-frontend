@@ -117,6 +117,21 @@ lifecycle.
 
 Device installation is **not** covered by it — see "Remaining manual tests".
 
+## Install entry point
+
+Installation is offered from the member app's **Settings → App** section rather
+than shown as an automatic overlay. Chromium browsers expose their native
+install prompt only after the user taps that entry. iOS Safari (including
+iPadOS using its desktop-style user agent) opens the Share → Add to Home Screen
+steps only after the same explicit action. The entry is hidden once the app is
+installed or when the current browser does not expose a supported install path.
+This keeps sign-in, onboarding and payment flows free from unsolicited install
+dialogs.
+
+The manifest launches at `/member/app-sign-in`, not `/`: on the production app
+host, `/` redirects to the separate marketing site. The sign-in route sends an
+already-authenticated user to the correct app destination.
+
 ## Update lifecycle
 
 An update propagates in three steps, and **all three are load-bearing**:

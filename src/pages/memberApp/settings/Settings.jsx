@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { IdCard, LogOut } from "lucide-react";
 import { useAuth } from "../../../store/AuthContext";
 import GlassLogoGlow from "../../../components/memberApp/GlassLogoGlow";
+import InstallAppSetting from "../../../components/memberApp/InstallAppSetting";
 import { toastSuccess } from "../../../utils/toast";
 import { useKycSummary } from "../../../hooks/useKyc";
 import KycStatusBadge from "../../../components/memberApp/KycStatusBadge";
@@ -153,6 +154,8 @@ export default function Settings() {
             </div>
           </div>
         ))}
+
+        <InstallAppSetting />
 
         <Button
           variant="outline-neutral"

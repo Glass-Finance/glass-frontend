@@ -7,6 +7,7 @@ import { readFileSync as readSrc } from "node:fs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const config = readSrc(join(root, "vite.config.js"), "utf8");
 const sw = readSrc(join(root, "src", "sw.js"), "utf8");
+const app = readSrc(join(root, "src", "App.jsx"), "utf8");
 
 // These guard the two mistakes made while building this feature, both of
 // which shipped-silently in the sense that the build passed and only the
@@ -16,6 +17,11 @@ const sw = readSrc(join(root, "src", "sw.js"), "utf8");
 describe("PWA worker configuration", () => {
   it("uses injectManifest so the worker's behaviour is explicit code", () => {
     expect(config).toMatch(/strategies:\s*["']injectManifest["']/);
+  });
+
+  it("starts the installed app on its sign-in route, not the marketing redirect", () => {
+    expect(config).toMatch(/start_url:\s*["']\/member\/app-sign-in["']/);
+    expect(app).toMatch(/path=["']\/member\/app-sign-in["']/);
   });
 
   it("never configures navigateFallback to the offline page", () => {

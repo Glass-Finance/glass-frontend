@@ -1,50 +1,17 @@
-import { useState } from "react";
-
-const DISMISS_KEY = "pwa_ios_instructions_dismissed";
-
-function isIOSSafari() {
-  const ua = navigator.userAgent;
-  const isIOS = /iPad|iPhone|iPod/.test(ua);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  return isIOS && isSafari;
-}
-
-function computeInitialVisibility() {
-  if (!isIOSSafari()) return false;
-  // Don't show if already installed (standalone mode)
-  if (window.navigator.standalone) return false;
-  try {
-    if (localStorage.getItem(DISMISS_KEY) === "1") return false;
-  } catch {
-    /* ignore */
-  }
-  return true;
-}
-
 /**
- * iOS Safari does not fire beforeinstallprompt.
- * Shows a one-time overlay with Share → Add to Home Screen instructions.
+ * iOS Safari does not fire beforeinstallprompt, so these steps are shown only
+ * after the user chooses the install option in Settings.
  */
-export default function IosInstallInstructions() {
-  const [visible, setVisible] = useState(computeInitialVisibility);
-
-  const dismiss = () => {
-    setVisible(false);
-    try {
-      localStorage.setItem(DISMISS_KEY, "1");
-    } catch {
-      /* ignore */
-    }
-  };
-
-  if (!visible) return null;
+export default function IosInstallInstructions({ open, onClose }) {
+  if (!open) return null;
 
   return (
     <div
       role="dialog"
       aria-label="Install Glasspay on iOS"
+      aria-modal="true"
       className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4"
-      onClick={dismiss}
+      onClick={onClose}
     >
       <div
         className="bg-white rounded-g-1 p-6 max-w-sm w-full shadow-xl"
@@ -74,7 +41,7 @@ export default function IosInstallInstructions() {
                   <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
                 </svg>
               </span>
-              at the bottom of the screen
+              in the browser toolbar
             </span>
           </li>
           <li className="flex gap-3">
@@ -96,7 +63,7 @@ export default function IosInstallInstructions() {
         </ol>
         <button
           type="button"
-          onClick={dismiss}
+          onClick={onClose}
           className="w-full bg-brand text-white text-sm font-medium py-2.5 rounded-g-1 hover:bg-brand/90 transition-colors"
         >
           Done
