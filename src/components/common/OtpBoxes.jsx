@@ -108,7 +108,7 @@ export default function OtpBoxes({
           {digits.map((d, i) => (
             <div
               key={i}
-              className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg border-[1.5px] transition-all ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+              className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 flex items-center justify-center text-base md:text-lg font-semibold text-gray-900 rounded-lg border-[1.5px] transition-all ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
             >
               {d}
             </div>
