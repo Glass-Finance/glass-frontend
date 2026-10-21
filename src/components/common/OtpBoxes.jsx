@@ -72,7 +72,10 @@ export default function OtpBoxes({
   const digits = Array.from({ length }, (_, i) => code[i] ?? "");
 
   return (
-    <div className={`relative ${className}`} onClick={() => !disabled && inputRef.current?.focus()}>
+    <div
+      className={`relative otp-input-root ${className}`}
+      onClick={() => !disabled && inputRef.current?.focus()}
+    >
       <style>{AUTOFILL_OVERRIDE_CSS}</style>
       <input
         ref={inputRef}
@@ -105,7 +108,7 @@ export default function OtpBoxes({
           {digits.map((d, i) => (
             <div
               key={i}
-              className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg border-[1.5px] transition-all ${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+              className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg border-[1.5px] transition-all ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
             >
               {d}
             </div>

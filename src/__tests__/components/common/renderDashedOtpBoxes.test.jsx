@@ -82,4 +82,45 @@ describe("renderDashedOtpBoxes", () => {
     expect(renderDashedOtpBoxes(["1", "", "", "", "", ""], 1)).toBeTruthy();
     expect(renderDashedOtpBoxes.length).toBe(2);
   });
+
+  it("sizes boxes for phone and desktop (Figma: 40px mobile, 64px desktop)", () => {
+    render(
+      <OtpBoxes
+        value={["1", "2", "", "", "", ""]}
+        onChange={() => {}}
+        renderBoxes={renderDashedOtpBoxes}
+      />,
+    );
+    const box = screen.getByLabelText("Digit 1 of 6");
+    // Phone default 40px (h-10/max-w-10), desktop override 64px (h-16/max-w-16)
+    expect(box.className).toContain("h-10");
+    expect(box.className).toContain("max-w-10");
+    expect(box.className).toContain("md:h-16");
+    expect(box.className).toContain("md:max-w-16");
+  });
+
+  it("marks only the caret box for the focus ring", () => {
+    render(
+      <OtpBoxes
+        value={["1", "2", "", "", "", ""]}
+        onChange={() => {}}
+        renderBoxes={renderDashedOtpBoxes}
+      />,
+    );
+    // code.length = 2 → box 3 is the next keystroke target
+    expect(screen.getByLabelText("Digit 3 of 6").className).toContain("otp-box-active");
+    expect(screen.getByLabelText("Digit 1 of 6").className).not.toContain("otp-box-active");
+    expect(screen.getByLabelText("Digit 4 of 6").className).not.toContain("otp-box-active");
+  });
+
+  it("wires the OtpBoxes root for the focus-within ring selector", () => {
+    const { container } = render(
+      <OtpBoxes
+        value={["", "", "", "", "", ""]}
+        onChange={() => {}}
+        renderBoxes={renderDashedOtpBoxes}
+      />,
+    );
+    expect(container.querySelector(".otp-input-root")).toBeTruthy();
+  });
 });
