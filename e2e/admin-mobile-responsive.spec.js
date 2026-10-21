@@ -150,16 +150,37 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     test.skip(testInfo.project.name !== "mobile-chromium", "phone layout only");
     await page.setViewportSize(PHONE);
     await installNetworkMock(page, seedDashboard(createScenario()));
-    await preparePage(page, PERSONA);
+    await preparePage(page, PERSONA, {
+      seedTour: testInfo.title !== "first-run tour is optional and its choice persists",
+    });
   });
 
   test("page header is hidden; shell + content stack for the phone frame", async ({ page }) => {
     await page.goto(`/dashboard/admin?community=${C}`);
     await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
+    await expect(page.locator("header").getByText("Dashboard")).toBeVisible();
+    await expect(page.locator("header").getByText("Kings College")).toBeVisible();
     // The desktop-only h1/subtitle block is display:none below md.
     await expect(page.getByRole("heading", { name: "Dashboard", level: 1 })).toBeHidden();
+    await expect(page.getByText("Active Plans")).toBeVisible();
+    expect(
+      await page.getByText("Active Plans").evaluate((el) => Boolean(el.closest(".col-span-2"))),
+    ).toBe(true);
     await expect(page.getByText("Member Payments")).toBeVisible();
     await page.screenshot({ path: test.info().outputPath("admin-mobile-365.png"), fullPage: true });
+  });
+
+  test("first-run tour is optional and its choice persists", async ({ page }) => {
+    await page.goto(`/dashboard/admin?community=${C}`);
+    const prompt = page.getByRole("region", { name: "Dashboard tour" });
+    await expect(prompt).toBeVisible();
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
+    await prompt.getByRole("button", { name: "Take a tour" }).click();
+    await expect(page.getByRole("button", { name: "Close tour" })).toBeVisible();
+    await page.getByRole("button", { name: "Close tour" }).click();
+    await expect(prompt).toBeHidden();
+    await page.reload();
+    await expect(prompt).toBeHidden();
   });
 
   test("drawer opens full width with the community switcher", async ({ page }) => {
@@ -183,5 +204,12 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await page.getByRole("menuitem", { name: "Termly Dues" }).click();
     await expect(page.getByRole("button", { name: "Clear All" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Remove Termly Dues filter" })).toBeVisible();
+  });
+
+  test("members are presented as actionable cards on the phone", async ({ page }) => {
+    await page.goto(`/dashboard/members?community=${C}`);
+    await expect(page.getByRole("button", { name: "Remove Ada Admin" })).toBeVisible();
+    await expect(page.getByRole("listitem").getByText("0/1 Paid")).toBeVisible();
+    await expect(page.locator("table")).toBeHidden();
   });
 });

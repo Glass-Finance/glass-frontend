@@ -141,11 +141,9 @@ function communityPath(slug, path, isPaying = false) {
   return `/dashboard/${resolvedPath}?community=${slug}`;
 }
 
-// The topbar's Help button is the only trigger for the first-launch tour, and
-// it hides below md so the mobile topbar stays Figma's three-item bar (node
-// 352:19421: burger, brand, bell). This row is where it lands instead, in both
-// drawers, so a phone user can still replay it. Deliberately not a Figma row:
-// it exists to keep an existing feature reachable, not to match a design.
+// Help stays in the mobile drawer because the phone topbar prioritizes current
+// page/community context; it supplements the non-modal first-run tour prompt.
+// Deliberately not a Figma row: it keeps an existing feature reachable.
 function MobileTourRow({ onOpenTour, onDismiss }) {
   if (!onOpenTour) return null;
   return (

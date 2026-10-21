@@ -13,17 +13,18 @@ export default function DashboardStats({ stats, isLoading, error = null }) {
     // to whatever the row actually has room for instead of a hardcoded
     // column count.
     <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-2.5 md:gap-3 mb-5">
-      {stats.map((s) => (
+      {stats.map((s, index) => (
         <div
           key={s.label}
-          // min-height 108px (not a fixed height -- a wrapped label like
-          // "Overdue Members" shouldn't clip or force the card taller than
-          // its siblings), 12/16 padding on mobile against Figma's 160x108
-          // cards (node 332:19196), 8px radius, space-between so the
-          // icon+value row stays pinned to the bottom of the card instead of
-          // drifting up under a short single-line label. Matches the shared
-          // StatCard.jsx used by Members/Payments/MemberDetail on desktop.
-          className="min-h-[108px] flex flex-col justify-between bg-surface-container rounded-g-2 px-3 py-4 md:p-4 border border-surface-container-border"
+          // The four primary cards keep Figma's 108px mobile height; the fifth
+          // spans both columns as a compact horizontal card so it doesn't sit
+          // alone in a third row. Desktop cards retain the shared
+          // StatCard.jsx sizing used by Members/Payments/MemberDetail.
+          className={`${
+            index === 4
+              ? "col-span-2 min-h-[76px] flex-row items-center px-4 py-3 md:col-span-1 md:min-h-[108px] md:flex-col md:items-stretch md:justify-between md:p-4"
+              : "min-h-[108px] flex-col justify-between px-3 py-4 md:p-4"
+          } flex bg-surface-container rounded-g-2 border border-surface-container-border`}
         >
           <div className="flex items-center justify-between gap-1">
             <span className="text-xs md:text-sm text-gray-500 font-medium">{s.label}</span>
