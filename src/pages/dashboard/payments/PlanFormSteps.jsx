@@ -162,8 +162,11 @@ export function Step2({
   return (
     <div className="pr-1 space-y-3.5">
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Plan Name</label>
+        <label htmlFor="create-plan-name" className="block text-xs font-medium text-gray-700 mb-1">
+          Plan Name
+        </label>
         <input
+          id="create-plan-name"
           className={inputCls}
           value={form.name || ""}
           placeholder="Enter plan name"
@@ -177,9 +180,12 @@ export function Step2({
         {fieldErrors.name && <p className="text-xs text-danger mt-1">{fieldErrors.name}</p>}
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">URL slug</label>
+        <label htmlFor="create-plan-slug" className="block text-xs font-medium text-gray-700 mb-1">
+          URL slug
+        </label>
         <div className="relative">
           <input
+            id="create-plan-slug"
             className={inputCls + " pr-8"}
             value={slug}
             onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
@@ -235,7 +241,10 @@ export function Step2({
           )}
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="create-plan-amount"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
             Amount{" "}
             {amountRequired ? (
               <span className="text-danger">*</span>
@@ -244,6 +253,7 @@ export function Step2({
             )}
           </label>
           <input
+            id="create-plan-amount"
             type="number"
             onWheel={blurOnWheel}
             className={inputCls}
@@ -355,9 +365,15 @@ export function Step2({
           defaults to 1 (i.e. every single cycle) when left blank. */}
       {planType === "recurring" && form.frequency && (
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Repeat Every</label>
+          <label
+            htmlFor="create-plan-interval"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            Repeat Every
+          </label>
           <div className="flex items-center gap-2">
             <input
+              id="create-plan-interval"
               type="number"
               onWheel={blurOnWheel}
               min={1}
@@ -382,8 +398,14 @@ export function Step2({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+          <label
+            htmlFor="create-plan-start-date"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            Start Date
+          </label>
           <input
+            id="create-plan-start-date"
             type="date"
             className={inputCls}
             value={form.startDate || ""}
@@ -393,6 +415,7 @@ export function Step2({
         {planType === "recurring" ? (
           !isDaily && (
             <BillingDayField
+              id="create-plan-billing-day"
               frequency={form.frequency}
               value={form.billingDay}
               max={billingDayMax}
@@ -401,10 +424,14 @@ export function Step2({
           )
         ) : (
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="create-plan-due-date"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
               Due Date <span className="text-danger">*</span>
             </label>
             <input
+              id="create-plan-due-date"
               type="date"
               className={inputCls}
               value={form.dueDate || ""}
@@ -419,10 +446,14 @@ export function Step2({
           new obligations. Left blank = runs indefinitely. */}
       {planType === "recurring" && (
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="create-plan-end-date"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
             End Date <span className="text-gray-400">(optional)</span>
           </label>
           <input
+            id="create-plan-end-date"
             type="date"
             className={inputCls}
             value={form.endAt || ""}
@@ -435,10 +466,14 @@ export function Step2({
       {planType === "recurring" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="create-plan-grace-days"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
               Grace Period (days)
             </label>
             <input
+              id="create-plan-grace-days"
               type="number"
               onWheel={blurOnWheel}
               min={0}

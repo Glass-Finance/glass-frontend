@@ -30,6 +30,7 @@
 - [ ] `npm run typecheck`
 - [ ] `npm run test`
 - [ ] `npm run build`
+- [ ] Any new or changed form control has an accessible name (`npm run check:input-labels`)
 - [ ] Documentation updated where behavior or architecture changed
 - [ ] Dependency changes are explained, or intentionally deferred
 

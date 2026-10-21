@@ -278,6 +278,7 @@ export default function PlanMembersModal({ plan, communityId, onClose }) {
           <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-surface-container-border flex-1 max-w-xs focus-within:border-[#002FA7] transition-colors">
             <Search size={12} className="text-gray-400 flex-shrink-0" />
             <input
+              aria-label="Search members"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search members…"
@@ -355,6 +356,7 @@ export default function PlanMembersModal({ plan, communityId, onClose }) {
                 <th className="px-5 py-2.5 w-8">
                   <input
                     type="checkbox"
+                    aria-label="Select all members"
                     checked={selected.length === filtered.length && filtered.length > 0}
                     onChange={(e) =>
                       setSelected(
@@ -404,6 +406,7 @@ export default function PlanMembersModal({ plan, communityId, onClose }) {
                       <td className="px-5 py-3">
                         <input
                           type="checkbox"
+                          aria-label={`Select ${getName(m)}`}
                           checked={selected.includes(key)}
                           onChange={() =>
                             setSelected((p) =>
@@ -500,10 +503,14 @@ export default function PlanMembersModal({ plan, communityId, onClose }) {
             onClose={() => setWaiveOpen(false)}
           >
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="waive-reason"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Reason (optional)
               </label>
               <TextInput
+                id="waive-reason"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="e.g. Certificate fee waived for this cohort"

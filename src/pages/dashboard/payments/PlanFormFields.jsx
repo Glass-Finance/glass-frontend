@@ -36,14 +36,17 @@ export function PayoutAccountField({ accounts, value, onChange }) {
 // Shared billing-day picker (create wizard + edit modal). WEEKLY plans get a
 // weekday dropdown instead of a raw 1–7 input, and every frequency shows an
 // always-visible plain-English preview of when members are billed.
-export function BillingDayField({ frequency, value, max, onChange }) {
+export function BillingDayField({ frequency, value, max, onChange, id = "billing-day" }) {
   const day = Number(value);
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-700 mb-1">Billing Day</label>
+      <label htmlFor={id} className="block text-xs font-medium text-gray-700 mb-1">
+        Billing Day
+      </label>
       {frequency === "WEEKLY" ? (
         <div className="relative">
           <select
+            id={id}
             className={`${inputCls} appearance-none !pr-9`}
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
@@ -59,6 +62,7 @@ export function BillingDayField({ frequency, value, max, onChange }) {
         </div>
       ) : (
         <input
+          id={id}
           type="number"
           onWheel={blurOnWheel}
           className={inputCls}

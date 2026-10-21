@@ -79,3 +79,64 @@ describe("TextInput focus treatment", () => {
     expect(input().getAttribute("aria-invalid")).toBe("true");
   });
 });
+
+// The accessible name is owned by this component, not left to each call site.
+// A hand-written sibling <label> can silently lose its htmlFor, and a
+// placeholder is not an accessible name -- so the `label` prop renders a real
+// <label htmlFor> bound to the field, and `hideLabel` keeps that label in the
+// accessibility tree without showing it.
+describe("TextInput accessible name", () => {
+  it("binds the label prop to the field with htmlFor", () => {
+    render(<TextInput label="Email address" placeholder="Enter Your Password" />);
+    const field = input();
+    const label = document.querySelector(`label[for="${field.id}"]`);
+    expect(label).not.toBeNull();
+    expect(label.textContent).toBe("Email address");
+  });
+
+  it("keeps the label in the accessibility tree but hides it visually", () => {
+    render(<TextInput label="Search members" hideLabel placeholder="Search" />);
+    const field = screen.getByPlaceholderText("Search");
+    const label = document.querySelector(`label[for="${field.id}"]`);
+    expect(label).not.toBeNull();
+    expect(label.textContent).toBe("Search members");
+    expect(label.className).toContain("sr-only");
+  });
+
+  it("gives the field an id even when the caller passes none", () => {
+    render(<TextInput label="Amount" placeholder="Enter Your Password" />);
+    expect(input().id).toBeTruthy();
+  });
+
+  it("generates an id that is safe to use in a CSS selector", () => {
+    // React's useId() returns something like ":r0:" / "«r0»". A colon is
+    // legal in an id but breaks every querySelector('#...') against it.
+    render(<TextInput label="Amount" placeholder="Enter Your Password" />);
+    expect(input().id).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("gives two fields distinct ids", () => {
+    render(
+      <>
+        <TextInput label="First" placeholder="a" />
+        <TextInput label="Second" placeholder="b" />
+      </>,
+    );
+    expect(screen.getByPlaceholderText("a").id).not.toBe(screen.getByPlaceholderText("b").id);
+  });
+
+  it("points the field at its error text when the caller says where it is", () => {
+    render(
+      <>
+        <TextInput error="Required" errorId="amount-error" placeholder="Enter Your Password" />
+        <p id="amount-error">Required</p>
+      </>,
+    );
+    expect(input().getAttribute("aria-describedby")).toBe("amount-error");
+  });
+
+  it("does not describe the field by an error id when there is no error", () => {
+    render(<TextInput errorId="amount-error" placeholder="Enter Your Password" />);
+    expect(input().getAttribute("aria-describedby")).toBeNull();
+  });
+});

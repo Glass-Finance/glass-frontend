@@ -6,7 +6,7 @@ Vitest runs in a jsdom environment through `vite.config.js`. Testing Library is 
 
 Tests are colocated under `src/__tests__/` and use `*.test.js` or `*.test.jsx`. The suite is primarily unit and component-level; it does not replace manual verification against the real backend because this repository has no local backend or sandbox.
 
-**Unit suite:** 197 test files, 1888 tests (2026-10-20).
+**Unit suite:** 199 test files, 1923 tests (2026-10-21).
 
 ## Type checking
 
@@ -20,7 +20,7 @@ The one TypeScript file in the codebase, `src/utils/format.ts`, is fully type-ch
 
 ## Accessibility lint
 
-ESLint runs `eslint-plugin-jsx-a11y` recommended rules. Five rules with large pre-existing backlogs are currently disabled (`label-has-associated-control`, `click-events-have-key-events`, `no-static-element-interactions`, `no-autofocus`, `no-noninteractive-element-interactions`) — **224 findings across 76 files**, measured 2026-10-20. Re-enable them incrementally as the backlog is fixed; every other a11y rule is error-level.
+ESLint runs `eslint-plugin-jsx-a11y` recommended rules. Five rules with large pre-existing backlogs are currently disabled (`label-has-associated-control`, `click-events-have-key-events`, `no-static-element-interactions`, `no-autofocus`, `no-noninteractive-element-interactions`) — **174 findings across 71 files**, measured 2026-10-21 (down from 224 across 76 files on 2026-10-20: binding the remaining `<label htmlFor>` to their controls cleared 50 of the 94 `label-has-associated-control` findings). Re-enable them incrementally as the backlog is fixed; every other a11y rule is error-level.
 
 **Re-measuring the counts.** These numbers drift, and two hand-maintained copies of a count is how they drift unnoticed. To get the current figures, write a temporary config that re-enables the five rules over the base config and count the JSON output:
 
@@ -49,6 +49,29 @@ npx eslint . --config eslint.a11y-audit.config.js -f json -o a11y.json
 ```
 
 Update the numbers here and in the comment in `eslint.config.js` in the same commit.
+
+## Input accessible names
+
+`npm run check:input-labels` fails the build if any form control in the app has no accessible name. It runs in CI as its own step, before lint.
+
+**Why it exists when jsx-a11y already runs.** jsx-a11y cannot catch this direction of the problem. Its `label-has-associated-control` rule checks that a `<label>` **has** a control; it says nothing about a control **having** a label. Its `control-has-associated-label` rule applies only to custom components, so a native `<input>` with no name passes lint cleanly. A placeholder is not an accessible name — it disappears on focus and is not reliably announced.
+
+**What it measured.** Before this check existed, **80 controls across 33 files** had no accessible name: 69 raw `<input>` elements and 11 `<TextInput>` call sites. The raw inputs were mostly fields whose visible `<label>` was a sibling element with no `htmlFor`, so the label was visually attached but programmatically orphaned — a screen reader announced "edit text, blank" for every one of them.
+
+**How it decides.** A control is named when it has an `aria-label`, an `aria-labelledby` pointing at an id that exists, an `id` matched by a `<label htmlFor>` (including the shared `<Label>` component in `components/auth/FormFields.jsx`), or is wrapped inside a `<label>`. The scanner reads the JSX source directly; `scripts/scan-input-labels.mjs` and its test (`src/__tests__/config/inputLabelScanner.test.js`) are the implementation.
+
+**How to add a named field.** The shared `TextInput` owns the association, so prefer its `label` prop:
+
+```jsx
+// Visible label, rendered by TextInput itself.
+<TextInput label="Amount" type="number" />
+
+// Label already on screen elsewhere in the layout: bind it explicitly.
+<label htmlFor="group-name">Name</label>
+<TextInput id="group-name" />
+```
+
+`TextInput` generates a selector-safe id when the caller passes none, so a field can never end up without one. For a raw `<input>`, give it an `aria-label` (placeholder-only fields such as search boxes) or bind a `<label htmlFor>` to it.
 
 ## Coverage
 

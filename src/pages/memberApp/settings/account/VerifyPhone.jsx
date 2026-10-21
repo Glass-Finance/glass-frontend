@@ -157,8 +157,11 @@ export default function VerifyPhone() {
           />
           <div className="px-4">
             <div className="border border-surface-container-border bg-white rounded-2xl p-4">
-              <label className="text-xs text-ink-ghost block mb-1.5">Phone Number</label>
+              <label htmlFor="member-verify-phone" className="text-xs text-ink-ghost block mb-1.5">
+                Phone Number
+              </label>
               <TextInput
+                id="member-verify-phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => {

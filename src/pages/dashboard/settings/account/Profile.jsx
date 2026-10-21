@@ -422,6 +422,7 @@ export default function Profile() {
                 ref={photoInputRef}
                 type="file"
                 accept="image/png,image/jpeg"
+                aria-label="Profile photo"
                 className="hidden"
                 onChange={(e) => handlePhotoSelect(e.target.files[0])}
               />
@@ -438,8 +439,11 @@ export default function Profile() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-600">First Name</label>
+                <label htmlFor="settings-first-name" className="text-xs text-gray-600">
+                  First Name
+                </label>
                 <input
+                  id="settings-first-name"
                   name="firstName"
                   value={form.firstName}
                   onChange={handleChange}
@@ -451,8 +455,11 @@ export default function Profile() {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-600">Last Name</label>
+                <label htmlFor="settings-last-name" className="text-xs text-gray-600">
+                  Last Name
+                </label>
                 <input
+                  id="settings-last-name"
                   name="lastName"
                   value={form.lastName}
                   onChange={handleChange}
@@ -563,8 +570,11 @@ export default function Profile() {
             </div>
             <div className="p-6">
               <div className="flex flex-col gap-1.5 max-w-md">
-                <label className="text-xs text-gray-600">Email Address</label>
+                <label htmlFor="settings-email" className="text-xs text-gray-600">
+                  Email Address
+                </label>
                 <input
+                  id="settings-email"
                   type="email"
                   value={emailDraft}
                   onChange={(e) => {
@@ -610,8 +620,11 @@ export default function Profile() {
                 </p>
               )}
               <div className="flex flex-col gap-1.5 max-w-md">
-                <label className="text-xs text-gray-600">Phone Number</label>
+                <label htmlFor="settings-phone" className="text-xs text-gray-600">
+                  Phone Number
+                </label>
                 <input
+                  id="settings-phone"
                   type="tel"
                   value={phoneDraft}
                   onChange={(e) => {

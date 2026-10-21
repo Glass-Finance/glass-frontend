@@ -202,8 +202,14 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
 
         <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">Plan Name</label>
+            <label
+              htmlFor="edit-plan-name"
+              className="block text-xs font-medium text-gray-700 mb-1.5"
+            >
+              Plan Name
+            </label>
             <input
+              id="edit-plan-name"
               className={inputCls}
               value={form.name}
               onChange={(e) => {
@@ -265,7 +271,10 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="edit-plan-amount"
+                className="block text-xs font-medium text-gray-700 mb-1.5"
+              >
                 Amount Per Member{" "}
                 {amountRequired ? (
                   <span className="text-danger">*</span>
@@ -274,6 +283,7 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
                 )}
               </label>
               <input
+                id="edit-plan-amount"
                 type="number"
                 onWheel={blurOnWheel}
                 className={inputCls}
@@ -419,9 +429,15 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
 
           {isRecurring && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">Repeat Every</label>
+              <label
+                htmlFor="edit-plan-interval"
+                className="block text-xs font-medium text-gray-700 mb-1.5"
+              >
+                Repeat Every
+              </label>
               <div className="flex items-center gap-2">
                 <input
+                  id="edit-plan-interval"
                   type="number"
                   onWheel={blurOnWheel}
                   min={1}
@@ -447,8 +463,14 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
             className={`grid gap-3 ${isRecurring && !isDaily ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}
           >
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">Start Date</label>
+              <label
+                htmlFor="edit-plan-start-date"
+                className="block text-xs font-medium text-gray-700 mb-1.5"
+              >
+                Start Date
+              </label>
               <input
+                id="edit-plan-start-date"
                 type="date"
                 className={inputCls}
                 value={form.startDate}
@@ -457,6 +479,7 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
             </div>
             {isRecurring && !isDaily && (
               <BillingDayField
+                id="edit-plan-billing-day"
                 frequency={form.frequency}
                 value={form.billingDay}
                 max={editBillingDayMax}
@@ -467,10 +490,14 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
 
           {isRecurring && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="edit-plan-end-date"
+                className="block text-xs font-medium text-gray-700 mb-1.5"
+              >
                 End Date <span className="text-gray-400">(optional)</span>
               </label>
               <input
+                id="edit-plan-end-date"
                 type="date"
                 className={inputCls}
                 value={form.endAt}
@@ -488,10 +515,14 @@ export default function EditPlanModal({ plan, communityId, onClose, onSave, savi
           {isRecurring && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                <label
+                  htmlFor="edit-plan-grace-days"
+                  className="block text-xs font-medium text-gray-700 mb-1.5"
+                >
                   Grace Period (days)
                 </label>
                 <input
+                  id="edit-plan-grace-days"
                   type="number"
                   onWheel={blurOnWheel}
                   min={0}

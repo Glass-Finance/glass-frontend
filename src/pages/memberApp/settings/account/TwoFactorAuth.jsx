@@ -29,6 +29,7 @@ function CodeInput({ value, onChange, disabled }) {
       inputMode="numeric"
       maxLength={6}
       autoComplete="one-time-code"
+      aria-label="Authentication code"
       placeholder="000000"
       value={value}
       disabled={disabled}

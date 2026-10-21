@@ -282,6 +282,7 @@ export default function DiscoverCommunities() {
           <input
             autoFocus
             type="text"
+            aria-label="Search communities"
             placeholder="Search Community"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

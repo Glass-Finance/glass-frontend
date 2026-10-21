@@ -81,6 +81,7 @@ export default function UploadMembersTab({
           ref={fileRef}
           type="file"
           accept=".csv"
+          aria-label="Upload members CSV file"
           className="hidden"
           onChange={(e) => handleFile(e.target.files[0])}
         />
@@ -101,6 +102,7 @@ export default function UploadMembersTab({
         <div className="flex gap-2">
           <input
             type="url"
+            aria-label="CSV file URL"
             value={fileUrl}
             onChange={(e) => {
               setFileUrl(e.target.value);

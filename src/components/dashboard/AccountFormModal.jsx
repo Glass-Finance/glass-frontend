@@ -123,11 +123,15 @@ export default function AccountFormModal({
           <div className="space-y-4">
             {/* Row 1 — account number + bank select */}
             <div>
-              <label className="block text-xs text-gray-600 mb-1.5">
+              <label
+                htmlFor="community-bank-account-number"
+                className="block text-xs text-gray-600 mb-1.5"
+              >
                 Community Bank Account Number
               </label>
               <div className="flex gap-3">
                 <input
+                  id="community-bank-account-number"
                   type="text"
                   inputMode="numeric"
                   maxLength={10}
@@ -160,9 +164,15 @@ export default function AccountFormModal({
 
             {/* Row 2 — resolved account name (editable when auto-resolve fails) */}
             <div>
-              <label className="block text-xs text-gray-600 mb-1.5">Account Name</label>
+              <label
+                htmlFor="community-bank-account-name"
+                className="block text-xs text-gray-600 mb-1.5"
+              >
+                Account Name
+              </label>
               <div className="relative">
                 <input
+                  id="community-bank-account-name"
                   type="text"
                   readOnly={!manualMode}
                   value={resolving ? "Verifying account…" : accName}

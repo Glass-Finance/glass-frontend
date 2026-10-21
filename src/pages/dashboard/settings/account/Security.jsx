@@ -629,9 +629,12 @@ export default function Security() {
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-600">Current Password</label>
+            <label htmlFor="current-password" className="text-xs font-medium text-gray-600">
+              Current Password
+            </label>
             <div className="relative">
               <input
+                id="current-password"
                 type={show.current ? "text" : "password"}
                 value={passwords.current}
                 onChange={setPasswordField("current")}
@@ -656,9 +659,12 @@ export default function Security() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">New Password</label>
+              <label htmlFor="new-password" className="text-xs font-medium text-gray-600">
+                New Password
+              </label>
               <div className="relative">
                 <input
+                  id="new-password"
                   type={show.new ? "text" : "password"}
                   value={passwords.new}
                   onChange={setPasswordField("new")}
@@ -681,9 +687,12 @@ export default function Security() {
               <PasswordChecklist password={passwords.new} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Confirm New Password</label>
+              <label htmlFor="confirm-password" className="text-xs font-medium text-gray-600">
+                Confirm New Password
+              </label>
               <div className="relative">
                 <input
+                  id="confirm-password"
                   type={show.confirm ? "text" : "password"}
                   value={passwords.confirm}
                   onChange={setPasswordField("confirm")}

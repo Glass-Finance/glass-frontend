@@ -292,11 +292,15 @@ export default function PaymentProfile() {
 
               {/* Account number + bank */}
               <div className="mb-5">
-                <label className="text-sm text-gray-700 block mb-1.5">
+                <label
+                  htmlFor="onboarding-account-number"
+                  className="text-sm text-gray-700 block mb-1.5"
+                >
                   Community Bank Account Number
                 </label>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <input
+                    id="onboarding-account-number"
                     type="text"
                     maxLength={10}
                     value={accNumber}
@@ -332,9 +336,15 @@ export default function PaymentProfile() {
 
               {/* Resolved account name */}
               <div className="mb-2">
-                <label className="text-sm text-gray-700 block mb-1.5">Account Name</label>
+                <label
+                  htmlFor="onboarding-account-name"
+                  className="text-sm text-gray-700 block mb-1.5"
+                >
+                  Account Name
+                </label>
                 <div className="relative">
                   <input
+                    id="onboarding-account-name"
                     type="text"
                     value={resolving ? "Verifying…" : accName}
                     readOnly={!manualMode}

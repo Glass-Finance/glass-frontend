@@ -69,6 +69,7 @@ export default function MemberPaymentsSection({
         <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-surface-container-border w-full sm:flex-1 sm:min-w-0 sm:max-w-xs focus-within:border-[#002FA7] transition-colors">
           <Search size={12} className="text-gray-400 flex-shrink-0" />
           <input
+            aria-label="Search members and payments"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search members, payments, receipts..."

@@ -371,8 +371,14 @@ export default function OrganizationProfile() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Community Name *</label>
+                <label
+                  htmlFor="community-community-name"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Community Name *
+                </label>
                 <input
+                  id="community-community-name"
                   type="text"
                   name="communityName"
                   value={form.communityName}
@@ -389,8 +395,14 @@ export default function OrganizationProfile() {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Description *</label>
+                <label
+                  htmlFor="community-description"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Description *
+                </label>
                 <input
+                  id="community-description"
                   type="text"
                   name="description"
                   value={form.description}
@@ -432,9 +444,12 @@ export default function OrganizationProfile() {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Community URL slug *</label>
+                <label htmlFor="community-slug" className="text-sm font-medium text-gray-700">
+                  Community URL slug *
+                </label>
                 <div className="relative">
                   <input
+                    id="community-slug"
                     type="text"
                     value={slug}
                     onChange={(e) => {
@@ -481,8 +496,14 @@ export default function OrganizationProfile() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Contact Email *</label>
+                <label
+                  htmlFor="community-contact-email"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Contact Email *
+                </label>
                 <input
+                  id="community-contact-email"
                   type="email"
                   name="contactEmail"
                   value={form.contactEmail}
@@ -503,7 +524,9 @@ export default function OrganizationProfile() {
 
             {/* Logo upload */}
             <div className="flex flex-col gap-1.5 mb-8">
-              <label className="text-sm font-medium text-gray-700">Community Logo</label>
+              <label htmlFor="community-logo" className="text-sm font-medium text-gray-700">
+                Community Logo
+              </label>
               <div
                 onClick={() => fileRef.current?.click()}
                 onDragOver={(e) => {
@@ -518,6 +541,7 @@ export default function OrganizationProfile() {
                   ref={fileRef}
                   type="file"
                   accept="image/png,image/jpeg"
+                  id="community-logo"
                   className="hidden"
                   onChange={(e) => handleFile(e.target.files[0])}
                 />

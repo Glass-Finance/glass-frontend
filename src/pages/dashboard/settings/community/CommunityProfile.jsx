@@ -229,6 +229,7 @@ export default function CommunityProfile() {
             ref={logoInputRef}
             type="file"
             accept="image/png,image/jpeg"
+            aria-label="Community logo"
             className="hidden"
             onChange={(e) => handleLogoSelect(e.target.files[0])}
           />
@@ -245,8 +246,14 @@ export default function CommunityProfile() {
 
         <div className="flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">Community Name</label>
+            <label
+              htmlFor="community-name"
+              className="block text-xs font-medium text-gray-700 mb-1.5"
+            >
+              Community Name
+            </label>
             <input
+              id="community-name"
               type="text"
               name="name"
               value={form.name}
@@ -378,10 +385,14 @@ export default function CommunityProfile() {
               members, payments, and data. This cannot be undone.
             </p>
 
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="delete-community-confirm"
+              className="block text-xs font-medium text-gray-700 mb-1.5"
+            >
               Type <strong>{community?.name}</strong> to confirm
             </label>
             <input
+              id="delete-community-confirm"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               placeholder={community?.name ?? ""}

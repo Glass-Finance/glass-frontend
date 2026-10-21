@@ -93,6 +93,7 @@ export default function BankSelect({
             <Search size={13} className="text-gray-400 flex-shrink-0" />
             <input
               ref={searchRef}
+              aria-label="Search banks"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search banks..."

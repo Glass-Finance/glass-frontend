@@ -17,6 +17,7 @@
     "verify:pwa": "node scripts/verify-pwa-sw.mjs",
     "probe:idempotency": "node scripts/probe-payment-idempotency.mjs",
     "check:landing-sync": "node scripts/check-landing-sync.mjs",
+    "check:input-labels": "node scripts/scan-input-labels.mjs",
     "audit:endpoints": "node scripts/endpoint-audit.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

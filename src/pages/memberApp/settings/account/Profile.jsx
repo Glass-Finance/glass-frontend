@@ -140,6 +140,7 @@ export default function Profile() {
             ref={photoInputRef}
             type="file"
             accept="image/png,image/jpeg,image/webp"
+            aria-label="Profile photo"
             className="hidden"
             onChange={(e) => handlePhotoSelect(e.target.files[0])}
           />
@@ -157,15 +158,21 @@ export default function Profile() {
 
         <div className="border border-surface-container-border bg-white rounded-2xl p-4 flex flex-col gap-3.5">
           <div>
-            <label className="text-xs text-ink-ghost block mb-1.5">First Name</label>
+            <label htmlFor="member-first-name" className="text-xs text-ink-ghost block mb-1.5">
+              First Name
+            </label>
             <TextInput
+              id="member-first-name"
               value={form.firstName}
               onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
             />
           </div>
           <div>
-            <label className="text-xs text-ink-ghost block mb-1.5">Last Name</label>
+            <label htmlFor="member-last-name" className="text-xs text-ink-ghost block mb-1.5">
+              Last Name
+            </label>
             <TextInput
+              id="member-last-name"
               value={form.lastName}
               onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
             />

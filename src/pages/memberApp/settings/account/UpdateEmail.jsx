@@ -153,8 +153,11 @@ export default function UpdateEmail() {
           />
           <div className="px-4">
             <div className="border border-surface-container-border bg-white rounded-2xl p-4">
-              <label className="text-xs text-ink-ghost block mb-1.5">Email Address</label>
+              <label htmlFor="member-update-email" className="text-xs text-ink-ghost block mb-1.5">
+                Email Address
+              </label>
               <TextInput
+                id="member-update-email"
                 type="email"
                 value={email}
                 onChange={(e) => {

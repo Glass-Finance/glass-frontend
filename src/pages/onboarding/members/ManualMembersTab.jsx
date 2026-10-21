@@ -47,6 +47,7 @@ export default function ManualMembersTab({
         ))}
         <input
           type="text"
+          aria-label="Add member email"
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
           onKeyDown={handleEmailKeyDown}
@@ -61,6 +62,7 @@ export default function ManualMembersTab({
       </p>
       <input
         type="text"
+        aria-label="Phone number"
         value={phoneNumbers}
         onChange={(e) => setPhoneNumbers(e.target.value)}
         placeholder="Enter Phone Number"

@@ -209,8 +209,14 @@ function SendNotificationModal({ onClose }) {
 
         {/* Title */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Title</label>
+          <label
+            htmlFor="notification-title"
+            className="block text-xs font-semibold text-gray-700 mb-1.5"
+          >
+            Title
+          </label>
           <input
+            id="notification-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
