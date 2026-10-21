@@ -98,7 +98,7 @@ export default function PhoneOTPStep({ phone, onVerified, onBack }) {
               {digits.slice(0, 3).map((d, i) => (
                 <div
                   key={i}
-                  className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${d || i === activeIndex ? "border-primary" : "border-hairline-disabled"}`}
+                  className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 flex items-center justify-center text-base md:text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-primary" : "border-hairline-disabled"}`}
                 >
                   {d}
                 </div>
@@ -109,7 +109,7 @@ export default function PhoneOTPStep({ phone, onVerified, onBack }) {
                 return (
                   <div
                     key={idx}
-                    className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${d || idx === activeIndex ? "border-primary" : "border-hairline-disabled"}`}
+                    className={`w-10 h-10 md:w-16 md:h-16 flex-shrink-0 flex items-center justify-center text-base md:text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-primary" : "border-hairline-disabled"}`}
                   >
                     {d}
                   </div>

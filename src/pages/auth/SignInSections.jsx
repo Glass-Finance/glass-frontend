@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/Button";
 import AuthLayout from "../../layouts/AuthLayout";
 import { Label, TextInput, PrimaryButton, ErrorMessage } from "../../components/auth/FormFields";
 import OtpBoxes from "../../components/common/OtpBoxes";
+import { renderDashedOtpBoxes } from "../../components/common/renderDashedOtpBoxes";
 
 export function MfaChallengeScreen({
   mfaInputRef,
@@ -171,30 +172,7 @@ export function OtpVerifyScreen({
             length={6}
             autoFocus
             disabled={otpVerifying}
-            renderBoxes={(digits, activeIndex) => (
-              <div className="flex items-center gap-4 justify-center pointer-events-none">
-                {digits.slice(0, 3).map((digit, index) => (
-                  <div
-                    key={index}
-                    className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${digit || index === activeIndex ? "border-primary" : "border-hairline-disabled"}`}
-                  >
-                    {digit}
-                  </div>
-                ))}
-                <span className="text-gray-400 text-lg font-medium px-1 flex-shrink-0">—</span>
-                {digits.slice(3, 6).map((digit, index) => {
-                  const position = index + 3;
-                  return (
-                    <div
-                      key={position}
-                      className={`w-16 h-16 flex-shrink-0 flex items-center justify-center text-lg font-semibold text-gray-900 rounded-lg transition-all border-[1.5px] ${digit || position === activeIndex ? "border-primary" : "border-hairline-disabled"}`}
-                    >
-                      {digit}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            renderBoxes={renderDashedOtpBoxes}
           />
 
           {otpError && <p className="text-sm text-danger text-center -mt-2">{otpError}</p>}
