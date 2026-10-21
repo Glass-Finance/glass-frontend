@@ -204,6 +204,19 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(page.getByText("Your Communities")).toBeVisible();
   });
 
+  test("communities overview drawer lets admins enter a community", async ({ page }) => {
+    await page.goto("/dashboard/home");
+    await page.getByRole("button", { name: "Open menu" }).click();
+
+    await expect(page.getByRole("button", { name: "Close menu" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Your communities" })).toBeVisible();
+    const community = page.getByRole("button", { name: /^Kings College/ });
+    await expect(community).toBeVisible();
+    await community.click();
+
+    await expect(page).toHaveURL(new RegExp(`/dashboard/admin/paying\\?community=${C}`));
+  });
+
   test("filter dropdown, chips and pagination are reachable on the phone", async ({ page }) => {
     await page.goto(`/dashboard/admin?community=${C}`);
     const section = page.locator('[data-tour="member-payments-table"]');

@@ -967,6 +967,75 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
             </div>
           </div>
         )}
+        {onCommunitiesOverview && mobileOpen && (
+          <div className="bg-white w-full md:hidden flex flex-col overflow-hidden">
+            <div className="relative py-1.5 px-4 border-b border-[var(--color-hairline)] flex items-center justify-between gap-2 min-h-11">
+              <h2 className="min-w-0 flex-1 m-0 text-sm font-bold text-black leading-[1.3]">
+                Your Communities
+              </h2>
+              <Button
+                variant="tertiary"
+                size="icon-sm"
+                aria-label="Close menu"
+                title="Close menu"
+                onClick={closeDrawer}
+                className="flex-shrink-0 text-ink/60"
+              >
+                <X size={16} />
+              </Button>
+            </div>
+            <nav
+              aria-label="Your communities"
+              aria-busy={loading || undefined}
+              className="flex-1 py-2.5 px-2 overflow-y-auto"
+            >
+              {loading ? (
+                <div className="space-y-2 p-2" aria-label="Loading communities">
+                  {[0, 1, 2].map((i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-g-1" />
+                  ))}
+                </div>
+              ) : adminCommunities.length === 0 ? (
+                <p className="px-2 py-3 text-sm text-ink-faint">No communities to manage yet.</p>
+              ) : (
+                <div className="space-y-1">
+                  {adminCommunities.map((community) => (
+                    <button
+                      key={community.id}
+                      type="button"
+                      onClick={() => switchToCommunity(community)}
+                      title={community.name}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-g-1 border-none cursor-pointer bg-transparent text-left text-ink-muted hover:bg-surface-sunken"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="flex-shrink-0 w-9 h-9 rounded-g-1 overflow-hidden bg-surface-sunken"
+                      >
+                        <PulseImg
+                          src={community.logo?.url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          skeletonClassName="bg-black/5"
+                          fallback={
+                            <span className="w-full h-full flex items-center justify-center text-brand text-xs font-bold">
+                              {getInitials(community.name)}
+                            </span>
+                          }
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                        {community.name}
+                      </span>
+                      <span className="flex-shrink-0 text-xs text-ink-faint">
+                        {community.owned ? "Owner" : "Admin"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </>
   );
