@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "../../hooks/usePageTitle";
@@ -91,24 +91,6 @@ const memberEmail = (m) => resolveEmail(m);
 // backend-derived definition of "administers this community".
 const isAdminRole = (m) => isCommunityAdmin(m);
 
-function useIsPhoneViewport() {
-  const [isPhone, setIsPhone] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      (window.matchMedia?.("(max-width: 767px)")?.matches ?? window.innerWidth < 768),
-  );
-
-  useEffect(() => {
-    const media = window.matchMedia?.("(max-width: 767px)");
-    if (!media) return;
-    const update = () => setIsPhone(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
-  return isPhone;
-}
-
 function statusStyle(paid, total) {
   if (total === 0) return "bg-[#f5f6fa] text-ink-muted";
   if (paid === total) return "bg-success-wash text-success-strong";
@@ -170,7 +152,6 @@ function FilterPanel({ planOptions, filters, onApply, onClose }) {
 
 export default function Members() {
   usePageTitle("Members");
-  const isPhoneViewport = useIsPhoneViewport();
   const navigate = useNavigate();
   const communityId = useActiveCommunityId();
   const { data: community } = useCommunity(communityId);
@@ -562,96 +543,7 @@ export default function Members() {
             </div>
           )}
 
-          {isPhoneViewport && (
-            <div className="border-t border-gray-100">
-              {isLoading ? (
-                <div className="space-y-3 p-4" aria-label="Loading members">
-                  {[0, 1, 2].map((item) => (
-                    <div
-                      key={item}
-                      className="h-28 animate-pulse rounded-lg bg-surface-sunken"
-                      aria-hidden="true"
-                    />
-                  ))}
-                </div>
-              ) : kycGated ? (
-                <div className="p-4">
-                  <CommunityStaffKycNotice
-                    status={kycGate.status}
-                    subject="your members list"
-                    onVerify={() => setKycWizardOpen(true)}
-                  />
-                </div>
-              ) : error ? (
-                <p className="px-4 py-8 text-center text-sm text-danger">Couldn't load members.</p>
-              ) : filtered.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-gray-500">No members found.</p>
-              ) : (
-                <ul className="m-0 list-none divide-y divide-gray-100 p-0">
-                  {filtered.map((m) => {
-                    const status = statusStyle(m.paidCount, m.totalCount);
-                    return (
-                      <li key={m.id} className="space-y-3 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-2">
-                            <input
-                              type="checkbox"
-                              aria-label={`Select ${memberName(m) || memberEmail(m) || "member"}`}
-                              checked={selected.includes(m.id)}
-                              onChange={() => toggleSelect(m.id)}
-                              className="mt-2"
-                            />
-                            <div className="min-w-0">
-                              <Button
-                                variant="tertiary"
-                                size="sm-tight"
-                                fullWidth={false}
-                                className="max-w-full truncate text-left"
-                                onClick={() =>
-                                  navigate(`/dashboard/members/${m.id}?community=${communityId}`)
-                                }
-                              >
-                                {memberName(m)}
-                              </Button>
-                              <KycStateBadge status={m.kycStatus} />
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline-neutral"
-                            size="sm-tight"
-                            fullWidth={false}
-                            aria-label={`Remove ${memberName(m) || "member"}`}
-                            onClick={() => handleRemove(m)}
-                            className="flex-shrink-0"
-                          >
-                            <UserMinus size={14} /> Remove
-                          </Button>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-gray-600">
-                            {m.planCount} {m.planCount === 1 ? "plan" : "plans"}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status}`}
-                          >
-                            {m.paidCount}/{m.totalCount} Paid
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1 text-sm text-gray-500">
-                          <span className="truncate">{memberEmail(m)}</span>
-                          <span>
-                            Last payment: {m.lastPaymentDate ? formatDate(m.lastPaymentDate) : "—"}
-                          </span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          )}
-
-          <div className={isPhoneViewport ? "hidden" : "overflow-x-auto"}>
+          <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-y border-gray-100 bg-surface-bg">

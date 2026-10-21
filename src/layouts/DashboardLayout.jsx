@@ -26,10 +26,9 @@ export default function DashboardLayout() {
   const [tourOpen, setTourOpen] = useState(false);
   const [tourPromptOpen, setTourPromptOpen] = useState(false);
 
-  // Scoped desktop text/spacing downscale for the dashboard -- see the
-  // html.dashboard-compact rule in index.css. The phone breakpoint retains a
-  // 16px root for legibility; the class is removed on unmount so other routes
-  // are unaffected.
+  // Scoped text/spacing downscale for the dashboard -- see the
+  // html.dashboard-compact rule in index.css. The class is removed on unmount
+  // so other routes are unaffected.
   useEffect(() => {
     document.documentElement.classList.add("dashboard-compact");
     return () => document.documentElement.classList.remove("dashboard-compact");

@@ -105,32 +105,30 @@ community-admin dashboard follows Figma section `1:13185` ("Admin Responsiveness
 which ships three frames — a phone (365×833), a drawer, and a MacBook — under one set of
 rules:
 
-| Part                 | Below `md` (phones)                                                                                                  | `md` and up (desktop)                             |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Nav rail             | `hidden`; 84vw drawer capped at 320px (no rail behind it)                                                            | `hidden md:flex` rail + 220px panel               |
-| Drawer header        | 32×32 community logo + name with role chip beneath + chevron + ✕ close                                               | Community name + Owner/role chip                  |
-| Topbar               | `h-14`, 48×48 burger · page title + truncated community name · 48×48 round bell                                      | `h-14`, community switcher + search + help        |
-| Page header          | Main page h1 hidden; current page and community appear in the topbar                                                 | h1 + subtitle + quick actions                     |
-| Stats grid           | `grid-cols-2`; fifth card spans both columns, 108px cards / compact fifth, `rounded-g-2`, label 12 / value 16 medium | `auto-fit minmax(190px,1fr)`, original 14/20 bold |
-| Section cards        | `rounded-g-2` (8px), `p-3`                                                                                           | `rounded-xl` (12px), original padding             |
-| Payment Plans card   | `bg-brand-100`                                                                                                       | `bg-brand-mist`                                   |
-| Member list          | Stacked cards with name, plan count, payment status, email, last payment, and remove action                          | Seven-column table                                |
-| Your Payments table  | Due Date column hidden (`hidden md:table-cell`)                                                                      | Due Date visible                                  |
-| Search inputs        | `text-base` (stops iOS zoom-on-focus)                                                                                | `text-xs`                                         |
-| Unpaid alert         | Stacks below `sm`; icon 16px                                                                                         | Row layout; icon 26px                             |
-| Filter chips + pager | Visible at every width (client-side list)                                                                            | Same                                              |
+| Part                  | Below `md` (phones)                                                        | `md` and up (desktop)                             |
+| --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
+| Nav rail              | `hidden`; 84vw drawer capped at 320px (no rail behind it)                  | `hidden md:flex` rail + 220px panel               |
+| Drawer header         | 32×32 community logo + name with role chip beneath + chevron + ✕ close     | Community name + Owner/role chip                  |
+| Topbar                | `h-14`, 48×48 burger · 32px Glass mark · 48×48 round bell                  | `h-14`, community switcher + search + help        |
+| Page header           | `hidden md:flex` — the shell already carries community context             | h1 + subtitle + quick actions                     |
+| Stats grid            | `grid-cols-2`, 108px min-height, `rounded-g-2`, label 12 / value 16 medium | `auto-fit minmax(190px,1fr)`, original 14/20 bold |
+| Section cards         | `rounded-g-2` (8px), `p-3`                                                 | `rounded-xl` (12px), original padding             |
+| Payment Plans card    | `bg-brand-100`                                                             | `bg-brand-mist`                                   |
+| Member Payments table | Member · Plan · Amount · Email · Status; Date and Actions hidden           | All seven columns                                 |
+| Your Payments table   | Due Date column hidden (`hidden md:table-cell`)                            | Due Date visible                                  |
+| Search inputs         | `text-base` (stops iOS zoom-on-focus)                                      | `text-xs`                                         |
+| Unpaid alert          | Stacks below `sm`; icon 16px                                               | Row layout; icon 26px                             |
+| Filter chips + pager  | Visible at every width (client-side list)                                  | Same                                              |
 
 **Why radius differs by breakpoint:** Figma draws the phone frame's cards at r=8 and the
 MacBook frame's at r=12 — both on the §1.5 scale. Use `rounded-g-2 md:rounded-xl` rather
 than picking one; do not invent an intermediate. The caution banner's node carries r=2,
 which is off-system; the phone layout uses the nearest on-system value, `rounded-g-1` (4).
 
-**Type is never scaled below the floors in §7.1.** The dashboard's compact root scale is
-desktop-only; phones retain a 16px root so rem-based `text-xs` remains 12px. The phone
-frames use 12px labels and 16px medium values because Figma does, not as a general rule —
-product chrome on desktop keeps its 14/20 scale. Recent Activity body copy is `text-sm`
-(14) at every breakpoint; the mobile frame's 18/400 was rejected as too heavy for a dense
-list.
+**Type is never scaled below the floors in §7.1.** The phone frames shrink labels to 12
+and values to 16 medium because Figma does, not as a general rule — product chrome on
+desktop keeps its 14/20 scale. Recent Activity body copy is `text-sm` (14) at every
+breakpoint; the mobile frame's 18/400 was rejected as too heavy for a dense list.
 
 **The first-run tour is optional.** Show a non-modal prompt with “Take a tour” and “Not
 now”; never open the walkthrough over the dashboard automatically. Keep the tour available

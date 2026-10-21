@@ -155,17 +155,18 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     });
   });
 
-  test("page header is hidden; shell + content stack for the phone frame", async ({ page }) => {
+  test("mobile shell keeps the centered Glass wordmark and stacks dashboard content", async ({
+    page,
+  }) => {
     await page.goto(`/dashboard/admin?community=${C}`);
     await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
-    await expect(page.locator("header").getByText("Dashboard")).toBeVisible();
-    await expect(page.locator("header").getByText("Kings College")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Glass — your communities" })).toBeVisible();
     // The desktop-only h1/subtitle block is display:none below md.
     await expect(page.getByRole("heading", { name: "Dashboard", level: 1 })).toBeHidden();
     await expect(page.getByText("Active Plans")).toBeVisible();
     expect(
       await page.getByText("Active Plans").evaluate((el) => Boolean(el.closest(".col-span-2"))),
-    ).toBe(true);
+    ).toBe(false);
     await expect(page.getByText("Member Payments")).toBeVisible();
     await page.screenshot({ path: test.info().outputPath("admin-mobile-365.png"), fullPage: true });
   });
@@ -214,10 +215,9 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(page.getByRole("button", { name: "Remove Termly Dues filter" })).toBeVisible();
   });
 
-  test("members are presented as actionable cards on the phone", async ({ page }) => {
+  test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
-    await expect(page.getByRole("button", { name: "Remove Ada Admin" })).toBeVisible();
-    await expect(page.getByRole("listitem").getByText("0/1 Paid")).toBeVisible();
-    await expect(page.locator("table")).toBeHidden();
+    await expect(page.locator("table")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove Ada Admin" })).toHaveCount(0);
   });
 });
