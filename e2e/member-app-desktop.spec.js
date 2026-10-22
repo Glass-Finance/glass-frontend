@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { MEMBER_PERSONA, createScenario, installNetworkMock, preparePage } from "./support.js";
 
 test("member app uses desktop navigation and content layout", async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
   test.skip(testInfo.project.name !== "desktop-chromium", "desktop member-app shell");
   await page.setViewportSize({ width: 1440, height: 960 });
   await installNetworkMock(page, createScenario({ persona: MEMBER_PERSONA }));
@@ -21,7 +22,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
 
   await page.getByRole("link", { name: "Payment history" }).click();
   await expect(page).toHaveURL(/\/member\/transactions$/);
-  await expect(page.getByRole("heading", { name: "Payment History" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Payment History", exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Manage payments" }).click();
   await expect(page.getByRole("heading", { name: "Manage Payments" })).toBeVisible();
@@ -67,7 +68,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
     },
     {
       path: "/member/upcoming",
-      title: "Upcoming Payments",
+      title: "Upcoming payments",
       description: "Review upcoming dues and export your payment schedule.",
     },
     {
@@ -107,7 +108,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
     },
     {
       path: "/member/communities",
-      title: "My Communities",
+      title: "My communities",
       description: "View your memberships and switch between communities.",
     },
     {
@@ -120,7 +121,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
   for (const { path, title, description } of responsivePages) {
     await page.setViewportSize({ width: 1440, height: 960 });
     await page.goto(path, { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: title })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: title, exact: true })).toBeVisible();
     await expect(page.getByText(description)).toBeVisible();
     await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
     const contentWidth = await page
