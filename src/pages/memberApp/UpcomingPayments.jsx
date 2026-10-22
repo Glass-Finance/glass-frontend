@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Download, Loader2 } from "lucide-react";
+import { Bell, Check, ChevronDown, Download, Loader2, RefreshCw } from "lucide-react";
 import { usePayments } from "../../hooks/usePayments";
 import PageLoadingState from "../../components/common/PageLoadingState";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
@@ -9,6 +9,7 @@ import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
 import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
+import glassMark from "../../assets/Glass.webp";
 
 const FILTER_OPTIONS = ["All", "Recurring", "One-time"];
 
@@ -113,7 +114,7 @@ export default function UpcomingPayments() {
   }
 
   return (
-    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-none">
       <GlassLogoGlow />
       {/* Header */}
       <MemberPageHeader
@@ -137,7 +138,7 @@ export default function UpcomingPayments() {
         }
       />
 
-      <div className="md:mx-auto md:w-full md:max-w-3xl">
+      <div className="md:w-full">
         {/* Filter */}
         <div className="pt-0 px-4 pb-4 md:px-0">
           <FilterDropdown value={filter} onChange={setFilter} />
@@ -157,27 +158,61 @@ export default function UpcomingPayments() {
               </Button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="border border-surface-container-border bg-white rounded-2xl py-12 px-6 text-center flex flex-col items-center gap-2">
-              <div className="w-[52px] h-[52px] rounded-full bg-brand-mist flex items-center justify-center mb-1">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--color-brand)"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12l5 5 9-9" />
-                </svg>
+            <>
+              <section className="hidden overflow-hidden rounded-g-2 border border-surface-container-border bg-white md:block">
+                <div className="flex min-h-[382px] flex-col items-center px-8 pb-10 pt-14 text-center">
+                  <div className="relative mb-7 h-[92px] w-[100px]">
+                    <img src={glassMark} alt="" className="h-full w-full object-contain" />
+                    <span className="absolute -bottom-2 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-success text-white">
+                      <Check size={19} strokeWidth={2.5} />
+                    </span>
+                  </div>
+                  <h2 className="m-0 text-2xl font-semibold text-ink">You're all caught up</h2>
+                  <p className="mt-2 max-w-[460px] text-base leading-6 text-ink-muted">
+                    Nothing is due right now. When a community adds a payment, it will show up here
+                    with its due date.
+                  </p>
+                  <div className="mt-7 flex items-center gap-3">
+                    <Button variant="outline" size="md" fullWidth={false} onClick={refresh}>
+                      <RefreshCw size={16} />
+                      Check again
+                    </Button>
+                    <Button
+                      variant="outline-neutral"
+                      size="md"
+                      fullWidth={false}
+                      onClick={() => navigate("/member/transactions")}
+                    >
+                      View payment history
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex min-h-[50px] items-center justify-between gap-4 border-t border-surface-container-border bg-surface-sunken/50 px-7 text-sm text-ink-muted">
+                  <span>Last checked just now</span>
+                  <span className="flex items-center gap-1.5">
+                    <Bell size={14} />
+                    Want a heads-up when something is due?{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate("/member/notification-settings")}
+                      className="border-0 bg-transparent p-0 font-semibold text-brand underline underline-offset-2"
+                    >
+                      Turn on notifications
+                    </button>
+                  </span>
+                </div>
+              </section>
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-surface-container-border bg-white px-6 py-12 text-center md:hidden">
+                <div className="mb-1 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand-mist">
+                  <Check size={22} className="text-brand" />
+                </div>
+                <p className="m-0 text-sm font-semibold text-ink-strong">Nothing due right now</p>
+                <p className="m-0 text-[13px] text-ink-faint">You're up to date on all payments.</p>
+                <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
+                  Check again
+                </Button>
               </div>
-              <p className="text-sm font-semibold text-ink-strong m-0">Nothing due right now</p>
-              <p className="text-[13px] text-ink-faint m-0">You're up to date on all payments.</p>
-              <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
-                Check again
-              </Button>
-            </div>
+            </>
           ) : (
             filtered.map((item) => <PaymentRow key={item.id} item={item} onPay={handlePay} />)
           )}
