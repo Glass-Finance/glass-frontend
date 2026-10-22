@@ -19,8 +19,8 @@ const OTP_LENGTH = 6;
 
 export function renderDashedOtpBoxes(boxDigits, activeIndex) {
   return (
-    <div className="mx-auto flex w-full max-w-[300px] items-center justify-between gap-2 pointer-events-none md:max-w-[420px]">
-      <div className="flex flex-1 min-w-0 justify-between">
+    <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-1 pointer-events-none">
+      <div className="flex items-center gap-2">
         {boxDigits.slice(0, 3).map((d, i) => (
           <div
             key={i}
@@ -32,7 +32,7 @@ export function renderDashedOtpBoxes(boxDigits, activeIndex) {
         ))}
       </div>
       <span className="text-gray-400 text-base md:text-xl font-light flex-shrink-0">—</span>
-      <div className="flex flex-1 min-w-0 justify-between">
+      <div className="flex items-center gap-2">
         {boxDigits.slice(3, 6).map((d, i) => {
           const idx = i + 3;
           return (

@@ -39,6 +39,31 @@ describe("renderDashedOtpBoxes", () => {
     expect(screen.getByText("—")).toBeTruthy();
   });
 
+  it("keeps all six boxes together in two fixed groups on narrow screens", () => {
+    render(
+      <OtpBoxes
+        value={["", "", "", "", "", ""]}
+        onChange={() => {}}
+        renderBoxes={renderDashedOtpBoxes}
+      />,
+    );
+    const firstBox = screen.getByLabelText("Digit 1 of 6");
+    const secondBox = screen.getByLabelText("Digit 2 of 6");
+    const thirdBox = screen.getByLabelText("Digit 3 of 6");
+    const fourthBox = screen.getByLabelText("Digit 4 of 6");
+    const fifthBox = screen.getByLabelText("Digit 5 of 6");
+    const sixthBox = screen.getByLabelText("Digit 6 of 6");
+
+    expect(firstBox.parentElement).toBe(secondBox.parentElement);
+    expect(firstBox.parentElement).toBe(thirdBox.parentElement);
+    expect(fourthBox.parentElement).toBe(fifthBox.parentElement);
+    expect(fourthBox.parentElement).toBe(sixthBox.parentElement);
+    expect(firstBox.parentElement.className).toContain("gap-2");
+    expect(firstBox.parentElement.className).not.toContain("flex-1");
+    expect(firstBox.parentElement.parentElement.className).toContain("w-fit");
+    expect(firstBox.parentElement.parentElement.className).toContain("max-w-full");
+  });
+
   it("shows the digits it is handed", () => {
     render(
       <OtpBoxes
