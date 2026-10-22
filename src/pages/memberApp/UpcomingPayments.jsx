@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, ChevronDown, Download, Loader2, RefreshCw } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, Download, Loader2, RefreshCw } from "lucide-react";
 import { usePayments } from "../../hooks/usePayments";
 import PageLoadingState from "../../components/common/PageLoadingState";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
@@ -9,7 +9,6 @@ import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
 import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
-import glassMark from "../../assets/Glass.webp";
 
 const FILTER_OPTIONS = ["All", "Recurring", "One-time"];
 
@@ -118,7 +117,7 @@ export default function UpcomingPayments() {
       <GlassLogoGlow />
       {/* Header */}
       <MemberPageHeader
-        title="Upcoming Payments"
+        title="Upcoming payments"
         description="Review upcoming dues and export your payment schedule."
         onBack={() => navigate(-1)}
         action={
@@ -159,21 +158,21 @@ export default function UpcomingPayments() {
             </div>
           ) : filtered.length === 0 ? (
             <>
-              <section className="hidden overflow-hidden rounded-g-2 border border-surface-container-border bg-white md:block">
-                <div className="flex min-h-[382px] flex-col items-center px-8 pb-10 pt-14 text-center">
-                  <div className="relative mb-7 h-[92px] w-[100px]">
-                    <img src={glassMark} alt="" className="h-full w-full object-contain" />
-                    <span className="absolute -bottom-2 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-success text-white">
-                      <Check size={19} strokeWidth={2.5} />
+              <section className="hidden md:block">
+                <div className="flex min-h-[420px] flex-col items-center px-8 pb-0 pt-14 text-center">
+                  <div className="relative mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
+                    <CalendarDays size={58} strokeWidth={1.7} />
+                    <span className="absolute bottom-[22px] right-[19px] flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#eef1ff] bg-success text-white">
+                      <Check size={16} strokeWidth={2.5} />
                     </span>
                   </div>
-                  <h2 className="m-0 text-2xl font-semibold text-ink">You're all caught up</h2>
-                  <p className="mt-2 max-w-[460px] text-base leading-6 text-ink-muted">
+                  <h2 className="m-0 text-[23px] font-semibold text-ink">You're all caught up</h2>
+                  <p className="mt-2 max-w-[430px] text-[15px] leading-6 text-ink-muted">
                     Nothing is due right now. When a community adds a payment, it will show up here
                     with its due date.
                   </p>
                   <div className="mt-7 flex items-center gap-3">
-                    <Button variant="outline" size="md" fullWidth={false} onClick={refresh}>
+                    <Button size="md" fullWidth={false} onClick={refresh}>
                       <RefreshCw size={16} />
                       Check again
                     </Button>
@@ -186,12 +185,9 @@ export default function UpcomingPayments() {
                       View payment history
                     </Button>
                   </div>
-                </div>
-                <div className="flex min-h-[50px] items-center justify-between gap-4 border-t border-surface-container-border bg-surface-sunken/50 px-7 text-sm text-ink-muted">
-                  <span>Last checked just now</span>
-                  <span className="flex items-center gap-1.5">
-                    <Bell size={14} />
-                    Want a heads-up when something is due?{" "}
+                  <p className="mt-7 flex flex-wrap items-center justify-center gap-1 text-[13px] text-ink-muted">
+                    Last checked just now <span aria-hidden="true">·</span> Want a heads-up when
+                    something is due?{" "}
                     <button
                       type="button"
                       onClick={() => navigate("/member/notification-settings")}
@@ -199,7 +195,7 @@ export default function UpcomingPayments() {
                     >
                       Turn on notifications
                     </button>
-                  </span>
+                  </p>
                 </div>
               </section>
               <div className="flex flex-col items-center gap-2 rounded-2xl border border-surface-container-border bg-white px-6 py-12 text-center md:hidden">

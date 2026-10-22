@@ -2,7 +2,16 @@ import { useState } from "react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import { AlertTriangle, ChevronRight, Loader2, LogOut, MoreVertical, Plus, X } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Loader2,
+  LogOut,
+  MoreVertical,
+  Plus,
+  UsersRound,
+  X,
+} from "lucide-react";
 import { useMyCommunities, useLeaveCommunity } from "../../../../hooks/useMyAccount";
 import { resolveIsPayingAdmin } from "../../../../utils/communityRole";
 import PageLoadingState from "../../../../components/common/PageLoadingState";
@@ -10,7 +19,6 @@ import KycWizardModal from "../../../../components/kyc/KycWizardModal";
 import { Button } from "../../../../components/ui/Button";
 import { useKycGate } from "../../../../hooks/useKycGate";
 import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
-import glassMark from "../../../../assets/Glass.webp";
 
 function getInitials(name = "") {
   return name
@@ -285,7 +293,7 @@ export default function MyCommunities() {
     <div className="relative min-h-screen overflow-hidden pb-10 md:min-h-[calc(100dvh-4rem)]">
       <GlassLogoGlow />
       <MemberPageHeader
-        title="My Communities"
+        title="My communities"
         description="View your memberships and switch between communities."
         onBack={() => goBackInApp(navigate, "/member/settings")}
         action={
@@ -357,10 +365,17 @@ export default function MyCommunities() {
               <div className="h-11 w-11 flex-shrink-0 rounded-xl border-2 border-dashed border-gray-200" />
               <p className="m-0 text-sm text-ink-ghost">You haven't joined any communities yet</p>
             </div>
-            <section className="hidden min-h-[545px] flex-col items-center rounded-g-2 border border-surface-container-border bg-white px-8 pb-10 pt-12 text-center md:flex">
-              <img src={glassMark} alt="" className="mb-4 h-[146px] w-[168px] object-contain" />
-              <h2 className="m-0 text-2xl font-semibold text-ink">You're not in a community yet</h2>
-              <p className="mt-2 max-w-[490px] text-base leading-6 text-ink-muted">
+            <section className="hidden min-h-[545px] flex-col items-center px-8 pb-10 pt-5 text-center md:flex">
+              <div className="relative mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
+                <UsersRound size={52} strokeWidth={1.8} />
+                <span className="absolute right-[-1px] top-[20px] flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
+                  <Plus size={16} strokeWidth={2.5} />
+                </span>
+              </div>
+              <h2 className="m-0 text-[23px] font-semibold text-ink">
+                You're not in a community yet
+              </h2>
+              <p className="mt-2 max-w-[430px] text-[15px] leading-6 text-ink-muted">
                 Communities are how Glass brings your association, club or group together. Start
                 your own, or join one you've been invited to.
               </p>
@@ -378,7 +393,7 @@ export default function MyCommunities() {
                   View invitations
                 </Button>
               </div>
-              <div className="mt-auto grid w-full max-w-[720px] grid-cols-3 gap-8 border-t border-surface-container-border pt-7 text-left">
+              <div className="mt-auto grid w-full max-w-[760px] grid-cols-3 gap-8 border-t border-surface-container-border pt-7 text-left">
                 <div>
                   <p className="m-0 text-sm font-semibold text-ink">Pay dues in one place</p>
                   <p className="mt-1 text-sm leading-5 text-ink-muted">
