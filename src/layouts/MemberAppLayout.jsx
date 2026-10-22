@@ -15,6 +15,7 @@ import InvitePopup from "../components/memberApp/InvitePopup";
 import ProfileAvatar from "../components/memberApp/ProfileAvatar";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../store/AuthContext";
+import { toPascalCaseName } from "../utils/format";
 import { toastSuccess } from "../utils/toast";
 
 const TABS = [
@@ -79,8 +80,9 @@ const DESKTOP_LINKS = [
 
 function MemberDesktopSidebar({ user, isAdmin, onLogout }) {
   const location = useLocation();
-  const name =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Member";
+  const name = toPascalCaseName(
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Member",
+  );
 
   return (
     <aside
