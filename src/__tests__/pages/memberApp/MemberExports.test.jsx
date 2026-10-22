@@ -39,6 +39,20 @@ function clickExport(name) {
 }
 
 describe("member exports", () => {
+  it("renders the desktop payment history empty state", () => {
+    render(
+      <MemoryRouter>
+        <Transactions />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "No Payment History" })).toBeTruthy();
+    expect(
+      screen.getAllByText("Once you make payment, your transaction history will appear here."),
+    ).toHaveLength(2);
+    expect(screen.getByRole("button", { name: /All Status/ })).toBeTruthy();
+  });
+
   it("exports the member's payment history through the shared job runner", () => {
     render(
       <MemoryRouter>

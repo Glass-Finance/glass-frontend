@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Download, Loader2 } from "lucide-react";
+import { ChevronDown, Download, Gift, Loader2 } from "lucide-react";
 import { useTransactions } from "../../hooks/useTransactions";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import PageLoadingState from "../../components/common/PageLoadingState";
@@ -215,30 +215,26 @@ export default function Transactions() {
           </Button>
         </div>
       ) : groups.length === 0 ? (
-        <div className="mx-3 py-12 px-6 text-center flex flex-col items-center gap-2 md:mx-0 md:rounded-2xl md:border md:border-surface-container-border md:bg-white">
-          <div className="w-[52px] h-[52px] rounded-full bg-stacked-container flex items-center justify-center mb-1">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--color-ink-faint)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 12V22H4V12" />
-              <path d="M22 7H2v5h20V7z" />
-              <path d="M12 22V7" />
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-            </svg>
+        <>
+          <section className="hidden min-h-[470px] flex-col items-center px-6 pt-16 text-center md:flex">
+            <div className="mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
+              <Gift size={56} strokeWidth={1.7} />
+            </div>
+            <h2 className="m-0 text-[23px] font-semibold text-ink">No Payment History</h2>
+            <p className="mt-2 max-w-[410px] text-[15px] leading-6 text-ink-muted">
+              Once you make payment, your transaction history will appear here.
+            </p>
+          </section>
+          <div className="mx-3 flex flex-col items-center gap-2 px-6 py-12 text-center md:hidden">
+            <div className="mb-1 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-stacked-container">
+              <Gift size={22} strokeWidth={1.6} className="text-ink-faint" />
+            </div>
+            <p className="m-0 text-base font-medium text-ink">No Payment History</p>
+            <p className="m-0 text-sm font-normal text-ink/60">
+              Once you make payment, your transaction history will appear here.
+            </p>
           </div>
-          <p className="text-base font-medium text-ink m-0">No Payment History</p>
-          <p className="text-sm font-normal text-ink/60 m-0">
-            Once you make payment, your transaction history will appear here.
-          </p>
-        </div>
+        </>
       ) : (
         groups.map(([label, txs]) => (
           <div
