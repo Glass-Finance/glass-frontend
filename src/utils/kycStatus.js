@@ -113,6 +113,22 @@ export function kycStatusLabel(status) {
   return key ? STYLES[key].text : "—";
 }
 
+// Account statuses accepted by the user-level bypass. Attempt-only states
+// (INITIATED/PROCESSING) are not profile statuses; unknown states fail closed.
+const MANUAL_APPROVAL_STATUSES = new Set([
+  "NOT_STARTED",
+  "PENDING",
+  "IN_REVIEW",
+  "REJECTED",
+  "ERROR",
+  "EXPIRED",
+  "REVOKED",
+]);
+
+export function canManuallyApproveKycStatus(status) {
+  return MANUAL_APPROVAL_STATUSES.has(status);
+}
+
 export function kycStatusStyle(status) {
   const key = KEYS[String(status ?? "").toUpperCase()];
   const s = key

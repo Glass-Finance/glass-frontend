@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import UsersSection from "../../../../pages/dashboard/platform-admin/UsersSection";
+vi.mock("../../../../store/AuthContext", () => ({
+  useAuth: () => ({ user: { role: "OPERATIONS_ADMIN" } }),
+}));
 import {
   getAdminUsers,
   suspendUser,

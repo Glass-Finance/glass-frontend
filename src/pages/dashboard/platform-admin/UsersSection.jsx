@@ -1,17 +1,14 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ShieldAlert, ShieldCheck, Users, Trash2, EyeOff } from "lucide-react";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import { Button } from "../../../components/ui/Button";
 import { toTitleCase } from "../../../utils/format";
-import {
-  getAdminUsers,
-  suspendUser,
-  unsuspendUser,
-  markUserForDeletion,
-  anonymizeUser,
-} from "../../../api/admin";
-import { unwrap, pageParams, fmtDateTime } from "./shared";
+import { suspendUser, unsuspendUser, markUserForDeletion, anonymizeUser } from "../../../api/admin";
+import { pageParams, fmtDateTime } from "./shared";
+import { useAdminUsers } from "../../../hooks/useAdminKyc";
+import AdminUserKycActions from "../../../components/dashboard/AdminUserKycActions";
+import { kycStatusLabel } from "../../../utils/kycStatus";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { SectionHeader, SearchBar, FilterSelect, TableShell, TableFooter } from "./SharedUI";
 
@@ -261,12 +258,7 @@ export default function UsersSection() {
     ...(enabledFilter !== "ALL" ? { enabled: enabledFilter === "ACTIVE" } : {}),
   };
 
-  const { data, isLoading, isFetching, error } = useQuery({
-    queryKey: ["admin-users", params],
-    queryFn: () => getAdminUsers(params).then(unwrap),
-    staleTime: 60_000,
-    placeholderData: (p) => p,
-  });
+  const { data, isLoading, isFetching, error } = useAdminUsers(params);
 
   const unsuspend = useMutation({
     mutationFn: (userId) => unsuspendUser(userId),
@@ -341,14 +333,16 @@ export default function UsersSection() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-stacked-container">
-              {["User", "Role", "Status", "Verified", "Last Login", "Communities", ""].map((h) => (
-                <th
-                  key={h}
-                  className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                >
-                  {h}
-                </th>
-              ))}
+              {["User", "Role", "Status", "Verified", "KYC", "Last Login", "Communities", ""].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -394,6 +388,11 @@ export default function UsersSection() {
                   </span>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="text-[11px] text-gray-500">
+                    {u.kycStatus ? kycStatusLabel(u.kycStatus) : "—"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
                   <span className="text-[11px] text-gray-500">{fmtDateTime(u.lastLoginAt)}</span>
                 </td>
                 <td className="px-4 py-3">
@@ -402,7 +401,8 @@ export default function UsersSection() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center justify-end gap-1.5 transition-opacity">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5">
+                    <AdminUserKycActions userId={u.id} user={u} />
                     {u.enabled ? (
                       <Button
                         variant="outline-caution"

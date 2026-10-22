@@ -1,13 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck, User as UserIcon } from "lucide-react";
-import {
-  getAdminKycAttempts,
-  getAdminKycAttempt,
-  decideKyc,
-  revokeKyc,
-  setKycAttemptPolicy,
-} from "../../../api/admin";
+import { decideKyc, setKycAttemptPolicy } from "../../../api/admin";
 import { useDebounce } from "../../../hooks/useDebounce";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import { Button } from "../../../components/ui/Button";
@@ -20,10 +14,17 @@ import {
   TableFooter,
   StatusBadge,
 } from "./SharedUI";
-import { unwrap, pageParams, fmtDateTime } from "./shared";
+import { pageParams, fmtDateTime } from "./shared";
+import {
+  useAdminKycAttempt,
+  useAdminKycAttempts,
+  useInvalidateAdminKyc,
+} from "../../../hooks/useAdminKyc";
+import AdminUserKycActions, {
+  AdminUserKycDialog,
+} from "../../../components/dashboard/AdminUserKycActions";
 import {
   idTypeLabel,
-  isKycApproved,
   isKycInReview,
   KYC_STATUS_FILTER_OPTIONS,
   KYC_ID_TYPE_FILTER_OPTIONS,
@@ -44,21 +45,19 @@ function Row({ label, value }) {
 
 function KycDetailModal({ attemptId, onClose }) {
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState(null); // "APPROVE" | "REJECT" | "REVOKE" | "POLICY" | null
+  const [userAction, setUserAction] = useState(null);
+  const invalidateUserKyc = useInvalidateAdminKyc();
+  const [mode, setMode] = useState(null); // "APPROVE" | "REJECT" | "POLICY" | null
   const [reason, setReason] = useState("");
   const [policyAllowed, setPolicyAllowed] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const detail = useQuery({
-    queryKey: ["admin-kyc-attempt", attemptId],
-    queryFn: () => getAdminKycAttempt(attemptId).then((r) => r.data?.data ?? r.data),
-    staleTime: 0,
-    retry: false,
-  });
+  const detail = useAdminKycAttempt(attemptId);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-kyc-attempts"] });
     queryClient.invalidateQueries({ queryKey: ["admin-kyc-attempt", attemptId] });
+    if (detail.data?.user?.id) invalidateUserKyc(detail.data.user.id);
   };
 
   const decide = useMutation({
@@ -82,24 +81,6 @@ function KycDetailModal({ attemptId, onClose }) {
     },
   });
 
-  const revoke = useMutation({
-    mutationFn: ({ reason: r }) => revokeKyc(detail.data?.user?.id, { reason: r }),
-    onSuccess: () => {
-      invalidate();
-      setMode(null);
-      setReason("");
-    },
-    meta: { successMessage: "KYC revoked" },
-    onError: (err) => {
-      if (err?.response?.status === 409) {
-        invalidate();
-        setFormError("Approval is no longer current — details reloaded.");
-      } else {
-        setFormError(getErrorMessage(err, "Revoke failed."));
-      }
-    },
-  });
-
   const policy = useMutation({
     mutationFn: ({ allowed, reason: r }) =>
       setKycAttemptPolicy(detail.data?.user?.id, { allowed, reason: r }),
@@ -113,7 +94,7 @@ function KycDetailModal({ attemptId, onClose }) {
   });
 
   const d = detail.data;
-  const busy = decide.isPending || revoke.isPending || policy.isPending;
+  const busy = decide.isPending || policy.isPending;
   const evidence = d?.evidence;
   const reviewReasons = evidence?.reviewReasons ?? [];
 
@@ -125,8 +106,19 @@ function KycDetailModal({ attemptId, onClose }) {
       return;
     }
     if (mode === "APPROVE" || mode === "REJECT") decide.mutate({ decision: mode, reason: r });
-    else if (mode === "REVOKE") revoke.mutate({ reason: r });
     else if (mode === "POLICY") policy.mutate({ allowed: policyAllowed, reason: r });
+  }
+
+  // Replace the evidence dialog during a user-level action; do not stack
+  // dialogs or let historical attempt state determine profile eligibility.
+  if (userAction && d?.user?.id) {
+    return (
+      <AdminUserKycDialog
+        userId={d.user.id}
+        action={userAction}
+        onClose={() => setUserAction(null)}
+      />
+    );
   }
 
   return (
@@ -140,7 +132,6 @@ function KycDetailModal({ attemptId, onClose }) {
             <p className="text-[11px] font-semibold text-gray-700 m-0 mb-2">
               {mode === "APPROVE" && "Approve reason"}
               {mode === "REJECT" && "Reject reason"}
-              {mode === "REVOKE" && "Revoke reason"}
               {mode === "POLICY" && "Attempt policy"}
             </p>
             {mode === "POLICY" && (
@@ -164,7 +155,7 @@ function KycDetailModal({ attemptId, onClose }) {
             <div className="flex gap-2 mt-3">
               <Button
                 size="sm"
-                variant={mode === "REJECT" || mode === "REVOKE" ? "danger" : "brand"}
+                variant={mode === "REJECT" ? "danger" : "brand"}
                 loading={busy}
                 onClick={submitReason}
               >
@@ -196,11 +187,7 @@ function KycDetailModal({ attemptId, onClose }) {
                 Reject
               </Button>
             )}
-            {isKycApproved(d.status) && d.user?.id && (
-              <Button size="sm" variant="danger" onClick={() => setMode("REVOKE")}>
-                Revoke
-              </Button>
-            )}
+            {d.user?.id && <AdminUserKycActions userId={d.user.id} onAction={setUserAction} />}
             {d.user?.id && (
               <Button size="sm" variant="secondary" onClick={() => setMode("POLICY")}>
                 Attempt policy
@@ -303,7 +290,7 @@ function KycDetailModal({ attemptId, onClose }) {
               Array.isArray(d.approvalBlockingReasons) &&
               d.approvalBlockingReasons.length > 0 && (
                 <p className="text-[11px] text-danger mb-2">
-                  Approval blocked: {d.approvalBlockingReasons.join(", ")}
+                  Evidence-review approval blocked: {d.approvalBlockingReasons.join(", ")}
                 </p>
               )}
           </>
@@ -332,12 +319,7 @@ export default function KycSection() {
     ...(idType !== "ALL" ? { idType } : {}),
   };
 
-  const { data, isLoading, isFetching, error } = useQuery({
-    queryKey: ["admin-kyc-attempts", params],
-    queryFn: () => getAdminKycAttempts(params).then(unwrap),
-    staleTime: 30_000,
-    placeholderData: (p) => p,
-  });
+  const { data, isLoading, isFetching, error } = useAdminKycAttempts(params);
 
   const items = data?.content ?? [];
 

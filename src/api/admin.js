@@ -88,7 +88,11 @@ export const getAdminKycAttempt = (attemptId) => client.get(`/admin/kyc/attempts
 // decision: "APPROVE" | "REJECT"; reason is user-visible and required.
 export const decideKyc = (attemptId, payload) =>
   client.post(`/admin/kyc/attempts/${attemptId}/decision`, payload);
-// Revoke the user's current APPROVED attempt. payload { reason }.
+// Approve the user's profile regardless of stage/evidence, including no attempt.
+// Permission: platform.kyc.review. payload { reason }.
+export const approveKycBypass = (userId, payload) =>
+  client.post(`/admin/users/${userId}/kyc/approve`, payload);
+// Revoke current profile approval, including approvals without an attempt.
 export const revokeKyc = (userId, payload) =>
   client.post(`/admin/users/${userId}/kyc/revoke`, payload);
 // Enable/disable new attempts. payload { allowed, reason }.
