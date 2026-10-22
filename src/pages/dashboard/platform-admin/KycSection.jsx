@@ -123,6 +123,7 @@ function KycDetailModal({ attemptId, onClose }) {
 
   return (
     <ModalShell
+      size="wide"
       title="KYC attempt"
       subtitle={d?.id ? `Attempt ${d.id.slice(0, 8)}…` : "Loading…"}
       onClose={onClose}
