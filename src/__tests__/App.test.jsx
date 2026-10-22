@@ -6,16 +6,16 @@ import { useAuth } from "../store/AuthContext";
 // App.jsx wires every route, guard, and lazy page boundary but had zero
 // coverage. These tests exercise only critical wiring — a public auth route
 // resolving through Suspense, the catch-all, the admin guard's redirect, the
-// member device gate, and the member auth guard — NOT every rendered page
-// (each page's own behavior belongs to its own test file). Guards' internal
-// decisions are already covered in routes/guards.test.jsx; this pins that
-// App actually mounts them where the comments say it does.
+// responsive member join route, and the member auth guard — NOT every rendered
+// page (each page's own behavior belongs to its own test file). Guards'
+// internal decisions are already covered in routes/guards.test.jsx; this pins
+// that App actually mounts them where the comments say it does.
 vi.mock("../store/AuthContext", () => ({ useAuth: vi.fn() }));
 // GoogleAuthButton needs a real GoogleOAuthProvider to mount.
 vi.mock("../components/auth/GoogleAuthButton", () => ({
   default: () => <div data-testid="google-auth-button" />,
 }));
-// MobileRequired draws a QR onto <canvas>; stubbed to expose the URL it was
+// CheckEmail draws a QR onto <canvas>; stubbed to expose the URL it was
 // given (same approach as CheckEmail.test.jsx).
 vi.mock("../components/common/QRCodeCanvas", () => ({
   default: ({ value }) => <div data-testid="qr-value">{value}</div>,
@@ -116,26 +116,41 @@ describe("App protected route integration", () => {
     ).toBeDefined();
   });
 
-  it("bounces a desktop visitor on a member-app path to the mobile-required screen", async () => {
+  it("keeps the member app behind authentication on desktop", async () => {
     renderAt("/member/home");
 
-    await waitFor(() =>
-      expect(window.location.pathname + window.location.search).toBe(
-        "/member/mobile-required?to=%2Fmember%2Fhome",
-      ),
-    );
-    // The hand-off screen itself resolves (lazy chunk loaded, QR stub fed the
-    // member-home target) rather than crashing on canvas rendering.
+    await waitFor(() => expect(window.location.pathname).toBe("/member/app-sign-in"));
     expect(
-      await screen.findByText(
-        "Scan To Continue On Your Phone",
-        {},
+      await screen.findByText("Sign In To Your Account", {}, { timeout: LAZY_ROUTE_TIMEOUT }),
+    ).toBeDefined();
+  });
+
+  it("renders the responsive member registration form on desktop", async () => {
+    renderAt("/member/join");
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { level: 1, name: "Create Your Account" },
         { timeout: LAZY_ROUTE_TIMEOUT },
       ),
     ).toBeDefined();
   });
 
-  it("lets a mobile device past the device gate, then bounces the signed-out session to member sign-in", async () => {
+  it("redirects old mobile-handoff URLs to their responsive destination", async () => {
+    renderAt("/member/mobile-required?to=%2Fmember%2Fjoin");
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { level: 1, name: "Create Your Account" },
+        { timeout: LAZY_ROUTE_TIMEOUT },
+      ),
+    ).toBeDefined();
+    expect(window.location.pathname).toBe("/member/join");
+  });
+
+  it("bounces a signed-out mobile session to member sign-in", async () => {
     setUA(IPHONE_UA);
     renderAt("/member/home");
 

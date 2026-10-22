@@ -1,10 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Device detection for the member app's mobile-only gating.
+// Device detection for surfaces that intentionally choose a device-specific
+// destination or presentation.
 //
-// Tablets are treated as desktop — the member experience is phone-first,
-// not just "narrow viewport," so a tablet shouldn't slip through a pure
-// width check. User-agent sniffing is the primary signal; viewport width is
-// a fallback for the rare case the UA can't be read.
+// Tablets are treated as desktop. User-agent sniffing is the primary signal;
+// viewport width is a fallback for the rare case the UA can't be read.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getDeviceType() {
@@ -34,41 +33,6 @@ function getDeviceType() {
 
 export function isMobileDevice() {
   return getDeviceType() === "mobile";
-}
-
-// Once MemberDeviceGuard has let someone through as mobile, remember that
-// for the rest of this browser tab. Real phones never need this -- their
-// UA is identical on every reload. It exists because device-emulation
-// tools (Chrome DevTools' device toolbar) don't always reapply their UA
-// override on a hard reload the same way they do on first load, which
-// would otherwise bounce an already-in-progress mobile session to the QR
-// handoff screen on every refresh.
-const MOBILE_SESSION_KEY = "glass_mobile_verified";
-
-export function isMobileSession() {
-  if (isMobileDevice()) {
-    try {
-      sessionStorage.setItem(MOBILE_SESSION_KEY, "1");
-    } catch {
-      /* ignore — storage unavailable, fall through to the live check only */
-    }
-    return true;
-  }
-  // The cached flag alone isn't enough -- once set it never expires for the
-  // rest of the tab, so an admin who tested with device emulation earlier
-  // in this same tab would stay "verified mobile" forever after, even after
-  // switching back to a genuine wide desktop window and navigating there
-  // fresh (e.g. the "Member View" sidebar link). Requiring the viewport to
-  // still be narrow keeps the flag doing its one real job -- surviving a
-  // reload where the UA override didn't reapply but the viewport is still
-  // small -- without also masking an unrelated later desktop visit.
-  const stillNarrow = typeof window !== "undefined" && window.innerWidth < 768;
-  if (!stillNarrow) return false;
-  try {
-    return sessionStorage.getItem(MOBILE_SESSION_KEY) === "1";
-  } catch {
-    return false;
-  }
 }
 
 // Public origin for the app. VITE_APP_URL pins this to the production
@@ -128,10 +92,4 @@ export function goToApp(path, navigate) {
 // e.g. an invite token) so a phone can open it directly after scanning.
 export function buildMobileUrl(path) {
   return `${APP_ORIGIN}${path}`;
-}
-
-// Where to send the "mobile-required" screen so it can render a QR back to
-// wherever the user was actually trying to go.
-export function mobileRequiredPath(targetPath) {
-  return `/member/mobile-required?to=${encodeURIComponent(targetPath)}`;
 }

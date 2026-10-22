@@ -2,12 +2,13 @@
 // (whose off-center knob was itself a real bug fixed separately in each copy
 // before this existed). showLabel adds the "On"/"Off" text some settings
 // rows use next to the switch.
-export default function Toggle({ on, onChange, disabled, showLabel = false }) {
+export default function Toggle({ on, onChange, disabled, showLabel = false, ariaLabel }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
+      aria-label={ariaLabel}
       onClick={() => !disabled && onChange(!on)}
       disabled={disabled}
       className={`flex items-center gap-1.5 flex-shrink-0 bg-transparent border-none p-0 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}

@@ -12,7 +12,7 @@ import { toTitleCase } from "../../../../utils/format";
 import { Button } from "../../../../components/ui/Button";
 import { TextInput } from "../../../../components/ui/TextInput";
 import verifiedBadge from "../../../../assets/icons/verified-badge.webp";
-import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 
 // Only used for the two non-editable "display" boxes below (verified email/
 // phone) -- real text fields (first/last name) use the shared TextInput
@@ -118,16 +118,13 @@ export default function Profile() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Profile</h1>
-      </div>
+      <MemberPageHeader
+        title="Profile"
+        description="Manage your personal details and contact information."
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl">
         <div className="flex flex-col items-center gap-2 mb-5">
           <div className="w-16 h-16 rounded-full bg-brand-mist flex items-center justify-center overflow-hidden">
             {photoSrc ? (

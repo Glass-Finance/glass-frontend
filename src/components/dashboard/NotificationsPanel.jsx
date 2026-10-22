@@ -38,11 +38,8 @@ function resolveCommunity(n, communityMap) {
 //   - a community this user OWNS/ADMINS  → the admin notifications page,
 //     scoped via ?community=, opening this notification's detail view.
 //   - a community this user is only a MEMBER of → the member app's
-//     notifications page. That page is hard-gated to mobile (see
-//     MemberDeviceGuard) same as the rest of the member app; on desktop the
-//     guard itself redirects to the QR hand-off screen rather than a dead
-//     end, the same fallback every other member-app deep link already
-//     relies on — nothing special-cased here.
+//     notifications page, which adapts to desktop and mobile in its shared
+//     member-app layout.
 //   - no resolvable community (an account-level notification, or one whose
 //     community isn't in this user's list at all) → the unscoped admin
 //     notifications page, same as before.

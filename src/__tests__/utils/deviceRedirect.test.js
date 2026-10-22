@@ -1,12 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   isMobileDevice,
-  isMobileSession,
   isMarketingHost,
   isAppHost,
   goToApp,
   buildMobileUrl,
-  mobileRequiredPath,
   APP_ORIGIN,
 } from "../../utils/deviceRedirect";
 
@@ -71,48 +69,6 @@ describe("isMobileDevice", () => {
   });
 });
 
-describe("isMobileSession", () => {
-  beforeEach(() => {
-    sessionStorage.clear();
-  });
-  afterEach(() => {
-    sessionStorage.clear();
-  });
-
-  it("sets the session flag and returns true on a real mobile device", () => {
-    setUA("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)");
-    setWidth(400);
-    expect(isMobileSession()).toBe(true);
-    expect(sessionStorage.getItem("glass_mobile_verified")).toBe("1");
-  });
-
-  it("keeps returning true on a desktop-UA reload as long as the viewport is still narrow and the flag was set", () => {
-    setUA("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)");
-    setWidth(400);
-    isMobileSession(); // sets the flag as a real mobile hit
-
-    setUA("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-    setPointer(false);
-    expect(isMobileSession()).toBe(true);
-  });
-
-  it("stops trusting the cached flag once the viewport is wide again", () => {
-    setUA("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)");
-    setWidth(400);
-    isMobileSession();
-
-    setUA("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-    setWidth(1440);
-    expect(isMobileSession()).toBe(false);
-  });
-
-  it("returns false with no flag set and a non-mobile device", () => {
-    setUA("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-    setWidth(1440);
-    expect(isMobileSession()).toBe(false);
-  });
-});
-
 describe("host detection + navigation", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -133,12 +89,6 @@ describe("host detection + navigation", () => {
     // pin a specific production value that has nothing to do with the
     // prefixing logic itself.
     expect(buildMobileUrl("/member/join?x=1")).toBe(`${APP_ORIGIN}/member/join?x=1`);
-  });
-
-  it("mobileRequiredPath encodes the target path as a query param", () => {
-    expect(mobileRequiredPath("/member/join?community=abc")).toBe(
-      "/member/mobile-required?to=%2Fmember%2Fjoin%3Fcommunity%3Dabc",
-    );
   });
 
   it("isMarketingHost is false on the jsdom test origin, which isn't glasspay.app/www.glasspay.app", () => {

@@ -1,12 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { isMobileDevice, mobileRequiredPath } from "../../utils/deviceRedirect";
 import CTASection from "../common/CTASection";
 
 export default function MembersCTA() {
   const navigate = useNavigate();
 
   function handleJoin() {
-    navigate(isMobileDevice() ? "/member/join" : mobileRequiredPath("/member/join"));
+    navigate("/member/join");
   }
 
   return (

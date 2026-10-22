@@ -135,13 +135,10 @@ function GlobalOverview() {
 
   // This page spans every community the admin belongs to, not one route's
   // worth — so it can't lean on /member/pay/:id the way a single-community
-  // context can. Member-app routes are permanently mobile-gated by
-  // MemberDeviceGuard (never device-gated, always a QR handoff on desktop),
-  // which meant clicking "Pay Now" here from a desktop dashboard bounced to
-  // a "scan this on your phone" screen instead of paying. AdminPaymentModal
-  // (same one AdminDashboard.jsx's paying-admin view already uses) is
-  // desktop-native and takes the exact obligation shape useGlobalOverview
-  // already returns, so no data reshaping is needed.
+  // context can. AdminPaymentModal (same one AdminDashboard.jsx's
+  // paying-admin view already uses) is desktop-native and takes the exact
+  // obligation shape useGlobalOverview already returns, so no data reshaping
+  // is needed.
   function handlePay(o) {
     setPayingItem(o);
   }
@@ -163,11 +160,9 @@ function GlobalOverview() {
           icon={<Clock size={14} className="text-brand" />}
           title="Upcoming Payments"
           badge={upcoming.length}
-          // No desktop-native page exists yet for "my dues across every
-          // community" (only /member/upcoming, which is permanently
-          // mobile-gated) — hiding the footer link rather than pointing it at
-          // Payments.jsx, which is a single active community's admin
-          // payment-plan management view, not a personal cross-community list.
+          // This admin-wide aggregate is not the same data context as a
+          // member's personal upcoming-payments page, so don't offer a
+          // misleading cross-app destination.
           footerLabel={null}
         >
           {isLoading ? (

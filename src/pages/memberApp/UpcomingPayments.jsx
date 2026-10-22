@@ -8,7 +8,7 @@ import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 const FILTER_OPTIONS = ["All", "Recurring", "One-time"];
 
@@ -113,75 +113,75 @@ export default function UpcomingPayments() {
   }
 
   return (
-    <div className="relative overflow-hidden min-h-screen pb-10">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-6 px-5 pb-5">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Upcoming Payments</h1>
-        <Button
-          variant="tertiary"
-          size="icon-sm"
-          onClick={exportCsv}
-          disabled={isExporting}
-          aria-label={isExporting ? "Preparing export" : "Export upcoming payments as CSV"}
-          className="absolute right-5"
-        >
-          {isExporting ? (
-            <Loader2 size={15} className="animate-spin text-ink-strong" />
-          ) : (
-            <Download size={15} className="text-ink-strong" />
-          )}
-        </Button>
-      </div>
+      <MemberPageHeader
+        title="Upcoming Payments"
+        description="Review upcoming dues and export your payment schedule."
+        onBack={() => navigate(-1)}
+        action={
+          <Button
+            variant="tertiary"
+            size="icon-sm"
+            onClick={exportCsv}
+            disabled={isExporting}
+            aria-label={isExporting ? "Preparing export" : "Export upcoming payments as CSV"}
+          >
+            {isExporting ? (
+              <Loader2 size={15} className="animate-spin text-ink-strong" />
+            ) : (
+              <Download size={15} className="text-ink-strong" />
+            )}
+          </Button>
+        }
+      />
 
-      {/* Filter */}
-      <div className="pt-0 px-4 pb-4">
-        <FilterDropdown value={filter} onChange={setFilter} />
-      </div>
+      <div className="md:mx-auto md:w-full md:max-w-3xl">
+        {/* Filter */}
+        <div className="pt-0 px-4 pb-4 md:px-0">
+          <FilterDropdown value={filter} onChange={setFilter} />
+        </div>
 
-      {/* List */}
-      <div className="mx-4 flex flex-col gap-3">
-        {isLoading ? (
-          <div className="border border-surface-container-border bg-white rounded-2xl">
-            <PageLoadingState size={56} padding="36px 24px" />
-          </div>
-        ) : loadError ? (
-          <div className="border border-surface-container-border bg-white rounded-2xl text-center py-5">
-            <p className="text-danger text-sm mt-0 mx-0 mb-2">Couldn't load upcoming payments.</p>
-            <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
-              Try again
-            </Button>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="border border-surface-container-border bg-white rounded-2xl py-12 px-6 text-center flex flex-col items-center gap-2">
-            <div className="w-[52px] h-[52px] rounded-full bg-brand-mist flex items-center justify-center mb-1">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--color-brand)"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12l5 5 9-9" />
-              </svg>
+        {/* List */}
+        <div className="mx-4 flex flex-col gap-3 md:mx-0">
+          {isLoading ? (
+            <div className="border border-surface-container-border bg-white rounded-2xl">
+              <PageLoadingState size={56} padding="36px 24px" />
             </div>
-            <p className="text-sm font-semibold text-ink-strong m-0">Nothing due right now</p>
-            <p className="text-[13px] text-ink-faint m-0">You're up to date on all payments.</p>
-            <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
-              Check again
-            </Button>
-          </div>
-        ) : (
-          filtered.map((item) => <PaymentRow key={item.id} item={item} onPay={handlePay} />)
-        )}
+          ) : loadError ? (
+            <div className="border border-surface-container-border bg-white rounded-2xl text-center py-5">
+              <p className="text-danger text-sm mt-0 mx-0 mb-2">Couldn't load upcoming payments.</p>
+              <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
+                Try again
+              </Button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="border border-surface-container-border bg-white rounded-2xl py-12 px-6 text-center flex flex-col items-center gap-2">
+              <div className="w-[52px] h-[52px] rounded-full bg-brand-mist flex items-center justify-center mb-1">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--color-brand)"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12l5 5 9-9" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-ink-strong m-0">Nothing due right now</p>
+              <p className="text-[13px] text-ink-faint m-0">You're up to date on all payments.</p>
+              <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
+                Check again
+              </Button>
+            </div>
+          ) : (
+            filtered.map((item) => <PaymentRow key={item.id} item={item} onPay={handlePay} />)
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { isMobileDevice, mobileRequiredPath } from "../../utils/deviceRedirect";
 import HowItWorksSection from "../howItWorks/HowItWorksSection";
 
 const steps = [
@@ -33,7 +32,7 @@ export default function MembersHowItWorks() {
   const navigate = useNavigate();
 
   function handleJoin() {
-    navigate(isMobileDevice() ? "/member/join" : mobileRequiredPath("/member/join"));
+    navigate("/member/join");
   }
 
   return <HowItWorksSection steps={steps} onCtaClick={handleJoin} />;

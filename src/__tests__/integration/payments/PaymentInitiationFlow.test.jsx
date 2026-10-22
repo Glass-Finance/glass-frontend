@@ -118,6 +118,7 @@ describe("PaymentSummary payment initiation flow", () => {
 
     const payButton = await screen.findByText("Make Payment");
 
+    fireEvent.click(screen.getByRole("switch", { name: "Save payment method" }));
     fireEvent.click(payButton);
 
     await screen.findByText("Payment failed");

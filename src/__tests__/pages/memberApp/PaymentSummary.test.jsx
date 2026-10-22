@@ -93,6 +93,35 @@ describe("PaymentSummary charge timing", () => {
     );
   });
 
+  it("keeps Auto-Pay off until the member explicitly opts in", async () => {
+    getObligation.mockResolvedValue({
+      data: { data: obligation({ recurringPlan: { frequency: "MONTHLY" } }) },
+    });
+    renderPaymentSummary();
+
+    const autoPaySwitch = await screen.findByRole("switch", {
+      name: "Enable Auto-Pay for this plan",
+    });
+    expect(autoPaySwitch.getAttribute("aria-checked")).toBe("false");
+
+    autoPaySwitch.click();
+    (await screen.findByText("Make Payment")).click();
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0][0].payload.savePaymentMethod).toBe(true);
+  });
+
+  it("labels the displayed amount as community dues and explains fee visibility", async () => {
+    renderPaymentSummary();
+
+    expect(await screen.findByText("Amount due to community:")).toBeDefined();
+    expect(
+      screen.getByText(
+        "This is the amount owed to the community. A platform fee may also apply; the final amount is calculated when payment starts and shown in your receipt.",
+      ),
+    ).toBeDefined();
+  });
+
   it("reuses the same idempotency key after a failed attempt is retried on the same mount", async () => {
     // A successful redirect navigates the page away for real, so the only
     // same-mount retry that actually happens is after a failure -- the

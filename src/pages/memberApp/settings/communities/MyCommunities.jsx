@@ -9,7 +9,7 @@ import PageLoadingState from "../../../../components/common/PageLoadingState";
 import KycWizardModal from "../../../../components/kyc/KycWizardModal";
 import { Button } from "../../../../components/ui/Button";
 import { useKycGate } from "../../../../hooks/useKycGate";
-import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 
 function getInitials(name = "") {
   return name
@@ -158,16 +158,13 @@ export default function MyCommunities() {
   return (
     <div className="relative overflow-hidden pb-10 min-h-screen">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => goBackInApp(navigate, "/member/settings")}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">My Communities</h1>
-      </div>
+      <MemberPageHeader
+        title="My Communities"
+        description="View your memberships and switch between communities."
+        onBack={() => goBackInApp(navigate, "/member/settings")}
+      />
 
-      <div className="pt-0 px-4 pb-4">
+      <div className="pt-0 px-4 pb-4 md:mx-auto md:w-full md:max-w-3xl md:px-0">
         <Button
           onClick={() => {
             kycGate.enforce(() => navigate("/onboarding/choose-path"));
@@ -198,7 +195,7 @@ export default function MyCommunities() {
         historyPath="/member/verify-identity/history"
       />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl md:px-0">
         {isLoading ? (
           <PageLoadingState size={56} padding="36px 24px" />
         ) : communities.length === 0 ? (

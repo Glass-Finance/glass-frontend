@@ -7,7 +7,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Info } from "lucide-react";
 import CloudImage from "../../components/common/CloudImage";
 import StepIndicator from "../../components/onboarding/StepIndicator";
-import { isMobileDevice, mobileRequiredPath } from "../../utils/deviceRedirect";
 import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { useKycGate } from "../../hooks/useKycGate";
@@ -64,17 +63,13 @@ export default function ChoosePath() {
       // 409 "you already have an account" and dead-ends at sign-in instead
       // of actually joining anything. Take them straight to browsing
       // communities to request to join with the account they already have.
-      const target = "/member/communities/search";
-      navigate(isMobileDevice() ? target : mobileRequiredPath(target));
-    } else if (isMobileDevice()) {
-      // /check-email below is a desktop-only handoff (QR + "open the link
-      // on your phone") for reaching /member/join, which is itself gated
-      // to mobile only. Already being on mobile means that detour has
-      // nothing left to hand off to -- go straight to the real join flow,
-      // same as MembersHero.jsx/MembersCTA.jsx's isMobileDevice() check.
-      navigate("/member/join");
+      navigate("/member/communities/search");
     } else {
-      navigate("/check-email", { state: { email } });
+      // This account was just created by the community-owner signup flow.
+      // Preserve the email shortcut to passwordless sign-in, but let the
+      // user complete it on the device they're already using.
+      const target = email ? `/member/join?email=${encodeURIComponent(email)}` : "/member/join";
+      navigate(target);
     }
   };
 

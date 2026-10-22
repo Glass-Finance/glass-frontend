@@ -9,7 +9,7 @@ import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusLabel, transactionStatusStyle } from "../../utils/transactionStatus";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyTransactions } from "../../api/exports";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 const STATUS_OPTIONS = ["All Status", "Success", "Failed", "Pending"];
 
@@ -168,34 +168,32 @@ export default function Transactions() {
   }, [filtered, selectedMonth]);
 
   return (
-    <div className="relative overflow-hidden min-h-screen max-w-[430px] mx-auto pb-10">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-5xl">
       <GlassLogoGlow />
       {/* ── Top bar ── */}
-      <div className="relative pt-6 px-5 pb-4 flex items-center justify-center sticky top-0 z-40">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Payment History</h1>
-        <Button
-          variant="tertiary"
-          size="icon-sm"
-          onClick={exportCsv}
-          disabled={isExporting}
-          aria-label={isExporting ? "Preparing export" : "Export payment history as CSV"}
-          className="absolute right-5"
-        >
-          {isExporting ? (
-            <Loader2 size={15} className="animate-spin text-ink-strong" />
-          ) : (
-            <Download size={15} className="text-ink-strong" />
-          )}
-        </Button>
-      </div>
+      <MemberPageHeader
+        title="Payment History"
+        description="View, filter, and export your past payments."
+        onBack={() => navigate(-1)}
+        action={
+          <Button
+            variant="tertiary"
+            size="icon-sm"
+            onClick={exportCsv}
+            disabled={isExporting}
+            aria-label={isExporting ? "Preparing export" : "Export payment history as CSV"}
+          >
+            {isExporting ? (
+              <Loader2 size={15} className="animate-spin text-ink-strong" />
+            ) : (
+              <Download size={15} className="text-ink-strong" />
+            )}
+          </Button>
+        }
+      />
 
       {/* ── Status + month filters ── */}
-      <div className="pt-0 px-5 pb-3.5 flex gap-2">
+      <div className="pt-0 px-5 pb-3.5 flex gap-2 md:px-0">
         <Dropdown value={statusFilter} options={STATUS_OPTIONS} onChange={setStatusFilter} />
         {monthOptions.length > 0 && (
           <Dropdown
@@ -217,7 +215,7 @@ export default function Transactions() {
           </Button>
         </div>
       ) : groups.length === 0 ? (
-        <div className="mx-3 py-12 px-6 text-center flex flex-col items-center gap-2">
+        <div className="mx-3 py-12 px-6 text-center flex flex-col items-center gap-2 md:mx-0 md:rounded-2xl md:border md:border-surface-container-border md:bg-white">
           <div className="w-[52px] h-[52px] rounded-full bg-stacked-container flex items-center justify-center mb-1">
             <svg
               width="22"
@@ -245,7 +243,7 @@ export default function Transactions() {
         groups.map(([label, txs]) => (
           <div
             key={label}
-            className="bg-surface-container rounded-2xl mx-3 mt-0 mb-3 overflow-hidden"
+            className="bg-surface-container rounded-2xl mx-3 mt-0 mb-3 overflow-hidden md:mx-0"
           >
             <div className="py-3 px-5 flex items-center gap-1.5 border-b border-stacked-container">
               <span className="text-sm font-bold text-[#2563eb]">{label}</span>

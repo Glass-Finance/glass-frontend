@@ -11,7 +11,7 @@ import Toggle from "../../components/common/Toggle";
 import ConfirmSheet from "../../components/memberApp/ConfirmSheet";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { normalizeImageObject } from "../../utils/normalizeImageFields";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 function frequencyLabel(freq) {
   const f = (freq ?? "").toUpperCase();
@@ -243,16 +243,13 @@ export default function ManagePayments() {
     <div className="relative overflow-hidden pb-[60px] min-h-screen">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-[22px] px-5 pb-5">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Manage Payments</h1>
-      </div>
+      <MemberPageHeader
+        title="Manage Payments"
+        description="Review recurring plans and manage auto-pay."
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-4xl md:px-0">
         {/* Filter — hidden while empty per design (there is nothing to filter) */}
         {(isLoading || recurringPlans.length > 0) && (
           <div className="mb-4">

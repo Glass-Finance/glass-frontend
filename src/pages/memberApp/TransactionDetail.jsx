@@ -10,7 +10,7 @@ import ReceiptModal from "../../components/common/ReceiptModal";
 import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusStyle } from "../../utils/transactionStatus";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 function StatusPill({ status }) {
   const { label, ...s } = transactionStatusStyle(status);
@@ -59,17 +59,14 @@ export default function TransactionDetail() {
   }
 
   return (
-    <div className="relative overflow-hidden min-h-screen pb-10 max-w-[430px] mx-auto">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-3xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Transaction Details</h1>
-      </div>
+      <MemberPageHeader
+        title="Transaction Details"
+        description="Review the receipt and details for this payment."
+        onBack={() => navigate(-1)}
+      />
 
       {isLoading ? (
         <PageLoadingState />
@@ -78,7 +75,7 @@ export default function TransactionDetail() {
           <p className="text-sm text-danger">Couldn't load this transaction.</p>
         </div>
       ) : (
-        <div className="py-0 px-4 flex flex-col gap-3">
+        <div className="py-0 px-4 flex flex-col gap-3 md:px-0">
           {/* Amount card */}
           <div className="bg-white rounded-2xl pt-7 px-5 pb-7 border border-surface-container-border flex flex-col items-center gap-3">
             <p className="text-[34px] font-bold text-ink m-0 tracking-[-0.5px]">

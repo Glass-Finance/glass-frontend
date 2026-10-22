@@ -5,7 +5,7 @@ import Toggle from "../../../../components/common/Toggle";
 import { SkeletonRow } from "../../../../components/common/SkeletonUI";
 import { MEMBER_APP_SKELETON_ROW } from "../../../../components/common/skeletonRowPresets";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
-import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 
 function PrefRow({ label, desc, value, onChange, disabled, last = false }) {
   return (
@@ -49,16 +49,13 @@ export default function Notifications() {
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Notifications</h1>
-      </div>
+      <MemberPageHeader
+        title="Notifications"
+        description="Choose which updates you receive and where they appear."
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl">
         {/* Error state */}
         {error && !isLoading && (
           <div className="bg-[#FFF0F0] border border-[#FECACA] rounded-xl py-3.5 px-4 mb-5 flex items-center justify-between">

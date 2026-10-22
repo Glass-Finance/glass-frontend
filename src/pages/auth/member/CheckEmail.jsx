@@ -39,16 +39,30 @@ export default function CheckEmail() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-2 overflow-hidden">
         <div className="w-full max-w-xl flex flex-col items-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-1.5 text-center font-sans">
-            Scan To Join From Your Phone
+            Continue Your Sign-In
           </h1>
           <p className="text-sm text-gray-500 mb-4 text-center">
-            Glass for members is best experienced on mobile!
+            Scan the code to continue on another device, or continue here.
           </p>
 
           <QRCodeCanvas value={joinUrl} size={170} color="#000000" />
 
-          <Button onClick={() => navigate("/")} fullWidth={false} className="w-[170px] mt-4">
-            Continue
+          <Button
+            onClick={() =>
+              navigate(email ? `/member/join?email=${encodeURIComponent(email)}` : "/member/join")
+            }
+            fullWidth={false}
+            className="w-[220px] mt-4"
+          >
+            Continue on this device
+          </Button>
+          <Button
+            variant="tertiary"
+            onClick={() => navigate("/")}
+            fullWidth={false}
+            className="mt-2"
+          >
+            Back to home
           </Button>
         </div>
       </main>

@@ -10,7 +10,7 @@ import { useKycSummary } from "../../../hooks/useKyc";
 import KycStatusBadge from "../../../components/memberApp/KycStatusBadge";
 import KycWizardModal from "../../../components/kyc/KycWizardModal";
 import { kycDisabled } from "../../../lib/flags";
-import { MobileBackButton } from "../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../components/memberApp/MemberPageHeader";
 import {
   IconUserProfile,
   IconSecurity,
@@ -112,17 +112,13 @@ export default function Settings() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4"
-        />
-        {/* Figma draws the title at weight 500, not 600. */}
-        <h1 className="text-lg font-medium text-ink m-0">Settings</h1>
-      </div>
+      <MemberPageHeader
+        title="Settings"
+        description="Manage your account, payment preferences, and communities."
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl md:px-0">
         {sections.map((section) => (
           <div key={section.label} className="mb-5">
             {/* Figma section header: 14px/500 at #000000 @ 0.6. */}

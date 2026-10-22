@@ -11,7 +11,7 @@ import { isKycRequiredError, KYC_ACCEPT_BLOCK_COPY } from "../../utils/kycStatus
 import { getErrorMessage } from "../../utils/errorHandler";
 // Same empty-state illustration the Notifications page's Invites tab uses.
 import invitesEmptyIllustration from "../../assets/memberApp/empty-states/notifications-invites-empty.webp";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 // CommunityJoinRequestStatus has four members; the copy is per-status because
 // "Your request to join is pending" was previously hardcoded for all of them.
@@ -147,19 +147,17 @@ export default function Invites() {
   }
 
   return (
-    <div className="relative overflow-hidden min-h-screen pb-10">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Go back"
-          onClick={() => navigate("/member/home")}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Invitations</h1>
-      </div>
+      <MemberPageHeader
+        title="Invitations"
+        description="Review community invitations and join requests."
+        onBack={() => navigate("/member/home")}
+        backLabel="Go back"
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl md:px-0">
         {staleNotice && (
           <div className="flex items-center gap-2 bg-[#FEF3C7] text-warning text-[12.5px] font-medium py-2.5 px-3 rounded-[10px] mb-3">
             <Info size={14} strokeWidth={2} className="flex-shrink-0" />

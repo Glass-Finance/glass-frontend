@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
-import { isMobileDevice, mobileRequiredPath } from "../../utils/deviceRedirect";
 import { cldUrl } from "../../lib/cloudinary";
 import BlurText from "../ui/BlurText";
 import VariableProximity from "../ui/VariableProximity";
@@ -28,11 +27,8 @@ export default function MembersHero() {
   const sectionRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Joining is a mobile-only flow — on desktop/tablet, hand off via QR
-  // instead of sending the visitor into a registration form built for
-  // a phone screen.
   function handleJoin() {
-    navigate(isMobileDevice() ? "/member/join" : mobileRequiredPath("/member/join"));
+    navigate("/member/join");
   }
 
   useEffect(() => {

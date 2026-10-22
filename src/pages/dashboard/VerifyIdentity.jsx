@@ -3,9 +3,8 @@ import { Button } from "../../components/ui/Button";
 import { ArrowLeft, History } from "lucide-react";
 import useKycFlow from "../../components/kyc/useKycFlow";
 
-// Dashboard-styled identity verification — the desktop counterpart to the
-// member app's /member/verify-identity (which stays behind the mobile-only
-// device gate). Thin chrome wrapper around the shared KYC flow
+// Dashboard-styled identity verification for admins. The member app offers
+// its own responsive /member/verify-identity route. Thin chrome wrapper around the shared KYC flow
 // (useKycFlow): the same stepper/steps/footer the KycWizardModal renders,
 // laid out inline instead of in a modal, so deep links and the modal can't
 // drift apart. The Smile ID state machine itself lives in

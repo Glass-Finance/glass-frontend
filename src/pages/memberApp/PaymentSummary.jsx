@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Landmark, Loader2, Info } from "lucide-react";
+import { Landmark, Loader2 } from "lucide-react";
 import { getObligation, getPaymentLink } from "../../api/members";
 import {
   useManagePayments,
@@ -14,13 +14,13 @@ import {
 import { getErrorMessage } from "../../utils/errorHandler";
 import PageLoadingState from "../../components/common/PageLoadingState";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 import Toggle from "../../components/common/Toggle";
 import { Button } from "../../components/ui/Button";
 import { toastSuccess } from "../../utils/toast";
 import { scheduleCopy, estimateNextCharge } from "../../utils/recurring";
 import { toTitleCase, formatNaira as fmt, formatDate } from "../../utils/format";
 import { paymentsDisabled } from "../../lib/flags";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
 
 function useObligation(obligationId) {
   return useQuery({
@@ -142,10 +142,9 @@ export default function PaymentSummary() {
   // frontend-only choice) silently enrolled every recurring payer in
   // Auto-Pay with no real way to decline, since the consent is created the
   // instant the payment succeeds and can't be selectively revoked
-  // afterward (only by deleting the whole saved card). Defaults to on for
-  // a recurring plan since that's the point of Auto-Pay, but it's a real,
-  // changeable choice now, same as a one-time plan already had.
-  const [saveMethod, setSaveMethod] = useState(true);
+  // afterward (only by deleting the whole saved card). Auto-Pay and
+  // saved-method reuse are opt-in so a payer never enrolls by default.
+  const [saveMethod, setSaveMethod] = useState(false);
   const effectiveSaveMethod = saveMethod;
   // The backend surfaces this as a plain rejection message on submit, with
   // no separate status field to check up front -- detected here so the
@@ -241,15 +240,14 @@ export default function PaymentSummary() {
   const isTestMode = import.meta.env.VITE_TEST_MODE === "true";
 
   return (
-    <div className="relative flex flex-col min-h-screen overflow-hidden max-w-[430px] mx-auto">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col overflow-hidden pb-10 md:max-w-3xl">
       <GlassLogoGlow />
       {/* ── Top bar ── */}
-      <div className="flex items-center px-4 pt-5 pb-4 relative">
-        <MobileBackButton aria-label="Back" onClick={() => navigate(-1)} />
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[16px] font-bold text-gray-900">
-          Payment Summary
-        </h1>
-      </div>
+      <MemberPageHeader
+        title="Payment Summary"
+        description="Review the amount due and payment preferences before continuing."
+        onBack={() => navigate(-1)}
+      />
 
       {/* ── Test mode banner ── */}
       {isTestMode && (
@@ -287,9 +285,9 @@ export default function PaymentSummary() {
         </div>
       )}
 
-      <div className="flex flex-col gap-3 px-4 pt-2">
+      <div className="mx-4 flex flex-col gap-3 px-0 pt-2 md:mx-auto md:w-full md:max-w-2xl md:pt-0">
         {/* ── Card 1: Community + saved method ── */}
-        <div className="bg-surface-container rounded-2xl px-4 py-4">
+        <div className="bg-surface-container rounded-2xl px-4 py-4 md:bg-white md:border md:border-surface-container-border">
           {/* Community row */}
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <div
@@ -337,27 +335,24 @@ export default function PaymentSummary() {
               </p>
             )}
 
-            {/* Automatic Payment — a real, changeable choice for every plan
-                (confirmed with backend: savePaymentMethod is optional at
-                the API level regardless of plan type). Defaults to on for
-                a recurring plan since that's the point of Auto-Pay, but
-                turning it off here means this specific payment won't
-                enroll the card -- there's no way to opt out after paying,
-                since the consent is created the instant this succeeds. */}
+            {/* Saving a method or enabling Auto-Pay is optional for every
+                plan; the member must explicitly opt in before payment. */}
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
-              <span className="flex items-center gap-1.5 text-[12px] text-gray-600">
-                Automatic Payment
-                <span
-                  title={
-                    isRecurring
-                      ? "Save this card and charge it automatically each cycle. Turn off to pay this cycle only."
-                      : "Save this method and reuse it automatically for future payments."
-                  }
-                >
-                  <Info size={12} className="text-gray-400" />
+              <span className="flex flex-col gap-1 text-[12px] text-gray-700 md:flex-1">
+                <span className="font-medium">
+                  {isRecurring ? "Auto-Pay for this plan" : "Save payment method"}
+                </span>
+                <span className="text-[11px] text-gray-500">
+                  {isRecurring
+                    ? "Off by default. Turn on to save this card and charge it automatically each cycle."
+                    : "Off by default. Turn on to save this method for future payments."}
                 </span>
               </span>
-              <Toggle on={saveMethod} onChange={setSaveMethod} />
+              <Toggle
+                on={saveMethod}
+                onChange={setSaveMethod}
+                ariaLabel={isRecurring ? "Enable Auto-Pay for this plan" : "Save payment method"}
+              />
             </div>
           </div>
         </div>
@@ -405,15 +400,19 @@ export default function PaymentSummary() {
               );
             })()}
 
-          {/* The platform fee isn't known until the real charge happens
-              (see handlePay) -- no fee breakdown to show ahead of that. */}
+          {/* The fee is determined by the backend at payment initiation;
+              this amount must not be presented as the all-in total. */}
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-gray-500">Total:</span>
+            <span className="text-[13px] text-gray-500">Amount due to community:</span>
             <span className="text-[15px] font-bold text-gray-900">{fmt(obligation?.amount)}</span>
           </div>
+          <p className="text-[11px] text-gray-500 mt-2 mb-0 leading-relaxed">
+            This is the amount owed to the community. A platform fee may also apply; the final
+            amount is calculated when payment starts and shown in your receipt.
+          </p>
 
           {isRecurring && (
-            <p className="text-[12px] text-gray-400 mt-3 pt-3 border-t border-gray-100 leading-relaxed">
+            <p className="text-[12px] text-gray-500 mt-3 pt-3 border-t border-gray-100 leading-relaxed">
               Today you're paying the current cycle. After that, {fmt(obligation?.amount)} renews{" "}
               {scheduleCopy(obligation.recurringPlan).toLowerCase()} until the plan ends or you turn
               off Auto-Pay in Settings.
