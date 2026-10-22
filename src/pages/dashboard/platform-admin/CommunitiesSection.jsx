@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Check, Building2, SlidersHorizontal, Edit2 } from "lucide-react";
 import ModalShell from "../../../components/dashboard/ModalShell";
@@ -8,6 +8,7 @@ import { getAdminCommunities, setCommissionOverride } from "../../../api/admin";
 import { updateCommunitySettings } from "../../../api/communities";
 import { fmtDate, unwrap, pageParams, withSafeCommunityLogos } from "./shared";
 import { getErrorMessage } from "../../../utils/errorHandler";
+import { formatJson } from "../../../utils/formatJson";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
   StatusBadge,
@@ -18,17 +19,15 @@ import {
   TableFooter,
 } from "./SharedUI";
 
+const JsonEditor = lazy(() => import("../../../components/ui/JsonEditor"));
+
 function CommissionModal({ community, onClose }) {
   const queryClient = useQueryClient();
   const [useDefault, setUseDefault] = useState(community.commissionSchedule == null);
   const [scheduleJson, setScheduleJson] = useState(() => {
     if (community.commissionSchedule == null) return "";
-    try {
-      return JSON.stringify(JSON.parse(community.commissionSchedule), null, 2);
-    } catch {
-      // Keep unreadable content editable rather than silently replacing it.
-      return community.commissionSchedule;
-    }
+    // Keep unreadable content editable rather than silently replacing it.
+    return formatJson(community.commissionSchedule) ?? community.commissionSchedule;
   });
   const [error, setError] = useState("");
 
@@ -79,32 +78,31 @@ function CommissionModal({ community, onClose }) {
 
         {!useDefault && (
           <div>
-            <label
-              htmlFor="commission-schedule"
-              className="block text-xs font-medium text-gray-700 mb-1.5"
-            >
-              Commission schedule (JSON)
-            </label>
-            <textarea
-              id="commission-schedule"
-              rows={12}
-              value={scheduleJson}
-              onChange={(e) => {
-                setScheduleJson(e.target.value);
-                setError("");
-              }}
-              spellCheck={false}
-              autoCapitalize="off"
-              aria-invalid={Boolean(error)}
-              aria-describedby={
-                error
-                  ? "commission-schedule-help commission-schedule-error"
-                  : "commission-schedule-help"
+            <Suspense
+              fallback={
+                <p role="status" className="text-sm text-gray-500">
+                  Loading editor…
+                </p>
               }
-              className="block w-full min-w-0 max-h-[45vh] resize-y rounded-g-1 border border-outline-input/40 px-4 py-3 font-mono text-sm text-gray-800 outline-none transition-colors focus:border-brand"
-            />
+            >
+              <JsonEditor
+                id="commission-schedule"
+                label="Commission schedule (JSON)"
+                value={scheduleJson}
+                onChange={(value) => {
+                  setScheduleJson(value);
+                  setError("");
+                }}
+                invalid={Boolean(error)}
+                describedBy={
+                  error
+                    ? "commission-schedule-help commission-schedule-error"
+                    : "commission-schedule-help"
+                }
+              />
+            </Suspense>
             <p id="commission-schedule-help" className="text-xs text-gray-500 mt-2">
-              Enter the community’s pricing schedule as a JSON object.
+              Enter a JSON object. Valid JSON formats automatically as you type.
             </p>
           </div>
         )}

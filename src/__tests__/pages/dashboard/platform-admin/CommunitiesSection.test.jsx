@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from "vitest";
+import { act, render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { EditorView } from "@uiw/react-codemirror";
 import CommunitiesSection from "../../../../pages/dashboard/platform-admin/CommunitiesSection";
 import { getAdminCommunities, setCommissionOverride } from "../../../../api/admin";
 import { updateCommunitySettings } from "../../../../api/communities";
@@ -19,6 +20,30 @@ vi.mock("../../../../api/communities", async (importOriginal) => ({
   ...(await importOriginal()),
   updateCommunitySettings: vi.fn(),
 }));
+
+// CodeMirror measures text layout; jsdom has no layout engine.
+beforeAll(() => {
+  Range.prototype.getClientRects ??= () => [];
+  Range.prototype.getBoundingClientRect ??= () => ({
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+  });
+});
+
+function scheduleView() {
+  return EditorView.findFromDOM(
+    screen.getByRole("textbox", { name: "Commission schedule (JSON)" }),
+  );
+}
+
+function setSchedule(value) {
+  const view = scheduleView();
+  act(() => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } }));
+}
 
 function page(content) {
   return { data: { data: { content, totalElements: content.length, totalPages: 1 } } };
@@ -122,9 +147,8 @@ describe("CommunitiesSection — commission override", () => {
     renderSection();
     fireEvent.click(await screen.findByRole("button", { name: "Commission" }));
     fireEvent.click(screen.getByLabelText("Use platform default"));
-    fireEvent.change(screen.getByLabelText("Commission schedule (JSON)"), {
-      target: { value: JSON.stringify(schedule) },
-    });
+    await screen.findByRole("textbox", { name: "Commission schedule (JSON)" });
+    setSchedule(JSON.stringify(schedule));
     submitOpenModal();
     await waitFor(() => expect(setCommissionOverride).toHaveBeenCalledWith("kca", { schedule }));
   });
@@ -144,9 +168,8 @@ describe("CommunitiesSection — commission override", () => {
     renderSection();
     fireEvent.click(await screen.findByRole("button", { name: "Commission" }));
     expect(screen.getByLabelText("Use platform default").checked).toBe(false);
-    expect(screen.getByLabelText("Commission schedule (JSON)").value).toBe(
-      JSON.stringify(schedule, null, 2),
-    );
+    await screen.findByRole("textbox", { name: "Commission schedule (JSON)" });
+    expect(scheduleView().state.doc.toString()).toBe(JSON.stringify(schedule, null, 2));
     submitOpenModal();
     await waitFor(() => expect(setCommissionOverride).toHaveBeenCalledWith("kca", { schedule }));
   });
@@ -155,7 +178,8 @@ describe("CommunitiesSection — commission override", () => {
     getAdminCommunities.mockResolvedValue(page([{ ...community, commissionSchedule: "not-json" }]));
     renderSection();
     fireEvent.click(await screen.findByRole("button", { name: "Commission" }));
-    expect(screen.getByLabelText("Commission schedule (JSON)").value).toBe("not-json");
+    await screen.findByRole("textbox", { name: "Commission schedule (JSON)" });
+    expect(scheduleView().state.doc.toString()).toBe("not-json");
     submitOpenModal();
     expect(screen.getByRole("alert").textContent).toContain("Enter valid JSON");
     expect(setCommissionOverride).not.toHaveBeenCalled();
@@ -165,7 +189,8 @@ describe("CommunitiesSection — commission override", () => {
     renderSection();
     fireEvent.click(await screen.findByRole("button", { name: "Commission" }));
     fireEvent.click(screen.getByLabelText("Use platform default"));
-    fireEvent.change(screen.getByLabelText("Commission schedule (JSON)"), { target: { value } });
+    await screen.findByRole("textbox", { name: "Commission schedule (JSON)" });
+    setSchedule(value);
     submitOpenModal();
     expect(screen.getByRole("alert").textContent).toContain("JSON object");
     expect(setCommissionOverride).not.toHaveBeenCalled();
@@ -197,12 +222,12 @@ describe("CommunitiesSection — commission override", () => {
     renderSection();
     fireEvent.click(await screen.findByRole("button", { name: "Commission" }));
     fireEvent.click(screen.getByLabelText("Use platform default"));
-    fireEvent.change(screen.getByLabelText("Commission schedule (JSON)"), {
-      target: { value: '{"bands":[]}' },
-    });
+    await screen.findByRole("textbox", { name: "Commission schedule (JSON)" });
+    setSchedule('{"bands":[]}');
     submitOpenModal();
     expect(await screen.findByText("Invalid pricing schedule")).toBeDefined();
-    expect(screen.getByLabelText("Commission schedule (JSON)").value).toBe('{"bands":[]}');
+    await screen.findByRole("textbox", { name: "Commission schedule (JSON)" });
+    expect(scheduleView().state.doc.toString()).toBe('{"bands":[]}');
   });
 
   it("cancels without saving", async () => {

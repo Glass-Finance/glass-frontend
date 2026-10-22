@@ -41,7 +41,9 @@ PATCH accepts `{ schedule: <object> }` or `{ schedule: null }` to clear it. Ther
 top-level `commissionRate` or `commissionCapMinor` response fields. The editor uses JSON
 while the pricing structure is still being decided: it checks for valid JSON objects,
 preserves schedule properties and values without unit conversion, and leaves pricing-rule
-validation to the backend. Verified against the live OpenAPI schema and backend
+validation to the backend. Its code editor highlights JSON syntax, marks parse errors,
+and formats valid JSON after a typing pause or with the Format button. Incomplete JSON
+is left untouched. Verified against the live OpenAPI schema and backend
 `CommunityCoreServiceImpl` on 2026-10-22.
 
 ## Residual follow-up
