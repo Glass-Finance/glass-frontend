@@ -93,6 +93,9 @@
   --animate-slideInUp: slideInUp 0.8s ease-out forwards;
   --animate-scaleIn: scaleIn 0.6s ease-out forwards;
   --animate-float: float 3s ease-in-out infinite;
+  --animate-lock-drop: lock-drop 3.6s infinite;
+  --animate-lock-slide: lock-slide 3.6s infinite;
+  --animate-lock-glint: lock-glint 3.6s infinite;
 
   /* Problem sections — durations/fill modes paired with the hand-written
      keyframes further down this file. Referenced from the JSX as
@@ -589,6 +592,89 @@ body {
 }
 
 /* Keyframe Animations */
+@keyframes lock-drop {
+  0% {
+    transform: translateY(-80%);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  5% {
+    opacity: 1;
+  }
+  22% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+  25% {
+    transform: translateY(5%);
+    animation-timing-function: ease-in-out;
+  }
+  28% {
+    transform: translateY(0);
+  }
+  90% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes lock-slide {
+  0%,
+  26% {
+    transform: translateX(77%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  44% {
+    transform: translateX(0);
+    animation-timing-function: ease-in-out;
+  }
+  46% {
+    transform: translateX(-4%);
+  }
+  48% {
+    transform: translateX(0);
+  }
+  90% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes lock-glint {
+  0%,
+  50% {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+    opacity: 0;
+  }
+  51% {
+    opacity: 1;
+  }
+  76% {
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+    opacity: 1;
+  }
+  77%,
+  100% {
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+    opacity: 0;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
