@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useEscapeToClose } from "../../../../hooks/useKeyboardShortcuts";
 import {
   Search,
@@ -15,6 +15,9 @@ import { useSystemConfigs } from "../../../../hooks/useSystemConfigs";
 import { useDebounce } from "../../../../hooks/useDebounce";
 import LoadingState from "../../../../components/common/LoadingState";
 import { Button } from "../../../../components/ui/Button";
+import { formatJson } from "../../../../utils/formatJson";
+
+const JsonEditor = lazy(() => import("../../../../components/ui/JsonEditor"));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -71,16 +74,31 @@ function ValueCell({ value, valueType }) {
 // ─── Edit Modal ───────────────────────────────────────────────────────────────
 
 function EditModal({ config, onClose, onSave, isSaving }) {
-  const [form, setForm] = useState({
-    value: config.value ?? "",
+  const isJson = config.valueType === "JSON";
+  const [form, setForm] = useState(() => ({
+    value: isJson ? (formatJson(config.value ?? "") ?? config.value ?? "") : (config.value ?? ""),
     name: config.name ?? "",
     description: config.description ?? "",
-  });
+  }));
+  const [valueError, setValueError] = useState("");
 
   useEscapeToClose(onClose);
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (isJson) {
+      try {
+        const parsed = JSON.parse(form.value);
+        if (parsed == null || typeof parsed !== "object") {
+          setValueError("Enter a JSON object or array.");
+          return;
+        }
+      } catch {
+        setValueError("Enter valid JSON before saving.");
+        return;
+      }
+    }
+    setValueError("");
     onSave(form);
   }
 
@@ -93,9 +111,9 @@ function EditModal({ config, onClose, onSave, isSaving }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-surface-bg rounded-2xl w-full max-w-md shadow-2xl border border-surface-container-border">
+      <div className="bg-surface-bg rounded-2xl w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden shadow-2xl border border-surface-container-border">
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
           <div>
             <h2 className="text-sm font-bold text-gray-900">Edit Configuration</h2>
             <p className="text-[11px] text-gray-400 mt-0.5 font-mono">{config.key}</p>
@@ -111,79 +129,121 @@ function EditModal({ config, onClose, onSave, isSaving }) {
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
-          {/* Meta info row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <CategoryBadge category={config.category} />
-            <EnvBadge environment={config.environment} />
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stacked-container text-ink-muted">
-              {config.valueType}
-            </span>
-          </div>
+        <form onSubmit={handleSubmit} className="min-h-0 flex flex-col">
+          <div className="min-h-0 overflow-y-auto px-6 pt-5 pb-1 flex flex-col gap-4">
+            {/* Meta info row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <CategoryBadge category={config.category} />
+              <EnvBadge environment={config.environment} />
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stacked-container text-ink-muted">
+                {config.valueType}
+              </span>
+            </div>
 
-          {/* Value */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Value</label>
-            {isBool ? (
-              <div className="flex gap-2">
-                {["true", "false"].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, value: v }))}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                      form.value === v
-                        ? "bg-brand text-white border-brand"
-                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <input
-                type={config.valueType === "NUMBER" ? "number" : "text"}
-                aria-label={`${config.label ?? "Config"} value`}
-                value={form.value}
-                onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
-                placeholder={`Enter ${(config.valueType ?? "value").toLowerCase()}…`}
-              />
+            {/* Value */}
+            <div>
+              {!isJson && (
+                <span className="block text-xs font-semibold text-gray-700 mb-1.5">Value</span>
+              )}
+              {isJson ? (
+                <Suspense
+                  fallback={
+                    <p role="status" className="text-sm text-gray-500">
+                      Loading editor…
+                    </p>
+                  }
+                >
+                  <JsonEditor
+                    id="system-config-json-value"
+                    label="Value (JSON)"
+                    value={form.value}
+                    onChange={(value) => {
+                      setForm((previous) => ({ ...previous, value }));
+                      setValueError("");
+                    }}
+                    invalid={Boolean(valueError)}
+                    describedBy={
+                      valueError
+                        ? "system-config-json-help system-config-json-error"
+                        : "system-config-json-help"
+                    }
+                  />
+                  <p id="system-config-json-help" className="text-xs text-gray-500 mt-2">
+                    Enter a JSON object or array. Valid JSON formats automatically as you type.
+                  </p>
+                </Suspense>
+              ) : isBool ? (
+                <div className="flex gap-2">
+                  {["true", "false"].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, value: v }))}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        form.value === v
+                          ? "bg-brand text-white border-brand"
+                          : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <input
+                  type={config.valueType === "NUMBER" ? "number" : "text"}
+                  aria-label={`${config.label ?? "Config"} value`}
+                  value={form.value}
+                  onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+                  className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
+                  placeholder={`Enter ${(config.valueType ?? "value").toLowerCase()}…`}
+                />
+              )}
+            </div>
+
+            {valueError && (
+              <p id="system-config-json-error" role="alert" className="text-sm text-danger">
+                {valueError}
+              </p>
             )}
-          </div>
 
-          {/* Name */}
-          <div>
-            <label
-              htmlFor="system-config-display-name"
-              className="block text-xs font-semibold text-gray-700 mb-1.5"
-            >
-              Display Name
-            </label>
-            <input
-              id="system-config-display-name"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
-              placeholder="Human-readable label"
-            />
-          </div>
+            {/* Name */}
+            <div>
+              <label
+                htmlFor="system-config-display-name"
+                className="block text-xs font-semibold text-gray-700 mb-1.5"
+              >
+                Display Name
+              </label>
+              <input
+                id="system-config-display-name"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
+                placeholder="Human-readable label"
+              />
+            </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Description</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={3}
-              className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors resize-none border border-hairline-strong focus:border-brand"
-              placeholder="What does this configuration control?"
-            />
+            {/* Description */}
+            <div>
+              <label
+                htmlFor="system-config-description"
+                className="block text-xs font-semibold text-gray-700 mb-1.5"
+              >
+                Description
+              </label>
+              <textarea
+                id="system-config-description"
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                rows={3}
+                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors resize-none border border-hairline-strong focus:border-brand"
+                placeholder="What does this configuration control?"
+              />
+            </div>
           </div>
-
           {/* Actions */}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 px-6 pt-4 pb-5 shrink-0">
             <Button
               type="button"
               variant="outline-neutral"
