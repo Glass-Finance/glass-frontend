@@ -34,10 +34,10 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => navigateSpy };
 });
 
-function mockPayments({ upcoming = [], history = [] } = {}) {
+function mockPayments({ nextDue = null, upcoming = [], history = [] } = {}) {
   usePayments.mockReturnValue({
     data: {
-      nextDue: null,
+      nextDue,
       upcoming,
       history,
       community: { name: "Kings College Alumni", slug: "kca" },
@@ -132,5 +132,44 @@ describe('Home\'s Upcoming Payments / Payment History "See All" links', () => {
 
     seeAllLinks[0].click();
     expect(navigateSpy).toHaveBeenCalledWith("/member/transactions");
+  });
+});
+
+describe("Home desktop overview", () => {
+  it("shows the next due payment and total remaining balance from upcoming payments", () => {
+    mockPayments({
+      nextDue: {
+        id: "p1",
+        type: "one-time",
+        amount: 1000,
+        amountPaid: 0,
+        name: "Museum Tour",
+        dueDate: "2026-09-03",
+      },
+      upcoming: [
+        {
+          id: "p1",
+          type: "one-time",
+          amount: 1000,
+          amountPaid: 0,
+          name: "Museum Tour",
+          dueDate: "2026-09-03",
+        },
+        {
+          id: "p2",
+          type: "recurring",
+          amount: 3000,
+          amountPaid: 0,
+          name: "Writer commission",
+          dueDate: "2026-09-17",
+        },
+      ],
+    });
+    renderHome();
+
+    expect(screen.getByText("Total outstanding")).toBeDefined();
+    expect(screen.getByText("₦4,000")).toBeDefined();
+    expect(screen.getByText("Museum Tour · One-time")).toBeDefined();
+    expect(screen.getByText("Also coming up")).toBeDefined();
   });
 });
