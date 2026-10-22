@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Check, Building2, SlidersHorizontal, Edit2 } from "lucide-react";
+import { Loader2, Building2, SlidersHorizontal, Edit2 } from "lucide-react";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import Toggle from "../../../components/common/Toggle";
 import { Button } from "../../../components/ui/Button";
@@ -123,11 +123,7 @@ function CommissionModal({ community, onClose }) {
             fullWidth={false}
             className="flex-1"
           >
-            {mutation.isPending ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Check size={12} />
-            )}
+            {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
             {mutation.isPending ? "Saving…" : "Save"}
           </Button>
         </div>
@@ -201,11 +197,7 @@ function CommunitySettingsModal({ community, onClose }) {
             fullWidth={false}
             className="flex-1"
           >
-            {mutation.isPending ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Check size={12} />
-            )}
+            {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
             {mutation.isPending ? "Saving…" : "Save"}
           </Button>
         </div>
