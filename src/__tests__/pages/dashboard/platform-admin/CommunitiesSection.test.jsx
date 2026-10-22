@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { EditorView } from "@uiw/react-codemirror";
 import CommunitiesSection from "../../../../pages/dashboard/platform-admin/CommunitiesSection";
 import { getAdminCommunities, setCommissionOverride } from "../../../../api/admin";
-import { updateCommunitySettings } from "../../../../api/communities";
+import { getCommunity, updateCommunitySettings } from "../../../../api/communities";
 
 // Platform-admin community controls: the commission-override payload
 // (a schedule object vs explicit null for platform default)
@@ -18,6 +18,7 @@ vi.mock("../../../../api/admin", async (importOriginal) => ({
 }));
 vi.mock("../../../../api/communities", async (importOriginal) => ({
   ...(await importOriginal()),
+  getCommunity: vi.fn(),
   updateCommunitySettings: vi.fn(),
 }));
 
@@ -84,6 +85,27 @@ function submitOpenModal() {
 
 beforeEach(() => {
   getAdminCommunities.mockResolvedValue(page([community]));
+  getCommunity.mockResolvedValue({
+    data: {
+      data: {
+        ...community,
+        name: "KCA Alumni updated",
+        description: "Fresh community profile",
+        category: ["ALUMNI"],
+        contactEmail: "community@example.com",
+        contactPhone: "+2348012345678",
+        publicVisible: true,
+        requiresMemberApproval: true,
+        metrics: {
+          totalMembers: 237,
+          activeMembers: 210,
+          collectedAmount: 123456.78,
+          outstandingAmount: 0,
+          currency: "NGN",
+        },
+      },
+    },
+  });
 });
 
 afterEach(() => {
@@ -116,6 +138,126 @@ describe("CommunitiesSection — rendering", () => {
     expect(row.textContent).toContain("ACTIVE");
     expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Commission" })).toBeTruthy();
+  });
+});
+
+describe("CommunitiesSection — details", () => {
+  it("moves focus into the dialog and restores it when closed", async () => {
+    renderSection();
+    const trigger = await screen.findByRole("button", { name: "View details for KCA Alumni" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    const dialog = await screen.findByRole("dialog", { name: "Community details" });
+    expect(document.activeElement).toBe(dialog);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("uses the community ID when no slug is supplied", async () => {
+    getAdminCommunities.mockResolvedValue(page([{ ...community, slug: null }]));
+    renderSection();
+    fireEvent.click(await findRow());
+    await screen.findByText("Fresh community profile");
+    expect(getCommunity).toHaveBeenCalledWith("comm-1");
+  });
+
+  it("rejects unsafe server logo URLs before displaying them", async () => {
+    getCommunity.mockResolvedValue({
+      data: { data: { ...community, logo: { url: "javascript:alert(1)" } } },
+    });
+    renderSection();
+    fireEvent.click(await findRow());
+    await screen.findByText("Community ID");
+    expect(document.querySelector('img[src^="javascript:"]')).toBeNull();
+  });
+
+  it("can retry a failed detail request", async () => {
+    getCommunity.mockRejectedValueOnce(new Error("Offline"));
+    renderSection();
+    fireEvent.click(await findRow());
+    fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
+    expect(await screen.findByText("Fresh community profile")).toBeDefined();
+    expect(getCommunity).toHaveBeenCalledTimes(2);
+  });
+
+  it("refreshes details after a commission update", async () => {
+    setCommissionOverride.mockResolvedValue({});
+    renderSection();
+    fireEvent.click(await findRow());
+    await screen.findByText("Fresh community profile");
+    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.click(screen.getByRole("button", { name: "Commission", exact: true }));
+    submitOpenModal();
+    await waitFor(() => expect(screen.queryByText("Commission Override")).toBeNull());
+    fireEvent.click(await findRow());
+    await waitFor(() => expect(getCommunity).toHaveBeenCalledTimes(2));
+  });
+
+  it("fetches fresh details only after the community row is clicked", async () => {
+    renderSection();
+    const row = await findRow();
+    expect(getCommunity).not.toHaveBeenCalled();
+    fireEvent.click(row);
+    expect(await screen.findByText("community@example.com")).toBeDefined();
+    expect(getCommunity).toHaveBeenCalledWith("kca");
+    expect(screen.getByText("Fresh community profile")).toBeDefined();
+    expect(screen.getByText("237")).toBeDefined();
+    expect(screen.getByText("₦123,456.78")).toBeDefined();
+    expect(screen.getByText("₦0.00")).toBeDefined();
+    expect(screen.getByText("+2348012345678")).toBeDefined();
+  });
+
+  it("provides a keyboard-accessible details button in the community row", async () => {
+    renderSection();
+    fireEvent.click(await screen.findByRole("button", { name: "View details for KCA Alumni" }));
+    expect(await screen.findByText("Fresh community profile")).toBeDefined();
+  });
+
+  it.each(["Settings", "Commission"])("keeps %s actions from opening details", async (name) => {
+    renderSection();
+    fireEvent.click(await screen.findByRole("button", { name, exact: true }));
+    expect(getCommunity).not.toHaveBeenCalled();
+    expect(screen.queryByText("Community details")).toBeNull();
+  });
+
+  it("shows commission JSON as text without changing its literals", async () => {
+    getCommunity.mockResolvedValue({
+      data: { data: { ...community, commissionSchedule: '{"limit":9007199254740993}' } },
+    });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect(await screen.findByText(/9007199254740993/)).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Format JSON" })).toBeNull();
+  });
+
+  it("distinguishes unavailable metrics from zero", async () => {
+    getCommunity.mockResolvedValue({ data: { data: { ...community, metrics: null } } });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect(await screen.findByText("Metrics unavailable")).toBeDefined();
+    expect(screen.queryByText("₦0.00")).toBeNull();
+  });
+
+  it("shows a denied detail request without displaying the list row as fresh data", async () => {
+    getCommunity.mockRejectedValue({ response: { status: 403 } });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect((await screen.findByRole("alert")).textContent).toContain("permission");
+  });
+
+  it("handles an empty detail response", async () => {
+    getCommunity.mockResolvedValue({ data: { data: null } });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect(await screen.findByText("Community details are unavailable.")).toBeDefined();
+  });
+
+  it("closes community details with Escape", async () => {
+    renderSection();
+    fireEvent.click(await findRow());
+    await screen.findByText("Fresh community profile");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByText("Community details")).toBeNull();
   });
 });
 
