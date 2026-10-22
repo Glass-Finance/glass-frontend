@@ -35,6 +35,9 @@ test.describe("member payment initiation", () => {
 
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
     await expect(page.getByRole("complementary", { name: "Member app navigation" })).toBeHidden();
+    const savePaymentMethod = page.getByRole("switch", { name: "Save payment method" });
+    await expect(savePaymentMethod).toHaveAttribute("aria-checked", "false");
+
     const payButton = page.getByRole("button", { name: "Make Payment" });
     await expect(payButton).toBeVisible(); // link data loaded, button actionable
     await payButton.click();
@@ -49,6 +52,6 @@ test.describe("member payment initiation", () => {
     expect(scenario.calls.initiate.path).toBe("/payments/pay/payment-links/pl-e2e");
     expect(scenario.calls.initiate.body.idempotencyKey).toBeTruthy();
     expect(scenario.calls.initiate.body.amount).toBe(250000);
-    expect(scenario.calls.initiate.body.savePaymentMethod).toBe(true);
+    expect(scenario.calls.initiate.body.savePaymentMethod).toBe(false);
   });
 });
