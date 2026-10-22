@@ -81,7 +81,7 @@ function AuditLogDetailModal({ auditLogId, onClose }) {
   });
 
   return (
-    <ModalShell title="Audit log" subtitle={data?.event} onClose={onClose}>
+    <ModalShell size="wide" title="Audit log" subtitle={data?.event} onClose={onClose}>
       <div className="p-6 max-h-[70vh] overflow-y-auto">
         {isLoading ? (
           <LoadingState className="py-10" />

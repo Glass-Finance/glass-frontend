@@ -57,7 +57,7 @@ export function AdminUserKycDialog({ userId, action, onClose }) {
       title={label}
       onClose={onClose}
       closeDisabled={busy}
-      className="rounded-g-1! sm:max-w-lg"
+      className="rounded-g-1! sm:max-w-3xl"
       footer={
         result ? (
           <Button size="sm" onClick={onClose}>

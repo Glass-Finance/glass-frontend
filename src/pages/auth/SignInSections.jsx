@@ -152,7 +152,7 @@ export function OtpVerifyScreen({
             size="sm"
             fullWidth={false}
             onClick={onBackToIdentifier}
-            className="mt-1"
+            className="mt-1 !px-0"
           >
             Use a different email
           </Button>

@@ -68,7 +68,12 @@ function TransactionDetailModal({ transactionId, onClose }) {
   const currency = data?.currency ?? "NGN";
 
   return (
-    <ModalShell title="Transaction" subtitle={data?.internalReference} onClose={onClose}>
+    <ModalShell
+      size="wide"
+      title="Transaction"
+      subtitle={data?.internalReference}
+      onClose={onClose}
+    >
       <div className="p-6 max-h-[70vh] overflow-y-auto">
         {isLoading ? (
           <LoadingState className="py-10" />

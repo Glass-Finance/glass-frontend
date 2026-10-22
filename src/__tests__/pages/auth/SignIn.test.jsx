@@ -492,6 +492,9 @@ describe("SignIn one-time-code mode", () => {
 
     expect(await screen.findByText("Enter Your Code")).toBeDefined();
     expect(requestLoginOtp).toHaveBeenCalledWith({ email: "member@example.com" });
+    expect(screen.getByRole("button", { name: "Use a different email" }).className).toContain(
+      "!px-0",
+    );
 
     fireEvent.change(screen.getByLabelText("Verification code"), {
       target: { value: "654321" },

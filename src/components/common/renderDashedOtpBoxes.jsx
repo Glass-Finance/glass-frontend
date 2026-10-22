@@ -19,27 +19,27 @@ const OTP_LENGTH = 6;
 
 export function renderDashedOtpBoxes(boxDigits, activeIndex) {
   return (
-    <div className="mx-auto flex w-full max-w-[300px] items-center justify-between gap-2 pointer-events-none md:max-w-[420px]">
-      <div className="flex flex-1 min-w-0 justify-between">
+    <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-1 pointer-events-none">
+      <div className="flex items-center gap-2">
         {boxDigits.slice(0, 3).map((d, i) => (
           <div
             key={i}
             aria-label={`Digit ${i + 1} of ${OTP_LENGTH}`}
-            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-strong"}`}
           >
             {d}
           </div>
         ))}
       </div>
       <span className="text-gray-400 text-base md:text-xl font-light flex-shrink-0">—</span>
-      <div className="flex flex-1 min-w-0 justify-between">
+      <div className="flex items-center gap-2">
         {boxDigits.slice(3, 6).map((d, i) => {
           const idx = i + 3;
           return (
             <div
               key={idx}
               aria-label={`Digit ${idx + 1} of ${OTP_LENGTH}`}
-              className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-strong"}`}
             >
               {d}
             </div>
