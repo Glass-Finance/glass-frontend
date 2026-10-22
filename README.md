@@ -35,18 +35,18 @@ npm run dev            # starts on http://localhost:3000
 
 ### Environment Variables
 
-| Variable                          | Required            | Purpose                                                                                |
-| --------------------------------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `VITE_API_BASE_URL`               | **Yes**             | Backend origin (e.g. `https://api.glasspay.app`). `/api/v1` is appended automatically. |
-| `VITE_CLOUDINARY_CLOUD_NAME`      | **Yes**             | Cloudinary cloud name. Build fails without it.                                         |
-| `VITE_TEST_MODE`                  | **Yes**             | `"true"` or `"false"` — fail-closed money-mode switch.                                 |
-| `VITE_GOOGLE_CLIENT_ID`           | Google sign-in only | OAuth 2.0 Web client ID.                                                               |
-| `VITE_APP_URL`                    | No                  | Public app origin (defaults to `window.location.origin`).                              |
-| `VITE_CRISP_WEBSITE_ID`           | No                  | Crisp chat widget ID (disables chat if unset).                                         |
+| Variable                          | Required            | Purpose                                                                                                |
+| --------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `VITE_API_BASE_URL`               | **Yes**             | Backend origin (e.g. `https://api.glasspay.app`). `/api/v1` is appended automatically.                 |
+| `VITE_CLOUDINARY_CLOUD_NAME`      | **Yes**             | Cloudinary cloud name. Build fails without it.                                                         |
+| `VITE_TEST_MODE`                  | **Yes**             | `"true"` or `"false"` — fail-closed money-mode switch.                                                 |
+| `VITE_GOOGLE_CLIENT_ID`           | Google sign-in only | OAuth 2.0 Web client ID.                                                                               |
+| `VITE_APP_URL`                    | No                  | Public app origin (defaults to `window.location.origin`).                                              |
+| `VITE_CRISP_WEBSITE_ID`           | No                  | Crisp chat widget ID (disables chat if unset).                                                         |
 | `VITE_SENTRY_DSN`                 | Production: yes     | Sentry error and performance reporting. Production is configured; unset locally to disable monitoring. |
-| `VITE_SENTRY_TRACES_SAMPLE_RATE`  | No                  | 0–1, defaults to `0.1`.                                                                |
-| `VITE_FLAGS`                      | No                  | JSON feature flags (e.g. `{"paymentsDisabled":true}`).                                 |
-| `VITE_SMILE_ENV` / `VITE_SMILE_*` | No                  | Smile ID KYC browser SDK config.                                                       |
+| `VITE_SENTRY_TRACES_SAMPLE_RATE`  | No                  | 0–1, defaults to `0.1`.                                                                                |
+| `VITE_FLAGS`                      | No                  | JSON feature flags (e.g. `{"paymentsDisabled":true}`).                                                 |
+| `VITE_SMILE_ENV` / `VITE_SMILE_*` | No                  | Smile ID KYC browser SDK config.                                                                       |
 
 ---
 

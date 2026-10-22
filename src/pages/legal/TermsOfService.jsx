@@ -382,8 +382,8 @@ export default function TermsOfService() {
       <h2>17. Intellectual Property</h2>
       <p>
         17.1 The Platform, including its software, design, trademarks (including "Glass" and
-        associated logos), and underlying technology, is owned by Glass Limited or its
-        licensors and is protected by Nigerian and international intellectual property law.
+        associated logos), and underlying technology, is owned by Glass Limited or its licensors and
+        is protected by Nigerian and international intellectual property law.
       </p>
       <p>
         17.2 Nothing in this Agreement transfers ownership of Glass's intellectual property to any

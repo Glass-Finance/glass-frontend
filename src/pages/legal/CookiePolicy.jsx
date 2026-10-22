@@ -16,10 +16,10 @@ export default function CookiePolicy() {
       lastUpdated="22nd of October, 2026"
     >
       <p>
-        This Cookie Policy explains how Glass Limited ("Glass," "we," "us," "our") uses
-        cookies and similar technologies on our website and applications (the "Platform"). This
-        Policy supplements our <Link to="/privacy">Privacy Policy</Link> and should be read
-        alongside it. Capitalized terms not defined here have the meaning given in the{" "}
+        This Cookie Policy explains how Glass Limited ("Glass," "we," "us," "our") uses cookies and
+        similar technologies on our website and applications (the "Platform"). This Policy
+        supplements our <Link to="/privacy">Privacy Policy</Link> and should be read alongside it.
+        Capitalized terms not defined here have the meaning given in the{" "}
         <Link to="/terms">Terms of Service</Link>.
       </p>
 

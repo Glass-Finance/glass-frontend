@@ -12,10 +12,10 @@ export default function PrivacyPolicy() {
       lastUpdated="22nd of October, 2026"
     >
       <p>
-        This Privacy Policy explains how Glass Limited ("Glass," "we," "us," "our")
-        collects, uses, discloses, and protects personal information when you use the Glass website,
-        mobile applications, dashboards, and related services (the "Platform"). Capitalized terms
-        not defined here have the meaning given in the <Link to="/terms">Terms of Service</Link>.
+        This Privacy Policy explains how Glass Limited ("Glass," "we," "us," "our") collects, uses,
+        discloses, and protects personal information when you use the Glass website, mobile
+        applications, dashboards, and related services (the "Platform"). Capitalized terms not
+        defined here have the meaning given in the <Link to="/terms">Terms of Service</Link>.
       </p>
       <p>
         This Policy applies to Community Owners, Community Administrators, Members, Guests, and
@@ -26,12 +26,12 @@ export default function PrivacyPolicy() {
 
       <h2>1. Scope</h2>
       <p>
-        This Policy covers personal information processed by Glass Limited as a data
-        controller (for Account-level and Platform-operation data) and, in relation to certain
-        Community data, as a data processor acting on the instructions of the Community Owner or
-        Organization. Where Glass processes Member data on behalf of a Community, the Community
-        remains responsible, as data controller, for ensuring it has a lawful basis to collect and
-        share that data with Glass.
+        This Policy covers personal information processed by Glass Limited as a data controller (for
+        Account-level and Platform-operation data) and, in relation to certain Community data, as a
+        data processor acting on the instructions of the Community Owner or Organization. Where
+        Glass processes Member data on behalf of a Community, the Community remains responsible, as
+        data controller, for ensuring it has a lawful basis to collect and share that data with
+        Glass.
       </p>
 
       <h2>2. Categories of Information We Collect</h2>
