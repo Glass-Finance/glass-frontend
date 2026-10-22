@@ -25,7 +25,7 @@ export function renderDashedOtpBoxes(boxDigits, activeIndex) {
           <div
             key={i}
             aria-label={`Digit ${i + 1} of ${OTP_LENGTH}`}
-            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${i === activeIndex ? "otp-box-active " : ""}${d || i === activeIndex ? "border-brand-deep" : "border-hairline-strong"}`}
           >
             {d}
           </div>
@@ -39,7 +39,7 @@ export function renderDashedOtpBoxes(boxDigits, activeIndex) {
             <div
               key={idx}
               aria-label={`Digit ${idx + 1} of ${OTP_LENGTH}`}
-              className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-neutral"}`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 md:w-16 md:h-16 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-gray-900 transition-all duration-150 text-[16px] md:text-xl md:text-[22px] border-[1.5px] ${idx === activeIndex ? "otp-box-active " : ""}${d || idx === activeIndex ? "border-brand-deep" : "border-hairline-strong"}`}
             >
               {d}
             </div>
