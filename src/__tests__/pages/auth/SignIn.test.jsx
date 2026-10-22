@@ -538,7 +538,7 @@ describe("SignIn one-time-code mode", () => {
     expect(requestLoginOtp).toHaveBeenCalledTimes(2);
 
     verifyLoginOtp.mockResolvedValue({ accessToken: "phone-otp-token" });
-    fireEvent.change(screen.getByLabelText("Verification code"), {
+    fireEvent.change(await screen.findByLabelText("Verification code"), {
       target: { value: "654321" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Verify & Sign In" }));
