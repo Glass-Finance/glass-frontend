@@ -93,9 +93,9 @@
   --animate-slideInUp: slideInUp 0.8s ease-out forwards;
   --animate-scaleIn: scaleIn 0.6s ease-out forwards;
   --animate-float: float 3s ease-in-out infinite;
-  --animate-lock-drop: lock-drop 3.6s infinite;
-  --animate-lock-slide: lock-slide 3.6s infinite;
-  --animate-lock-glint: lock-glint 3.6s infinite;
+  --animate-lock-drop: lock-drop var(--lock-animation-duration, 3.6s) infinite;
+  --animate-lock-slide: lock-slide var(--lock-animation-duration, 3.6s) infinite;
+  --animate-lock-glint: lock-glint var(--lock-animation-duration, 3.6s) infinite;
 
   /* Problem sections — durations/fill modes paired with the hand-written
      keyframes further down this file. Referenced from the JSX as
