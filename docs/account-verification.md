@@ -27,13 +27,13 @@ Phone is **not** collected during registration (email + name/password → email 
 
 ### Which channel a code goes out on
 
-| Surface                                           | Channel                                                                                               |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Registration (both `/sign-up` and `/member/join`) | **Email only.** The phone number is not collected at signup, so there is no number to send an SMS to. |
-| Passwordless sign-in (the “One-Time Code” tab)    | Email or SMS, matching the identifier that was typed.                                                 |
-| Add / update phone number                         | SMS to the number being added.                                                                        |
-| Password reset                                    | Email.                                                                                                |
-| Change account email                              | Email to the proposed address.                                                                        |
+| Surface                                                               | Channel                                                                                               |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Registration (both `/sign-up` and `/member/join`; desktop and mobile) | **Email only.** The phone number is not collected at signup, so there is no number to send an SMS to. |
+| Passwordless sign-in (the “One-Time Code” tab)                        | Email or SMS, matching the identifier that was typed.                                                 |
+| Add / update phone number                                             | SMS to the number being added.                                                                        |
+| Password reset                                                        | Email.                                                                                                |
+| Change account email                                                  | Email to the proposed address.                                                                        |
 
 A signup therefore never sends an SMS — if someone is waiting on a text after registering, the phone number still has to be added in Settings. The delivery mechanics (who sends, what a failed send looks like) are in [`authentication.md`](authentication.md#verification-codes--who-sends-them-and-who-reports-a-failed-send).
 

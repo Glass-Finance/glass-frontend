@@ -6,7 +6,7 @@ import { CreditCard, Trash2 } from "lucide-react";
 import { useManagePayments } from "../../../../hooks/usePayments";
 import PageLoadingState from "../../../../components/common/PageLoadingState";
 import ConfirmSheet from "../../../../components/memberApp/ConfirmSheet";
-import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 
 export default function SavedCards() {
   const navigate = useNavigate();
@@ -20,16 +20,13 @@ export default function SavedCards() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => goBackInApp(navigate, "/member/settings")}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Payment Methods</h1>
-      </div>
+      <MemberPageHeader
+        title="Payment Methods"
+        description="Review and remove saved payment methods."
+        onBack={() => goBackInApp(navigate, "/member/settings")}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl">
         {data.length > 0 && (
           <p className="text-[14px] font-medium text-black/60 mt-0 mx-1 mb-2">Saved Cards</p>
         )}

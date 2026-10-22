@@ -105,6 +105,7 @@ describe("PaymentSummary payment authorization redirect", () => {
 
     const payButton = await screen.findByText("Make Payment");
 
+    fireEvent.click(screen.getByRole("switch", { name: "Save payment method" }));
     fireEvent.click(payButton);
 
     expect(mutateAsync).toHaveBeenCalledTimes(1);

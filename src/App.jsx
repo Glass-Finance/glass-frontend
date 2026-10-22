@@ -8,7 +8,6 @@ import { isAppHost, MARKETING_ORIGIN } from "./utils/deviceRedirect";
 // ── Guards (eager — lightweight, needed for route resolution) ─────────────────
 import ProtectedRoute from "./routes/ProtectedRoute";
 import MemberProtectedRoute from "./routes/MemberProtectedRoute";
-import MemberDeviceGuard from "./routes/MemberDeviceGuard";
 import PlatformAdminRoute from "./routes/PlatformAdminRoute";
 import CommunityAdminGuard from "./routes/CommunityAdminGuard";
 
@@ -185,7 +184,7 @@ function App() {
           {/* ── Auth ──
             /sign-up is the COMMUNITY OWNER entry point (desktop-first,
             never device-gated). /member/join is the MEMBER registration
-            entry point — joining remains mobile-only, so it's hard-gated here.
+            entry point and is responsive on desktop and mobile.
             SignIn/ForgotPassword/ResetPassword are each reachable from two
             routes (no "/member" prefix vs "/member/...") for the admin- and
             member-facing entry points that link to them respectively (the
@@ -194,9 +193,7 @@ function App() {
             component. AuthLayout adapts its chrome between desktop and
             mobile via CSS. ── */}
           <Route path="/sign-up" element={<SignUp />} />
-          <Route element={<MemberDeviceGuard />}>
-            <Route path="/member/join" element={<Join />} />
-          </Route>
+          <Route path="/member/join" element={<Join />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -284,8 +281,7 @@ function App() {
 
           {/* ── Member app ──
             The authenticated member experience works on mobile and desktop.
-            MemberProtectedRoute remains in force on every private screen;
-            only the public member-join flow above is device-gated. */}
+            MemberProtectedRoute remains in force on every private screen. */}
           <Route element={<MemberProtectedRoute />}>
             <Route path="/member" element={<MemberAppLayout />}>
               <Route index element={<Navigate to="home" replace />} />

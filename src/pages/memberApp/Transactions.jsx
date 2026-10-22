@@ -9,7 +9,7 @@ import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusLabel, transactionStatusStyle } from "../../utils/transactionStatus";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyTransactions } from "../../api/exports";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 const STATUS_OPTIONS = ["All Status", "Success", "Failed", "Pending"];
 
@@ -171,35 +171,26 @@ export default function Transactions() {
     <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-5xl">
       <GlassLogoGlow />
       {/* ── Top bar ── */}
-      <div className="relative flex items-center justify-center pt-6 px-5 pb-4 md:static md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5 md:hidden"
-        />
-        <div className="text-center md:text-left">
-          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
-            Payment History
-          </h1>
-          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
-            View, filter, and export your past payments.
-          </p>
-        </div>
-        <Button
-          variant="tertiary"
-          size="icon-sm"
-          onClick={exportCsv}
-          disabled={isExporting}
-          aria-label={isExporting ? "Preparing export" : "Export payment history as CSV"}
-          className="absolute right-5 md:right-0 md:top-0"
-        >
-          {isExporting ? (
-            <Loader2 size={15} className="animate-spin text-ink-strong" />
-          ) : (
-            <Download size={15} className="text-ink-strong" />
-          )}
-        </Button>
-      </div>
+      <MemberPageHeader
+        title="Payment History"
+        description="View, filter, and export your past payments."
+        onBack={() => navigate(-1)}
+        action={
+          <Button
+            variant="tertiary"
+            size="icon-sm"
+            onClick={exportCsv}
+            disabled={isExporting}
+            aria-label={isExporting ? "Preparing export" : "Export payment history as CSV"}
+          >
+            {isExporting ? (
+              <Loader2 size={15} className="animate-spin text-ink-strong" />
+            ) : (
+              <Download size={15} className="text-ink-strong" />
+            )}
+          </Button>
+        }
+      />
 
       {/* ── Status + month filters ── */}
       <div className="pt-0 px-5 pb-3.5 flex gap-2 md:px-0">

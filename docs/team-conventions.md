@@ -48,7 +48,7 @@ Shared working agreements across the frontend (`Glass-Finance/glass-waitlist`) a
 ### E2E (Playwright)
 
 - Specs in `e2e/*.spec.js`; Vitest excludes `e2e/**` (`vite.config.js`).
-- Two projects: `desktop-chromium` (admin/public) and `mobile-chromium` / Pixel 7 (member app, `MemberDeviceGuard`). Each test runs in exactly one project via `test.skip(testInfo.project.name !== ...)`.
+- Two projects: `desktop-chromium` (admin/public) and `mobile-chromium` / Pixel 7 (responsive member app). Both projects exercise the member registration flow; private member routes remain authentication-guarded. Tests may use `test.skip(testInfo.project.name !== ...)` when behavior is project-specific.
 - Harness: local Vite on `127.0.0.1:4173` with injected public `VITE_*` (including `VITE_TEST_MODE=true`). No real backend, provider, or secrets.
 - Preferred mocking: shared `e2e/support.js` catch-all dispatcher (personas, `/api/v1` CORS, Paystack stub, third-party aborts). Inline `page.route` only for endpoint-specific cases; consolidating onto `support.js` is welcome.
 - Run: `npm run test:e2e`. CI job is the isolated `e2e` job in `.github/workflows/ci.yml` (not inline in the build job). That workflow has three jobs: `build` ("Lint & Build"), `secrets` ("Secret scan", TruffleHog over the pushed commits) and `e2e`.

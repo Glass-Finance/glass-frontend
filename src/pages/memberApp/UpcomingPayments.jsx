@@ -8,7 +8,7 @@ import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 const FILTER_OPTIONS = ["All", "Recurring", "One-time"];
 
@@ -116,35 +116,26 @@ export default function UpcomingPayments() {
     <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-6 px-5 pb-5 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5 md:hidden"
-        />
-        <div className="text-center md:text-left">
-          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
-            Upcoming Payments
-          </h1>
-          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
-            Review upcoming dues and export your payment schedule.
-          </p>
-        </div>
-        <Button
-          variant="tertiary"
-          size="icon-sm"
-          onClick={exportCsv}
-          disabled={isExporting}
-          aria-label={isExporting ? "Preparing export" : "Export upcoming payments as CSV"}
-          className="absolute right-5 md:right-0 md:top-0"
-        >
-          {isExporting ? (
-            <Loader2 size={15} className="animate-spin text-ink-strong" />
-          ) : (
-            <Download size={15} className="text-ink-strong" />
-          )}
-        </Button>
-      </div>
+      <MemberPageHeader
+        title="Upcoming Payments"
+        description="Review upcoming dues and export your payment schedule."
+        onBack={() => navigate(-1)}
+        action={
+          <Button
+            variant="tertiary"
+            size="icon-sm"
+            onClick={exportCsv}
+            disabled={isExporting}
+            aria-label={isExporting ? "Preparing export" : "Export upcoming payments as CSV"}
+          >
+            {isExporting ? (
+              <Loader2 size={15} className="animate-spin text-ink-strong" />
+            ) : (
+              <Download size={15} className="text-ink-strong" />
+            )}
+          </Button>
+        }
+      />
 
       <div className="md:mx-auto md:w-full md:max-w-3xl">
         {/* Filter */}

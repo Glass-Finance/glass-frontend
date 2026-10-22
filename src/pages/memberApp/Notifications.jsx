@@ -23,7 +23,7 @@ import { formatRelativeDateTime } from "../../utils/format";
 import paymentsEmptyIllustration from "../../assets/memberApp/empty-states/notifications-payments-empty.webp";
 import communityEmptyIllustration from "../../assets/memberApp/empty-states/notifications-community-empty.webp";
 import invitesEmptyIllustration from "../../assets/memberApp/empty-states/notifications-invites-empty.webp";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 const TABS = ["Payments", "Community", "Invites"];
 
@@ -312,21 +312,11 @@ export default function Notifications() {
     <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-6 px-5 pb-5 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5 md:hidden"
-        />
-        <div className="text-center md:text-left">
-          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
-            Notifications
-          </h1>
-          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
-            Stay up to date with payments, community activity, and invitations.
-          </p>
-        </div>
-      </div>
+      <MemberPageHeader
+        title="Notifications"
+        description="Stay up to date with payments, community activity, and invitations."
+        onBack={() => navigate(-1)}
+      />
 
       <div className="md:mx-auto md:w-full md:max-w-3xl">
         {/* Tab bar — segmented pill per Figma dev-mode spec (Frame 2121455025):

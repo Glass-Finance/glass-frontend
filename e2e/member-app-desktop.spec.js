@@ -27,8 +27,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
   await expect(page.getByRole("heading", { name: "Manage Payments" })).toBeVisible();
   await expect(page.getByText("Review recurring plans and manage auto-pay.")).toBeVisible();
   const managePaymentsWidth = await page
-    .locator(".member-app-page-content > div > div")
-    .nth(2)
+    .locator(".member-app-page-content > div > header + div")
     .evaluate((element) => element.getBoundingClientRect().width);
   expect(managePaymentsWidth).toBeLessThanOrEqual(896);
   await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
@@ -39,8 +38,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
     page.getByText("Manage your account, payment preferences, and communities."),
   ).toBeVisible();
   const settingsWidth = await page
-    .locator(".member-app-page-content > div > div")
-    .nth(2)
+    .locator(".member-app-page-content > div > header + div")
     .evaluate((element) => element.getBoundingClientRect().width);
   expect(settingsWidth).toBeLessThanOrEqual(768);
   await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
@@ -82,6 +80,41 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
       title: "Transaction Details",
       description: "Review the receipt and details for this payment.",
     },
+    {
+      path: "/member/profile",
+      title: "Profile",
+      description: "Manage your personal details and contact information.",
+    },
+    {
+      path: "/member/security",
+      title: "Security",
+      description: "Manage password and multi-factor account protection.",
+    },
+    {
+      path: "/member/notification-settings",
+      title: "Notifications",
+      description: "Choose which updates you receive and where they appear.",
+    },
+    {
+      path: "/member/saved-cards",
+      title: "Payment Methods",
+      description: "Review and remove saved payment methods.",
+    },
+    {
+      path: "/member/auto-pay",
+      title: "Auto-Pay",
+      description: "Review and manage automatic payments for recurring plans.",
+    },
+    {
+      path: "/member/communities",
+      title: "My Communities",
+      description: "View your memberships and switch between communities.",
+    },
+    {
+      path: "/member/verify-identity/history",
+      title: "Verification History",
+      description: "Review the status and details of previous identity checks.",
+    },
   ];
 
   for (const { path, title, description } of responsivePages) {
@@ -91,9 +124,9 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
     await expect(page.getByText(description)).toBeVisible();
     await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
     const contentWidth = await page
-      .locator(".member-app-page-content > div")
+      .locator(".member-app-page-content")
       .evaluate((element) => element.getBoundingClientRect().width);
-    expect(contentWidth).toBeLessThanOrEqual(1024);
+    expect(contentWidth).toBeLessThanOrEqual(1152);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);

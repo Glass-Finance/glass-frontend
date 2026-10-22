@@ -12,7 +12,7 @@ import PulseImg from "../../components/common/PulseImg";
 import LoadingState from "../../components/common/LoadingState";
 import JoinApprovedModal from "../../components/memberApp/JoinApprovedModal";
 import { getErrorMessage } from "../../utils/errorHandler";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 function usePublicSearch(query) {
@@ -262,21 +262,11 @@ export default function DiscoverCommunities() {
     <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-5xl">
       <GlassLogoGlow />
       {/* Header — before: padding: "52px 20px 16px" */}
-      <div className="relative flex items-center justify-center pt-[35px] px-5 pb-4 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-5 md:hidden"
-        />
-        <div className="text-center md:text-left">
-          <h1 className="text-[18px] leading-6 font-medium text-ink m-0 md:text-2xl md:font-semibold">
-            Browse Communities
-          </h1>
-          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
-            Find communities and send a request to join.
-          </p>
-        </div>
-      </div>
+      <MemberPageHeader
+        title="Browse Communities"
+        description="Find communities and send a request to join."
+        onBack={() => navigate(-1)}
+      />
 
       {/* Search input */}
       <div className="px-4 pb-4 md:mx-auto md:w-full md:max-w-4xl md:px-0">

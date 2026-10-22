@@ -10,7 +10,7 @@ import ReceiptModal from "../../components/common/ReceiptModal";
 import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusStyle } from "../../utils/transactionStatus";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
-import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
 
 function StatusPill({ status }) {
   const { label, ...s } = transactionStatusStyle(status);
@@ -62,21 +62,11 @@ export default function TransactionDetail() {
     <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-3xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4 md:hidden"
-        />
-        <div className="text-center md:text-left">
-          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
-            Transaction Details
-          </h1>
-          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
-            Review the receipt and details for this payment.
-          </p>
-        </div>
-      </div>
+      <MemberPageHeader
+        title="Transaction Details"
+        description="Review the receipt and details for this payment."
+        onBack={() => navigate(-1)}
+      />
 
       {isLoading ? (
         <PageLoadingState />

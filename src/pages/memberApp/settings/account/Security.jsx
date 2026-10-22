@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { Lock } from "lucide-react";
-import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 import { IconSecurity, IconDropdown } from "../../../../components/ui/icons/SettingsIcons";
 
 // Figma draws no distinct leading glyph for these two rows, so Password keeps
@@ -29,16 +29,13 @@ export default function Security() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Security</h1>
-      </div>
+      <MemberPageHeader
+        title="Security"
+        description="Manage password and multi-factor account protection."
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl">
         <div className="rounded-xl bg-surface-container border border-black/10 overflow-hidden">
           {ITEMS.map(({ Icon, label, desc, to }, i) => (
             <button

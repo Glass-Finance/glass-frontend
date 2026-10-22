@@ -30,11 +30,8 @@ export default function Join() {
   const joinEmail = useJoinEmailParam();
   const { storeSessionIfPresent, setSession, isAuthenticated, loading: authLoading } = useAuth();
 
-  // A user who already has a session (e.g. they're a member of another
-  // community, or just left themselves logged in) shouldn't be forced
-  // through the signup form just because they clicked an invite/join link —
-  // join them into the community directly instead. Mirrors InviteLanding.jsx's
-  // same already-authenticated short-circuit for the personalized-invite path.
+  // A user who already has a session should skip registration and go directly
+  // to the relevant member destination.
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
     if (community) {
@@ -61,7 +58,9 @@ export default function Join() {
     if (token) {
       consumeToken();
       navigate("/member/invites", { replace: true });
+      return;
     }
+    navigate("/member/communities/search", { replace: true });
   }, [authLoading, isAuthenticated, community, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [email, setEmail] = useState(() => {

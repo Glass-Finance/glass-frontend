@@ -8,7 +8,7 @@ import { isPasswordValid, PASSWORD_REQUIREMENTS_TEXT } from "../../../../utils/p
 import PasswordChecklist from "../../../../components/auth/PasswordChecklist";
 import { Button } from "../../../../components/ui/Button";
 import { TextInput } from "../../../../components/ui/TextInput";
-import { MobileBackButton } from "../../../../components/ui/MobileBackButton";
+import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 
 function PasswordField({ label, value, onChange, show, onToggleShow }) {
   return (
@@ -76,16 +76,13 @@ export default function Password() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
-        <MobileBackButton
-          aria-label="Back"
-          onClick={() => navigate(-1)}
-          className="absolute left-4"
-        />
-        <h1 className="text-lg font-medium text-ink m-0">Password</h1>
-      </div>
+      <MemberPageHeader
+        title="Password"
+        description="Update your password to help protect your account."
+        onBack={() => navigate(-1)}
+      />
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl">
         <div className="border border-surface-container-border bg-white rounded-2xl p-4 flex flex-col gap-3.5">
           <PasswordField
             label="Current Password"
