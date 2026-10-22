@@ -11,6 +11,7 @@ import AdminUserKycActions from "../../../components/dashboard/AdminUserKycActio
 import { kycStatusLabel } from "../../../utils/kycStatus";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { SectionHeader, SearchBar, FilterSelect, TableShell, TableFooter } from "./SharedUI";
+import UserDetailModal from "./UserDetailModal";
 
 function SuspendModal({ user, onClose }) {
   const queryClient = useQueryClient();
@@ -247,6 +248,7 @@ export default function UsersSection() {
   const [unsuspending, setUnsuspending] = useState(null);
   const [markingDeletion, setMarkingDeletion] = useState(null);
   const [anonymizing, setAnonymizing] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
   const debouncedSet = useDebounce((v) => {
     setDebouncedSearch(v);
     setPage(0);
@@ -349,15 +351,25 @@ export default function UsersSection() {
             {items.map((u, i) => (
               <tr
                 key={u.id}
-                className={`group hover:bg-gray-50 transition-colors ${i < items.length - 1 ? "border-b border-surface-sunken" : "border-b-0"}`}
+                onClick={() => setViewingUser(u.id)}
+                className={`group cursor-pointer hover:bg-gray-50 transition-colors ${i < items.length - 1 ? "border-b border-surface-sunken" : "border-b-0"}`}
               >
                 <td className="px-4 py-3">
-                  <p className="text-[12px] font-semibold text-gray-900 leading-tight">
+                  <Button
+                    variant="tertiary"
+                    size="xs"
+                    fullWidth={false}
+                    aria-label={`View details for ${u.email ?? u.id}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setViewingUser(u.id);
+                    }}
+                  >
                     {[u.userData?.firstName, u.userData?.lastName]
                       .filter(Boolean)
                       .map((s) => toTitleCase(s.trim()))
                       .join(" ") || "—"}
-                  </p>
+                  </Button>
                   <p className="text-[11px] text-gray-400">{u.email}</p>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
@@ -401,7 +413,10 @@ export default function UsersSection() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  <div
+                    className="flex flex-wrap items-center justify-end gap-1.5"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <AdminUserKycActions userId={u.id} user={u} />
                     {u.enabled ? (
                       <Button
@@ -461,6 +476,7 @@ export default function UsersSection() {
         onPage={setPage}
       />
       {suspending && <SuspendModal user={suspending} onClose={() => setSuspending(null)} />}
+      {viewingUser && <UserDetailModal userId={viewingUser} onClose={() => setViewingUser(null)} />}
       {unsuspending && (
         <UnsuspendModal
           user={unsuspending}

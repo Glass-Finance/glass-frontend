@@ -7,6 +7,7 @@ vi.mock("../../../../store/AuthContext", () => ({
 }));
 import {
   getAdminUsers,
+  getAdminUser,
   suspendUser,
   unsuspendUser,
   markUserForDeletion,
@@ -24,6 +25,7 @@ vi.mock("../../../../api/admin", async (importOriginal) => {
   return {
     ...actual,
     getAdminUsers: vi.fn(),
+    getAdminUser: vi.fn(),
     suspendUser: vi.fn(),
     unsuspendUser: vi.fn(),
     markUserForDeletion: vi.fn(),
@@ -66,6 +68,26 @@ async function findRow() {
 
 beforeEach(() => {
   getAdminUsers.mockResolvedValue(page([userFixture()]));
+  getAdminUser.mockResolvedValue({
+    data: {
+      data: userFixture({
+        userData: { firstName: "grace", lastName: "hopper" },
+        phoneNumber: "+2348012345678",
+        timezone: "Africa/Lagos",
+        platformRole: "USER",
+        phoneVerified: false,
+        mfaEnabled: true,
+        kycStatus: "APPROVED",
+        metrics: {
+          communitiesOwned: 1,
+          communitiesJoined: 3,
+          totalRelatedCommunities: 4,
+          pendingInvites: 0,
+          pendingJoinRequests: 2,
+        },
+      }),
+    },
+  });
 });
 
 afterEach(() => {
@@ -92,6 +114,145 @@ describe("UsersSection — rendering", () => {
     expect(await screen.findByText("Access denied")).toBeTruthy();
     expect(screen.getByText("Platform admin rights required to view this data.")).toBeTruthy();
     expect(suspendUser).not.toHaveBeenCalled();
+  });
+});
+
+describe("UsersSection — details", () => {
+  it("shows the profile photo and falls back to initials when it fails", async () => {
+    getAdminUser.mockResolvedValue({
+      data: {
+        data: userFixture({
+          userData: {
+            firstName: "ada",
+            lastName: "lovelace",
+            profileImage: { url: "https://example.com/profile.jpg" },
+          },
+        }),
+      },
+    });
+    renderSection();
+    fireEvent.click(await findRow());
+    const photo = await screen.findByRole("img", { name: "Ada Lovelace profile picture" });
+    expect(photo.getAttribute("src")).toBe("https://example.com/profile.jpg");
+    fireEvent.error(photo);
+    expect(screen.queryByRole("img", { name: "Ada Lovelace profile picture" })).toBeNull();
+    expect(
+      within(screen.getByRole("dialog", { name: "User details" })).getByText("AL"),
+    ).toBeDefined();
+  });
+
+  it.each([undefined, { url: "javascript:alert(1)" }])(
+    "uses initials for missing or unsafe profile images: %j",
+    async (profileImage) => {
+      getAdminUser.mockResolvedValue({
+        data: {
+          data: userFixture({
+            userData: { firstName: "ada", lastName: "lovelace", profileImage },
+          }),
+        },
+      });
+      renderSection();
+      fireEvent.click(await findRow());
+      const dialog = await screen.findByRole("dialog", { name: "User details" });
+      await waitFor(() => expect(within(dialog).getByText("AL")).toBeDefined());
+      expect(within(dialog).queryByRole("img")).toBeNull();
+    },
+  );
+
+  it("loads full details only when the row is clicked", async () => {
+    renderSection();
+    const row = await findRow();
+    expect(getAdminUser).not.toHaveBeenCalled();
+    fireEvent.click(row);
+    expect(await screen.findByRole("dialog", { name: "User details" })).toBeDefined();
+    expect(await screen.findByText("Grace Hopper")).toBeDefined();
+    expect(getAdminUser).toHaveBeenCalledWith("user-1");
+    expect(screen.getByText("+2348012345678")).toBeDefined();
+    expect(screen.getByText("Africa/Lagos")).toBeDefined();
+    expect(screen.getByText("Approved")).toBeDefined();
+    expect(screen.getByText("0")).toBeDefined();
+  });
+
+  it("supports keyboard focus and restores it after closing", async () => {
+    renderSection();
+    const trigger = await screen.findByRole("button", { name: "View details for ada@example.com" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    expect(await screen.findByRole("dialog", { name: "User details" })).toBe(
+      document.activeElement,
+    );
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it.each(["Suspend", "Delete", "Anonymize"])(
+    "does not open details for the %s action",
+    async (name) => {
+      renderSection();
+      fireEvent.click(await screen.findByRole("button", { name, exact: true }));
+      expect(screen.queryByRole("dialog", { name: "User details" })).toBeNull();
+      expect(getAdminUser).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps Unsuspend independent from details", async () => {
+    getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
+    renderSection();
+    fireEvent.click(await screen.findByRole("button", { name: "Unsuspend", exact: true }));
+    expect(getAdminUser).not.toHaveBeenCalled();
+  });
+
+  it("keeps KYC actions from opening a second user-details dialog", async () => {
+    getAdminUsers.mockResolvedValue(
+      page([userFixture({ platformRole: "USER", kycStatus: "APPROVED" })]),
+    );
+    renderSection();
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke KYC", exact: true }));
+    expect(await screen.findByRole("dialog", { name: "Revoke KYC" })).toBeDefined();
+    expect(screen.queryByRole("dialog", { name: "User details" })).toBeNull();
+    await waitFor(() => expect(getAdminUser).toHaveBeenCalledTimes(1));
+  });
+
+  it("handles missing profile data and verification flags without inferring false", async () => {
+    getAdminUser.mockResolvedValue({
+      data: { data: userFixture({ userData: null, accountName: "Example account" }) },
+    });
+    renderSection();
+    fireEvent.click(await findRow());
+    const dialog = await screen.findByRole("dialog", { name: "User details" });
+    await waitFor(() => expect(within(dialog).getAllByText("Example account")).toHaveLength(2));
+    expect(within(dialog).getByText("Phone verified").nextElementSibling.textContent).toBe("—");
+  });
+
+  it("shows missing metrics as unavailable instead of zero", async () => {
+    getAdminUser.mockResolvedValue({ data: { data: userFixture({ metrics: null }) } });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect(await screen.findByText("Metrics unavailable")).toBeDefined();
+    expect(screen.queryByText("0")).toBeNull();
+  });
+
+  it("handles an empty user response", async () => {
+    getAdminUser.mockResolvedValue({ data: { data: null } });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect(await screen.findByText("User details are unavailable.")).toBeDefined();
+  });
+
+  it("shows permission errors without displaying the list snapshot as fresh details", async () => {
+    getAdminUser.mockRejectedValue({ response: { status: 403 } });
+    renderSection();
+    fireEvent.click(await findRow());
+    expect((await screen.findByRole("alert")).textContent).toContain("permission");
+  });
+
+  it("retries failed detail requests", async () => {
+    getAdminUser.mockRejectedValueOnce(new Error("Offline"));
+    renderSection();
+    fireEvent.click(await findRow());
+    fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
+    expect(await screen.findByText("Grace Hopper")).toBeDefined();
+    expect(getAdminUser).toHaveBeenCalledTimes(2);
   });
 });
 

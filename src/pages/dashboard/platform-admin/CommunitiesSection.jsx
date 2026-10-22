@@ -10,6 +10,7 @@ import { fmtDate, unwrap, pageParams, withSafeCommunityLogos } from "./shared";
 import { getErrorMessage } from "../../../utils/errorHandler";
 import { formatJson } from "../../../utils/formatJson";
 import { useDebounce } from "../../../hooks/useDebounce";
+import CommunityDetailModal from "./CommunityDetailModal";
 import {
   StatusBadge,
   SectionHeader,
@@ -35,6 +36,7 @@ function CommissionModal({ community, onClose }) {
     mutationFn: (payload) => setCommissionOverride(community.slug ?? community.id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-communities"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-community"] });
       onClose();
     },
     meta: { successMessage: "Commission updated" },
@@ -158,6 +160,7 @@ function CommunitySettingsModal({ community, onClose }) {
     mutationFn: (payload) => updateCommunitySettings(community.slug ?? community.id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-communities"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-community"] });
       onClose();
     },
     meta: { successMessage: "Community settings updated" },
@@ -225,6 +228,7 @@ export default function CommunitiesSection() {
   const [page, setPage] = useState(0);
   const [editingCommission, setEditingCommission] = useState(null);
   const [editingSettings, setEditingSettings] = useState(null);
+  const [viewingCommunity, setViewingCommunity] = useState(null);
   const debouncedSet = useDebounce((v) => {
     setDebouncedSearch(v);
     setPage(0);
@@ -306,7 +310,8 @@ export default function CommunitiesSection() {
             {items.map((c, i) => (
               <tr
                 key={c.id}
-                className={`group hover:bg-gray-50 transition-colors ${i < items.length - 1 ? "border-b border-surface-sunken" : "border-b-0"}`}
+                onClick={() => setViewingCommunity(c.slug ?? c.id)}
+                className={`group cursor-pointer hover:bg-gray-50 transition-colors ${i < items.length - 1 ? "border-b border-surface-sunken" : "border-b-0"}`}
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -322,9 +327,18 @@ export default function CommunitiesSection() {
                       </div>
                     )}
                     <div>
-                      <p className="text-[12px] font-semibold text-gray-900 leading-tight">
+                      <Button
+                        variant="tertiary"
+                        size="xs"
+                        fullWidth={false}
+                        aria-label={`View details for ${c.name ?? "community"}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setViewingCommunity(c.slug ?? c.id);
+                        }}
+                      >
                         {c.name}
-                      </p>
+                      </Button>
                       <p className="text-[10px] text-gray-400 font-mono">{c.slug}</p>
                     </div>
                   </div>
@@ -353,7 +367,10 @@ export default function CommunitiesSection() {
                       variant="outline-neutral"
                       size="xs"
                       fullWidth={false}
-                      onClick={() => setEditingSettings(c)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditingSettings(c);
+                      }}
                     >
                       <SlidersHorizontal size={11} /> Settings
                     </Button>
@@ -361,7 +378,10 @@ export default function CommunitiesSection() {
                       variant="outline"
                       size="xs"
                       fullWidth={false}
-                      onClick={() => setEditingCommission(c)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditingCommission(c);
+                      }}
                     >
                       <Edit2 size={11} /> Commission
                     </Button>
@@ -382,6 +402,12 @@ export default function CommunitiesSection() {
       />
       {editingCommission && (
         <CommissionModal community={editingCommission} onClose={() => setEditingCommission(null)} />
+      )}
+      {viewingCommunity && (
+        <CommunityDetailModal
+          identifier={viewingCommunity}
+          onClose={() => setViewingCommunity(null)}
+        />
       )}
       {editingSettings && (
         <CommunitySettingsModal
