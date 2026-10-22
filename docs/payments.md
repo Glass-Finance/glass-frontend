@@ -28,6 +28,22 @@ A payment plan's terms (`amountMode`, `visibility`, `audience`, `memberIds`) are
 - `audience: GROUP` is **not** offered: it needs the community-groups endpoints, which this app has no surface for, and the backend rejects a GROUP audience with no `groupIds`.
 - `shapePlan` in `usePaymentPlans` passes all four through; the edit modal hydrates from them. Omitting a field on PATCH leaves the stored value alone, so the modal re-sends the current terms on every save.
 
+## Platform-admin amount units and community commissions
+
+Admin transaction, settlement, payment-link (including collected metrics), obligation,
+balance, and reconciliation amounts are already returned in major currency units.
+The platform-admin formatter displays them directly with two decimal places; it must
+not divide these response fields by 100.
+
+Community commission overrides use a separate contract. `CommunityResponse` returns
+`commissionSchedule` as a JSON string (null means platform default), and the commission
+PATCH accepts `{ schedule: <object> }` or `{ schedule: null }` to clear it. There are no
+top-level `commissionRate` or `commissionCapMinor` response fields. The editor uses JSON
+while the pricing structure is still being decided: it checks for valid JSON objects,
+preserves schedule properties and values without unit conversion, and leaves pricing-rule
+validation to the backend. Verified against the live OpenAPI schema and backend
+`CommunityCoreServiceImpl` on 2026-10-22.
+
 ## Residual follow-up
 
 Run `npm run probe:idempotency` once with production credentials to capture a live PASS artifact. Client-side reuse is covered by unit + E2E tests (`e2e/payment-idempotency.spec.js`).
