@@ -147,19 +147,26 @@ export default function Invites() {
   }
 
   return (
-    <div className="relative overflow-hidden min-h-screen pb-10">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
         <MobileBackButton
           aria-label="Go back"
           onClick={() => navigate("/member/home")}
-          className="absolute left-4"
+          className="absolute left-4 md:hidden"
         />
-        <h1 className="text-lg font-medium text-ink m-0">Invitations</h1>
+        <div className="text-center md:text-left">
+          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
+            Invitations
+          </h1>
+          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
+            Review community invitations and join requests.
+          </p>
+        </div>
       </div>
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl md:px-0">
         {staleNotice && (
           <div className="flex items-center gap-2 bg-[#FEF3C7] text-warning text-[12.5px] font-medium py-2.5 px-3 rounded-[10px] mb-3">
             <Info size={14} strokeWidth={2} className="flex-shrink-0" />

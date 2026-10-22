@@ -309,112 +309,125 @@ export default function Notifications() {
   }
 
   return (
-    <div className="relative overflow-hidden min-h-screen pb-10">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden pb-10 md:max-w-4xl">
       <GlassLogoGlow />
       {/* Header */}
-      <div className="flex items-center justify-center relative pt-6 px-5 pb-5">
+      <div className="relative flex items-center justify-center pt-6 px-5 pb-5 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
         <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
-          className="absolute left-5"
+          className="absolute left-5 md:hidden"
         />
-        <h1 className="text-lg font-medium text-ink m-0">Notifications</h1>
+        <div className="text-center md:text-left">
+          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
+            Notifications
+          </h1>
+          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
+            Stay up to date with payments, community activity, and invitations.
+          </p>
+        </div>
       </div>
 
-      {/* Tab bar — segmented pill per Figma dev-mode spec (Frame 2121455025):
+      <div className="md:mx-auto md:w-full md:max-w-3xl">
+        {/* Tab bar — segmented pill per Figma dev-mode spec (Frame 2121455025):
           bg-stacked-container (#F3F4F6), 4px radius, 4px padding, 11px gap,
           stretched to fill the width; active tab is a plain white segment
           (no shadow, matching the toggle pattern used elsewhere). */}
-      <div className="flex items-center gap-[11px] mb-4 mx-5 p-1 bg-stacked-container rounded">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 rounded border-none cursor-pointer text-[13px] transition-colors duration-200 ${activeTab === tab ? "bg-white font-semibold text-ink" : "bg-transparent font-normal text-ink-ghost"}`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+        <div className="flex items-center gap-[11px] mb-4 mx-5 p-1 bg-stacked-container rounded">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2 rounded border-none cursor-pointer text-[13px] transition-colors duration-200 ${activeTab === tab ? "bg-white font-semibold text-ink" : "bg-transparent font-normal text-ink-ghost"}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
 
-      {/* Mark All As Read / Clear All — same actions as the bell dropdown and admin
+        {/* Mark All As Read / Clear All — same actions as the bell dropdown and admin
           notifications page. Both apply to the whole list regardless of which
           tab is active, matching how those two surfaces already behave.
           Clear All uses DELETE /api/v1/notifications (removes every
           notification); Mark All As Read only clears the unread state. */}
-      {(activeTab === "Payments" || activeTab === "Community") && notifications.length > 0 && (
-        <div className="flex items-center justify-end gap-4 px-5 pb-3">
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth={false}
-            onClick={() => markAllRead()}
-            disabled={isMarkingAllRead}
-          >
-            Mark All As Read
-          </Button>
-          <button
-            onClick={() => clearAll()}
-            disabled={isClearingAll}
-            className={`text-xs font-medium text-danger bg-transparent border-none cursor-pointer p-0 ${isClearingAll ? "opacity-50" : "opacity-100"}`}
-          >
-            Clear All
-          </button>
+        {(activeTab === "Payments" || activeTab === "Community") && notifications.length > 0 && (
+          <div className="flex items-center justify-end gap-4 px-5 pb-3">
+            <Button
+              variant="tertiary"
+              size="sm"
+              fullWidth={false}
+              onClick={() => markAllRead()}
+              disabled={isMarkingAllRead}
+            >
+              Mark All As Read
+            </Button>
+            <button
+              onClick={() => clearAll()}
+              disabled={isClearingAll}
+              className={`text-xs font-medium text-danger bg-transparent border-none cursor-pointer p-0 ${isClearingAll ? "opacity-50" : "opacity-100"}`}
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="px-4">
+          {activeTab === "Payments" &&
+            (notifsLoading ? (
+              <PageLoadingState size={56} padding="36px 24px" />
+            ) : paymentNotifs.length === 0 ? (
+              <EmptyState
+                illustration={paymentsEmptyIllustration}
+                label="No Payment History"
+                hint="Once you make payment, your transaction history will appear here."
+              />
+            ) : (
+              <GroupedNotifications items={paymentNotifs} onTap={markRead} onNavigate={navigate} />
+            ))}
+
+          {activeTab === "Community" &&
+            (notifsLoading ? (
+              <PageLoadingState size={56} padding="36px 24px" />
+            ) : communityNotifs.length === 0 ? (
+              <EmptyState
+                illustration={communityEmptyIllustration}
+                label="No community updates yet."
+                hint="Plans, changes, and activity will appear here."
+              />
+            ) : (
+              <GroupedNotifications
+                items={communityNotifs}
+                onTap={markRead}
+                onNavigate={navigate}
+              />
+            ))}
+
+          {activeTab === "Invites" &&
+            (invitesLoading ? (
+              <PageLoadingState size={56} padding="36px 24px" />
+            ) : invites.length === 0 ? (
+              <EmptyState
+                illustration={invitesEmptyIllustration}
+                label="No pending invites."
+                hint="When an admin invites you to join a community, it'll appear here."
+                onAction={refresh}
+                actionLabel="Check Again"
+              />
+            ) : (
+              <div className="flex flex-col gap-3">
+                {invites.map((invite) => (
+                  <InviteCard
+                    key={invite.id}
+                    invite={invite}
+                    onAccept={handleAccept}
+                    onReject={handleReject}
+                    busy={isAccepting || isRejecting}
+                  />
+                ))}
+              </div>
+            ))}
         </div>
-      )}
-
-      {/* Content */}
-      <div className="px-4">
-        {activeTab === "Payments" &&
-          (notifsLoading ? (
-            <PageLoadingState size={56} padding="36px 24px" />
-          ) : paymentNotifs.length === 0 ? (
-            <EmptyState
-              illustration={paymentsEmptyIllustration}
-              label="No Payment History"
-              hint="Once you make payment, your transaction history will appear here."
-            />
-          ) : (
-            <GroupedNotifications items={paymentNotifs} onTap={markRead} onNavigate={navigate} />
-          ))}
-
-        {activeTab === "Community" &&
-          (notifsLoading ? (
-            <PageLoadingState size={56} padding="36px 24px" />
-          ) : communityNotifs.length === 0 ? (
-            <EmptyState
-              illustration={communityEmptyIllustration}
-              label="No community updates yet."
-              hint="Plans, changes, and activity will appear here."
-            />
-          ) : (
-            <GroupedNotifications items={communityNotifs} onTap={markRead} onNavigate={navigate} />
-          ))}
-
-        {activeTab === "Invites" &&
-          (invitesLoading ? (
-            <PageLoadingState size={56} padding="36px 24px" />
-          ) : invites.length === 0 ? (
-            <EmptyState
-              illustration={invitesEmptyIllustration}
-              label="No pending invites."
-              hint="When an admin invites you to join a community, it'll appear here."
-              onAction={refresh}
-              actionLabel="Check Again"
-            />
-          ) : (
-            <div className="flex flex-col gap-3">
-              {invites.map((invite) => (
-                <InviteCard
-                  key={invite.id}
-                  invite={invite}
-                  onAccept={handleAccept}
-                  onReject={handleReject}
-                  busy={isAccepting || isRejecting}
-                />
-              ))}
-            </div>
-          ))}
       </div>
     </div>
   );

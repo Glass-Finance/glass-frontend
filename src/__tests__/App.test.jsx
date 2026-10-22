@@ -6,7 +6,7 @@ import { useAuth } from "../store/AuthContext";
 // App.jsx wires every route, guard, and lazy page boundary but had zero
 // coverage. These tests exercise only critical wiring — a public auth route
 // resolving through Suspense, the catch-all, the admin guard's redirect, the
-// member device gate, and the member auth guard — NOT every rendered page
+// member join device gate, and the member auth guard — NOT every rendered page
 // (each page's own behavior belongs to its own test file). Guards' internal
 // decisions are already covered in routes/guards.test.jsx; this pins that
 // App actually mounts them where the comments say it does.
@@ -116,26 +116,26 @@ describe("App protected route integration", () => {
     ).toBeDefined();
   });
 
-  it("bounces a desktop visitor on a member-app path to the mobile-required screen", async () => {
+  it("keeps the member app behind authentication on desktop", async () => {
     renderAt("/member/home");
 
-    await waitFor(() =>
-      expect(window.location.pathname + window.location.search).toBe(
-        "/member/mobile-required?to=%2Fmember%2Fhome",
-      ),
-    );
-    // The hand-off screen itself resolves (lazy chunk loaded, QR stub fed the
-    // member-home target) rather than crashing on canvas rendering.
+    await waitFor(() => expect(window.location.pathname).toBe("/member/app-sign-in"));
     expect(
-      await screen.findByText(
-        "Scan To Continue On Your Phone",
-        {},
-        { timeout: LAZY_ROUTE_TIMEOUT },
-      ),
+      await screen.findByText("Sign In To Your Account", {}, { timeout: LAZY_ROUTE_TIMEOUT }),
     ).toBeDefined();
   });
 
-  it("lets a mobile device past the device gate, then bounces the signed-out session to member sign-in", async () => {
+  it("keeps desktop member registration device-gated", async () => {
+    renderAt("/member/join");
+
+    await waitFor(() =>
+      expect(window.location.pathname + window.location.search).toBe(
+        "/member/mobile-required?to=%2Fmember%2Fjoin",
+      ),
+    );
+  });
+
+  it("bounces a signed-out mobile session to member sign-in", async () => {
     setUA(IPHONE_UA);
     renderAt("/member/home");
 

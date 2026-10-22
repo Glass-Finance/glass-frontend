@@ -3,12 +3,10 @@ import {
   resolvePostAuthDestination,
   MEMBER_HOME,
   MEMBER_INVITES,
-  MEMBER_SIGN_IN,
   DASHBOARD_HOME,
   ADMIN_PANEL,
   DISCOVER_COMMUNITIES,
 } from "../../utils/postAuthDestination";
-import { mobileRequiredPath } from "../../utils/deviceRedirect";
 
 const ADMIN = { isPlatformAdmin: false, isAdmin: true };
 const PLATFORM_ADMIN = { isPlatformAdmin: true, isAdmin: true };
@@ -30,10 +28,8 @@ describe("resolvePostAuthDestination", () => {
     ).toEqual({ to: DASHBOARD_HOME });
   });
 
-  it("sends desktop non-admins to the QR handoff", () => {
-    expect(resolvePostAuthDestination({ user: MEMBER, isMobile: false })).toEqual({
-      to: mobileRequiredPath(MEMBER_SIGN_IN),
-    });
+  it("routes members to the member app on desktop as well as mobile", () => {
+    expect(resolvePostAuthDestination({ user: MEMBER })).toEqual({ to: MEMBER_HOME });
   });
 
   it("returns a join-community descriptor for pending shareable links", () => {

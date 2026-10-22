@@ -112,17 +112,23 @@ export default function Settings() {
   return (
     <div className="relative overflow-hidden min-h-screen pb-10">
       <GlassLogoGlow />
-      <div className="relative flex items-center justify-center pt-5 px-4 pb-4">
+      <div className="relative flex items-center justify-center pt-5 px-4 pb-4 md:flex-col md:items-start md:justify-start md:px-0 md:pt-0 md:pb-6">
         <MobileBackButton
           aria-label="Back"
           onClick={() => navigate(-1)}
-          className="absolute left-4"
+          className="absolute left-4 md:hidden"
         />
-        {/* Figma draws the title at weight 500, not 600. */}
-        <h1 className="text-lg font-medium text-ink m-0">Settings</h1>
+        <div className="text-center md:text-left">
+          <h1 className="text-lg font-medium text-ink m-0 md:text-2xl md:font-semibold">
+            Settings
+          </h1>
+          <p className="hidden text-sm text-ink-muted md:mt-1 md:block">
+            Manage your account, payment preferences, and communities.
+          </p>
+        </div>
       </div>
 
-      <div className="px-4">
+      <div className="px-4 md:mx-auto md:w-full md:max-w-3xl md:px-0">
         {sections.map((section) => (
           <div key={section.label} className="mb-5">
             {/* Figma section header: 14px/500 at #000000 @ 0.6. */}

@@ -304,7 +304,7 @@ export default function PaymentSuccess() {
   }[state];
 
   return (
-    <div className="relative flex flex-col min-h-screen overflow-hidden max-w-[430px] mx-auto">
+    <div className="relative flex flex-col min-h-screen overflow-hidden max-w-[430px] mx-auto md:max-w-2xl">
       <GlassLogoGlow />
       {/* Top bar — the success screen is a deliberate landing page (two
           real choices below, no auto-redirect), not an in-flow step, so it

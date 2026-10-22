@@ -7,7 +7,6 @@ import { useAuth } from "../../store/AuthContext";
 import { getAccessToken } from "../../store/sessionStorage";
 import { useMfaChallenge } from "../../hooks/useMfaChallenge";
 import { getMyInvites, getMyCommunityJoinRequests, submitJoinRequest } from "../../api/invites";
-import { isMobileDevice } from "../../utils/deviceRedirect";
 import { notifyError } from "../../utils/errorHandler";
 import { resolvePostAuthDestination } from "../../utils/postAuthDestination";
 import { toastInfo, toastSuccess } from "../../utils/toast";
@@ -22,14 +21,9 @@ import { MfaChallengeScreen, OtpVerifyScreen } from "./SignInSections";
 import { parseIdentifier, validateIdentifier } from "../../utils/authIdentifiers";
 import ModeTabs from "../../components/auth/ModeTabs";
 
-// One sign-in page reachable from two routes (/sign-in and
-// /member/app-sign-in) — neither the page nor the login call itself knows
-// in advance whether this is a community owner or a mobile-only member,
-// only the *resulting* role/device does, so there was never a reason for
-// two separate implementations. AuthLayout already adapts its chrome
-// between a desktop split-screen and a mobile top-banner/bottom-sheet via
-// CSS breakpoints, which is exactly the "one page, adapts by screen size"
-// behavior both entry points need.
+// One sign-in page is shared by the admin and member entry points. Routing
+// after authentication depends on the resulting role and return context;
+// AuthLayout adapts its chrome between desktop and mobile via CSS.
 export default function SignIn() {
   usePageTitle("Sign in");
   const navigate = useNavigate();
@@ -183,8 +177,8 @@ export default function SignIn() {
   }
 
   // Shared by password sign-in and Google sign-in: resolves the destination
-  // by the *resulting* role/device, since neither knows in advance whether
-  // this is a community owner or a mobile-only member. Pure routing math
+  // by the *resulting* role, since neither knows in advance whether this is
+  // a community owner or a member. Pure routing math
   // lives in resolvePostAuthDestination (unit-tested); this wrapper only
   // performs the async side work (community submit, invite lookups) and
   // consumes the one-shot session flags before delegating.
@@ -240,7 +234,7 @@ export default function SignIn() {
     // Admins return before this point inside the helper's role branches, so
     // these member-only lookups only run for member sessions, as before.
     let hasPendingInvites = false;
-    if (!user?.isPlatformAdmin && !user?.isAdmin && isMobileDevice()) {
+    if (!user?.isPlatformAdmin && !user?.isAdmin) {
       try {
         const inviteRes = await getMyInvites();
         const inviteData = inviteRes?.data?.data;
@@ -260,7 +254,6 @@ export default function SignIn() {
 
     return resolvePostAuthDestination({
       user,
-      isMobile: isMobileDevice(),
       returnTo,
       pendingPaymentRef: pendingRef,
       hasPendingInvites,

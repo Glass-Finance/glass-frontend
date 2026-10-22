@@ -152,7 +152,6 @@ export default function Join() {
       return;
     }
     const dest = resolvePostAuthDestination({
-      isMobile: true, // this route is device-gated upstream
       inviteToken: token,
       viaGoogle,
       fallback: "/member/communities/search",

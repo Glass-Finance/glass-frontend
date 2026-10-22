@@ -47,7 +47,7 @@ export function CommunitySwitcher({
             fallback={<span>{communityInitial}</span>}
           />
         </div>
-        <span className="text-sm font-medium text-ink whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+        <span className="text-sm font-medium text-ink whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] md:max-w-[300px]">
           {communityName}
         </span>
         <ChevronDown
@@ -115,7 +115,7 @@ export function HeroCard({ nextDue, onPay, error, onRefresh }) {
   if (!nextDue) {
     const isError = Boolean(error);
     return (
-      <div className="relative mx-4 rounded-lg overflow-hidden bg-white">
+      <div className="relative mx-4 rounded-lg overflow-hidden bg-white md:mx-0">
         <div className="absolute inset-0 rounded-lg border-[1.5px] border-surface-container-border pointer-events-none" />
         <div
           className={`absolute inset-0 rounded-lg border-[1.5px] pointer-events-none ${isError ? "border-danger" : "border-brand"}`}
@@ -182,7 +182,7 @@ export function HeroCard({ nextDue, onPay, error, onRefresh }) {
   const isOverdue = new Date(nextDue.dueDate) < new Date();
 
   return (
-    <div className="relative mx-4 rounded-lg overflow-hidden bg-white">
+    <div className="relative mx-4 rounded-lg overflow-hidden bg-white md:mx-0">
       <div className="absolute inset-0 rounded-lg border-[1.5px] border-surface-container-border pointer-events-none" />
       <div
         className={`absolute inset-0 rounded-lg border-[1.5px] pointer-events-none ${isOverdue ? "border-danger" : "border-brand"}`}
@@ -286,7 +286,7 @@ export function HistoryRow({ item, onOpen }) {
 
 export function NoCommunityState({ navigate }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[60px] pb-20 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[60px] pb-20 text-center md:col-span-2 md:mx-auto md:min-h-[400px] md:w-full md:max-w-2xl md:rounded-2xl md:border md:border-surface-container-border md:bg-white md:px-10 md:py-10">
       <img
         src={noCommunityIcon}
         alt=""
@@ -319,7 +319,7 @@ export function NoCommunityState({ navigate }) {
 
 export function NothingHappeningState({ navigate }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[60px] pb-20 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[60px] pb-20 text-center md:col-span-2 md:mx-auto md:min-h-[400px] md:w-full md:max-w-2xl md:rounded-2xl md:border md:border-surface-container-border md:bg-white md:px-10 md:py-10">
       <img
         src={noCommunityIcon}
         alt=""
@@ -352,7 +352,7 @@ export function NothingHappeningState({ navigate }) {
 
 export function PendingApprovalState({ navigate, community }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-8 pt-[60px] pb-20 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center px-8 pt-[60px] pb-20 text-center md:col-span-2 md:mx-auto md:min-h-[400px] md:w-full md:max-w-2xl md:rounded-2xl md:border md:border-surface-container-border md:bg-white md:px-10 md:py-10">
       <div className="w-20 h-20 rounded-full bg-[#FFF7E0] flex items-center justify-center mb-7">
         <Clock size={36} strokeWidth={1.6} className="text-accent-gold" />
       </div>
@@ -413,7 +413,7 @@ export function ProfileNudge({ navigate, user }) {
   return (
     <button
       onClick={() => navigate("/member/verify-phone")}
-      className="w-[calc(100%-40px)] mx-5 mb-4 flex items-center gap-3 text-left bg-brand-mist rounded-2xl px-4 py-3.5 border-none cursor-pointer"
+      className="w-[calc(100%-40px)] mx-5 mb-4 flex items-center gap-3 text-left bg-brand-mist rounded-2xl px-4 py-3.5 border-none cursor-pointer md:col-span-2 md:mx-0 md:mb-0 md:w-full"
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-brand m-0">Add Your Phone Number</p>

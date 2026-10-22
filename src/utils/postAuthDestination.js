@@ -9,7 +9,6 @@
  * Precedence mirrors the long-standing per-page logic, consolidated:
  *   platform admin → full-admin shell
  *   admin → validated returnTo (admin contexts) → dashboard home
- *   non-mobile non-admin → QR handoff (member app is mobile-only)
  *   pending community link → join-request flow (descriptor, caller submits)
  *   validated returnTo → it
  *   pending payment reference → payment callback
@@ -21,24 +20,20 @@
  * { joinCommunity: string } when the caller must first submit the pending
  * community join request, then route to /member/invites itself.
  *
- * @param {{ user?: { isPlatformAdmin?: boolean, isAdmin?: boolean }|null, isMobile?: boolean, returnTo?: string, pendingCommunity?: string, pendingPaymentRef?: string, inviteToken?: string, viaGoogle?: boolean, hasPendingInvites?: boolean, fallback?: string }} [opts]
+ * @param {{ user?: { isPlatformAdmin?: boolean, isAdmin?: boolean }|null, returnTo?: string, pendingCommunity?: string, pendingPaymentRef?: string, inviteToken?: string, viaGoogle?: boolean, hasPendingInvites?: boolean, fallback?: string }} [opts]
  */
 import { isSafeReturnPath } from "./returnPath";
-import { mobileRequiredPath } from "./deviceRedirect";
-
 export const MEMBER_HOME = "/member/home";
 export const MEMBER_INVITES = "/member/invites";
-export const MEMBER_SIGN_IN = "/member/app-sign-in";
 export const DASHBOARD_HOME = "/dashboard/home";
 export const ADMIN_PANEL = "/dashboard/admin-panel";
 export const DISCOVER_COMMUNITIES = "/member/communities/search";
 
 /**
- * @param {{ user?: { isPlatformAdmin?: boolean, isAdmin?: boolean }|null, isMobile?: boolean, returnTo?: string, pendingCommunity?: string, pendingPaymentRef?: string, inviteToken?: string, viaGoogle?: boolean, hasPendingInvites?: boolean, fallback?: string }} [opts]
+ * @param {{ user?: { isPlatformAdmin?: boolean, isAdmin?: boolean }|null, returnTo?: string, pendingCommunity?: string, pendingPaymentRef?: string, inviteToken?: string, viaGoogle?: boolean, hasPendingInvites?: boolean, fallback?: string }} [opts]
  */
 export function resolvePostAuthDestination({
   user,
-  isMobile = true,
   returnTo,
   pendingCommunity,
   pendingPaymentRef,
@@ -54,10 +49,6 @@ export function resolvePostAuthDestination({
     if (safe) return { to: safe };
     return { to: DASHBOARD_HOME };
   }
-
-  // The member app is mobile-only — a non-admin on desktop/tablet gets the
-  // QR handoff (pointing back at sign-in), not a layout never built for it.
-  if (!isMobile) return { to: mobileRequiredPath(MEMBER_SIGN_IN) };
 
   // joinCommunity documents the join-request routing contract; current
   // callers submit the community link inline before delegating, so no
