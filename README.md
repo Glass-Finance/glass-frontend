@@ -43,7 +43,7 @@ npm run dev            # starts on http://localhost:3000
 | `VITE_GOOGLE_CLIENT_ID`           | Google sign-in only | OAuth 2.0 Web client ID.                                                               |
 | `VITE_APP_URL`                    | No                  | Public app origin (defaults to `window.location.origin`).                              |
 | `VITE_CRISP_WEBSITE_ID`           | No                  | Crisp chat widget ID (disables chat if unset).                                         |
-| `VITE_SENTRY_DSN`                 | Prod: yes           | Sentry error reporting.                                                                |
+| `VITE_SENTRY_DSN`                 | Production: yes     | Sentry error and performance reporting. Production is configured; unset locally to disable monitoring. |
 | `VITE_SENTRY_TRACES_SAMPLE_RATE`  | No                  | 0–1, defaults to `0.1`.                                                                |
 | `VITE_FLAGS`                      | No                  | JSON feature flags (e.g. `{"paymentsDisabled":true}`).                                 |
 | `VITE_SMILE_ENV` / `VITE_SMILE_*` | No                  | Smile ID KYC browser SDK config.                                                       |
@@ -183,3 +183,9 @@ Detailed docs live in [`docs/`](docs/):
 - [`docs/team-conventions.md`](docs/team-conventions.md) — How the team works
 - [`docs/decisions/`](docs/decisions/) — Architecture decision records
 - [`docs/runbooks/`](docs/runbooks/) — Operational runbooks
+
+## License
+
+This repository is proprietary to **Glass Limited**. No license to use or
+redistribute the software is granted by access to the repository; see
+[`LICENSE`](LICENSE).

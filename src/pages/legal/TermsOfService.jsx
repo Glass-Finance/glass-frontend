@@ -9,7 +9,7 @@ export default function TermsOfService() {
     <LegalPageLayout
       title="Glass Finance — Terms of Service"
       effectiveDate="1st of August, 2026"
-      lastUpdated="1st of August, 2026"
+      lastUpdated="22nd of October, 2026"
     >
       <p>
         These Terms of Service ("Terms," "Agreement") are a binding legal agreement between Glass
@@ -96,7 +96,7 @@ export default function TermsOfService() {
         </li>
         <li>
           <strong>"Affiliate"</strong> means any entity that controls, is controlled by, or is under
-          common control with Glass Finance Limited.
+          common control with Glass Limited.
         </li>
       </ul>
 
@@ -382,7 +382,7 @@ export default function TermsOfService() {
       <h2>17. Intellectual Property</h2>
       <p>
         17.1 The Platform, including its software, design, trademarks (including "Glass" and
-        associated logos), and underlying technology, is owned by Glass Finance Limited or its
+        associated logos), and underlying technology, is owned by Glass Limited or its
         licensors and is protected by Nigerian and international intellectual property law.
       </p>
       <p>
@@ -615,7 +615,7 @@ export default function TermsOfService() {
 
       <h2>33. Contact Information</h2>
       <p>
-        Glass Finance Limited
+        Glass Limited
         <br />
         Email: <a href="mailto:legal@glasspay.app">legal@glasspay.app</a>
         <br />

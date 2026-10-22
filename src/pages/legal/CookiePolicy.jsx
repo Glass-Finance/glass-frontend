@@ -13,10 +13,10 @@ export default function CookiePolicy() {
     <LegalPageLayout
       title="Glass Finance — Cookie Policy"
       effectiveDate="1st of August, 2026"
-      lastUpdated="1st of August, 2026"
+      lastUpdated="22nd of October, 2026"
     >
       <p>
-        This Cookie Policy explains how Glass Finance Limited ("Glass," "we," "us," "our") uses
+        This Cookie Policy explains how Glass Limited ("Glass," "we," "us," "our") uses
         cookies and similar technologies on our website and applications (the "Platform"). This
         Policy supplements our <Link to="/privacy">Privacy Policy</Link> and should be read
         alongside it. Capitalized terms not defined here have the meaning given in the{" "}
@@ -150,7 +150,7 @@ export default function CookiePolicy() {
 
       <h2>16. Contact Us</h2>
       <p>
-        Glass Finance Limited
+        Glass Limited
         <br />
         Email: <a href="mailto:legal@glasspay.app">legal@glasspay.app</a>
         <br />

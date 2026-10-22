@@ -36,7 +36,7 @@ export default function LegalPageLayout({ title, effectiveDate, lastUpdated, chi
       <footer className="border-t border-gray-100">
         <div className="max-w-3xl mx-auto px-6 py-8 text-center">
           <p className="text-xs text-gray-400">
-            Copyright © {new Date().getFullYear()} Glass Finance Limited
+            Copyright © {new Date().getFullYear()} Glass Limited
           </p>
         </div>
       </footer>
