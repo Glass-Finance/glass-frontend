@@ -2,9 +2,7 @@
 //
 // Back navigation that never leaves the app.
 //
-// The member app is entered with `replace: true` everywhere — post-auth
-// destinations (auth/member/Join, auth/SignIn), the mobile-required QR handoff
-// (routes/MemberDeviceGuard → /member/mobile-required?to=…), Paystack redirects,
+// The member app is entered with `replace: true` for post-auth destinations
 // and interrupted-payment resumes. The router's history depth is therefore
 // often exactly one entry, so `navigate(-1)` pops the document and hands the
 // browser back to whatever preceded the app: the marketing landing page, an

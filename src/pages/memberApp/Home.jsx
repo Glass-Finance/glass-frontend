@@ -176,11 +176,11 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative overflow-hidden min-h-screen pb-10">
+      <div className="relative overflow-hidden min-h-screen pb-10 md:grid md:grid-cols-2 md:content-start md:gap-x-6 md:gap-y-4 md:pb-8">
         <GlassLogoGlow />
         <SideDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-        <div className="flex items-start justify-between pt-[25px] px-5 pb-5">
+        <div className="flex items-start justify-between pt-[25px] px-5 pb-5 md:col-span-2 md:items-center md:px-0 md:pt-2 md:pb-3">
           <div className="flex flex-col gap-[7px] min-w-0">
             <div className="flex items-center gap-[15px] min-w-0">
               <Button
@@ -188,7 +188,7 @@ export default function Home() {
                 size="icon-md"
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open menu"
-                className="flex-shrink-0"
+                className="flex-shrink-0 md:hidden"
               >
                 <Menu size={28} strokeWidth={2} className="text-ink" />
               </Button>
@@ -249,7 +249,7 @@ export default function Home() {
         </div>
 
         {!hasNoCommunity && !showNothingHappening && (
-          <div className="pt-1 px-5 pb-5">
+          <div className="pt-1 px-5 pb-5 md:col-span-2 md:px-0 md:pt-0 md:pb-2">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-2xl font-medium text-ink m-0">Hi {firstName(data?.user)},</h1>
               {showKycBadge && (
@@ -284,7 +284,7 @@ export default function Home() {
           <>
             <HeroCard nextDue={nextDue} onPay={handlePay} error={error} onRefresh={refresh} />
 
-            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border">
+            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border md:mx-0 md:mt-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-normal text-ink">Upcoming Payments</span>
@@ -311,7 +311,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border">
+            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border md:mx-0 md:mt-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-normal text-ink">Payment History</span>
                 {history.length > 0 && (

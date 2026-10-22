@@ -2,16 +2,14 @@ import { test, expect } from "@playwright/test";
 import { MEMBER_PERSONA, createScenario, installNetworkMock, ok, preparePage } from "./support.js";
 
 test.describe("member payment initiation", () => {
-  // The member app is mobile-only (MemberDeviceGuard): a narrow viewport plus
-  // touch emulation satisfies the device check's width<768 + coarse-pointer
-  // fallback, so the seeded member lands on the real payment summary instead
-  // of the QR handoff.
+  // The payment flow is exercised in a mobile browser to cover its phone
+  // layout and touch interactions.
   test.use({ isMobile: true, hasTouch: true, viewport: { width: 390, height: 844 } });
 
   test("reaches the provider authorization boundary without a real charge", async ({
     page,
   }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile-chromium", "member pay flow is mobile-only");
+    test.skip(testInfo.project.name !== "mobile-chromium", "member payment flow mobile coverage");
     const scenario = createScenario({ persona: MEMBER_PERSONA });
     scenario.overrides.push({
       method: "GET",
@@ -35,6 +33,8 @@ test.describe("member payment initiation", () => {
 
     await page.goto("/member/pay/pl-e2e?via=link");
 
+    await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "Member app navigation" })).toBeHidden();
     const payButton = page.getByRole("button", { name: "Make Payment" });
     await expect(payButton).toBeVisible(); // link data loaded, button actionable
     await payButton.click();

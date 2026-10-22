@@ -17,10 +17,9 @@ export default function MobileRequired() {
   const target = isSafeReturnPath(searchParams.get("to")) ?? "/member/app-sign-in";
   const url = buildMobileUrl(target);
 
-  // Admins have a real desktop home to go to; a pure member doesn't --
-  // sending them to /dashboard/home would just get bounced by
-  // ProtectedRoute back to /member/home, which is itself mobile-gated,
-  // landing them right back on this page.
+  // Admins can continue to their dashboard. The member registration flow
+  // remains mobile-only, so unauthenticated members return to the public
+  // landing page from this handoff.
   const continueTo = isAdmin ? "/dashboard/home" : "/";
 
   return (

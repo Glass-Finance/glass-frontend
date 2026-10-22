@@ -18,9 +18,8 @@ function StepHeader({ title, onBack, right }) {
   );
 }
 
-// Member-app identity verification (mobile-only — the device gate keeps
-// desktop traffic on the dashboard-styled page). Thin chrome wrapper around
-// the shared KYC flow (useKycFlow) — same stepper/steps/footer as the
+// Member-app identity verification. Thin chrome wrapper around the shared
+// KYC flow (useKycFlow) — same stepper/steps/footer as the
 // dashboard page and the KycWizardModal; the Smile ID state machine stays
 // in useKycVerification.
 export default function VerifyIdentity() {

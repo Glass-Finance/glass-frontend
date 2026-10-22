@@ -241,7 +241,7 @@ export default function PaymentSummary() {
   const isTestMode = import.meta.env.VITE_TEST_MODE === "true";
 
   return (
-    <div className="relative flex flex-col min-h-screen overflow-hidden max-w-[430px] mx-auto">
+    <div className="relative flex flex-col min-h-screen overflow-hidden max-w-[430px] mx-auto md:max-w-2xl">
       <GlassLogoGlow />
       {/* ── Top bar ── */}
       <div className="flex items-center px-4 pt-5 pb-4 relative">

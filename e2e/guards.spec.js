@@ -21,17 +21,17 @@ test("unauthenticated /dashboard/home redirects to /sign-in", async ({ page }, t
 test("unauthenticated /member/home redirects to /member/app-sign-in on mobile", async ({
   page,
 }, testInfo) => {
-  test.skip(testInfo.project.name !== "mobile-chromium", "member app is mobile");
+  test.skip(testInfo.project.name !== "mobile-chromium", "mobile member app auth guard");
   await blockThirdParty(page);
   await page.goto("/member/home");
   await expect(page).toHaveURL(/\/member\/app-sign-in/);
 });
 
-test("desktop hitting a member route gets the mobile-required handoff", async ({
+test("unauthenticated desktop member route redirects to member sign-in", async ({
   page,
 }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop-chromium", "device gate checked on desktop");
+  test.skip(testInfo.project.name !== "desktop-chromium", "desktop member app auth guard");
   await blockThirdParty(page);
   await page.goto("/member/home");
-  await expect(page).toHaveURL(/\/member\/mobile-required/);
+  await expect(page).toHaveURL(/\/member\/app-sign-in/);
 });

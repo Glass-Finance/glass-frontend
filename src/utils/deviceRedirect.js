@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Device detection for the member app's mobile-only gating.
+// Device detection for mobile-only member registration.
 //
 // Tablets are treated as desktop — the member experience is phone-first,
 // not just "narrow viewport," so a tablet shouldn't slip through a pure

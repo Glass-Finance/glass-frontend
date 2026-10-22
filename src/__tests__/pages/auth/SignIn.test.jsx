@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import SignIn from "../../../pages/auth/SignIn";
 import { useAuth } from "../../../store/AuthContext";
 import { verifyMfaLogin, requestLoginOtp, verifyLoginOtp } from "../../../services/authService";
@@ -21,9 +21,8 @@ vi.mock("../../../services/authService", () => ({
   requestLoginOtp: vi.fn(),
   verifyLoginOtp: vi.fn(),
 }));
-// Invite lookups only run for mobile member sessions (jsdom is desktop), but
-// the pending ?community= join-request submission runs on any device during
-// resolveDestination — mocked to assert that contract without a network call.
+// Member invite lookups and pending ?community= join-request submissions are
+// mocked to assert post-auth routing without network calls.
 vi.mock("../../../api/invites", () => ({
   getMyInvites: vi.fn(),
   getMyCommunityJoinRequests: vi.fn(),
@@ -48,13 +47,6 @@ function setWidth(width) {
   Object.defineProperty(window, "innerWidth", { value: width, configurable: true });
 }
 
-// Captures where SignIn navigated to, including the query string the
-// mobile-required handoff encodes its target into.
-function DestinationMarker() {
-  const location = useLocation();
-  return <div data-testid="destination">{location.pathname + location.search}</div>;
-}
-
 function renderSignIn(initialPath = "/sign-in") {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
@@ -62,7 +54,7 @@ function renderSignIn(initialPath = "/sign-in") {
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/member/app-sign-in" element={<SignIn />} />
         <Route path="/dashboard/admin-panel" element={<div>Admin panel</div>} />
-        <Route path="/member/mobile-required" element={<DestinationMarker />} />
+        <Route path="/member/home" element={<div>Member home</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -94,8 +86,8 @@ beforeEach(() => {
   sessionStorage.clear();
   localStorage.clear();
   // Desktop device + an unauthenticated session by default; individual tests
-  // override the auth mock. isMobileDevice() feeds resolvePostAuthDestination,
-  // so pinning UA/width keeps the asserted destinations deterministic.
+  // override the auth mock. Pinning UA/width keeps device-specific entry
+  // flows deterministic.
   setUA(DESKTOP_UA);
   setWidth(1440);
   useAuth.mockReturnValue({
@@ -163,18 +155,14 @@ describe("SignIn password form", () => {
     });
   });
 
-  it("routes a non-admin member on desktop to the QR handoff instead of the member app", async () => {
+  it("routes a non-admin member on desktop into the member app", async () => {
     renderSignIn();
     useAuth().login.mockResolvedValue({ isPlatformAdmin: false, isAdmin: false });
 
     fillCredentials("member@example.com", "secret123");
     clickSignIn();
 
-    const marker = await screen.findByTestId("destination");
-    // The member app is mobile-only; resolvePostAuthDestination sends desktop
-    // members to the mobile-required screen pointed back at the member
-    // sign-in entry point.
-    expect(marker.textContent).toBe("/member/mobile-required?to=%2Fmember%2Fapp-sign-in");
+    expect(await screen.findByText("Member home")).toBeDefined();
   });
 
   it("surfaces the pre-auth 401 as credential feedback and re-enables the form", async () => {
@@ -253,8 +241,7 @@ describe("SignIn pre-auth redirect", () => {
 
     renderSignIn();
 
-    const marker = await screen.findByTestId("destination");
-    expect(marker.textContent).toBe("/member/mobile-required?to=%2Fmember%2Fapp-sign-in");
+    expect(await screen.findByText("Member home")).toBeDefined();
     expect(screen.queryByText("Sign In To Your Account")).toBeNull();
   });
 
