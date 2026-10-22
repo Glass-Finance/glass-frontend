@@ -59,6 +59,7 @@ describe("renderDashedOtpBoxes", () => {
     expect(fourthBox.parentElement).toBe(fifthBox.parentElement);
     expect(fourthBox.parentElement).toBe(sixthBox.parentElement);
     expect(firstBox.parentElement.className).toContain("gap-2");
+    expect(firstBox.parentElement.className).toContain("md:gap-4");
     expect(firstBox.parentElement.className).not.toContain("flex-1");
     expect(firstBox.parentElement.parentElement.className).toContain("w-fit");
     expect(firstBox.parentElement.parentElement.className).toContain("max-w-full");

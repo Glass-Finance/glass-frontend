@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { requestLoginOtp, verifyLoginOtp } from "../services/authService";
-import { parseIdentifier, validateIdentifier } from "../utils/authIdentifiers";
+import { getEmailError } from "../utils/validators";
+import { isPhoneValid, PHONE_FORMAT_HINT } from "../utils/phone";
 import { notifyError, getErrorMessage, getRetryAfterSeconds } from "../utils/errorHandler";
 import { useCountdown, formatCountdown } from "./useCountdown";
 
@@ -18,6 +19,7 @@ import { useCountdown, formatCountdown } from "./useCountdown";
 //   onAuthenticated(authData)        — establish the session and route onward
 export function useOtpSignIn({ onAuthAttempt, onMfaRequired, onAuthenticated }) {
   const [otpStep, setOtpStep] = useState("request"); // "request" | "verify"
+  const [otpChannel, setOtpChannel] = useState("email"); // "email" | "phone"
   const [otpIdentifier, setOtpIdentifier] = useState("");
   const [otpIdentifierError, setOtpIdentifierError] = useState("");
   const [otpSending, setOtpSending] = useState(false);
@@ -36,8 +38,22 @@ export function useOtpSignIn({ onAuthAttempt, onMfaRequired, onAuthenticated }) 
   const resendSecondsLeft = useCountdown(resendCooldown, resendCooldownKey);
   const otpCodeExpired = otpStep === "verify" && otpSecondsLeft <= 0;
 
+  function getOtpIdentifier() {
+    const identifier = otpIdentifier.trim();
+    return otpChannel === "email"
+      ? { email: identifier.toLowerCase() }
+      : { phoneNumber: identifier };
+  }
+
   async function handleSendOtp() {
-    const identifierError = validateIdentifier(otpIdentifier);
+    const identifierError =
+      otpChannel === "email"
+        ? getEmailError(otpIdentifier)
+        : !otpIdentifier.trim()
+          ? "Phone number is required."
+          : isPhoneValid(otpIdentifier)
+            ? ""
+            : PHONE_FORMAT_HINT;
     if (identifierError) {
       setOtpIdentifierError(identifierError);
       return;
@@ -45,7 +61,7 @@ export function useOtpSignIn({ onAuthAttempt, onMfaRequired, onAuthenticated }) 
     setOtpSending(true);
     setOtpIdentifierError("");
     try {
-      const result = await requestLoginOtp(parseIdentifier(otpIdentifier));
+      const result = await requestLoginOtp(getOtpIdentifier());
       const seconds = Math.max(0, Math.round((new Date(result.expiresAt) - Date.now()) / 1000));
       setOtpInitialSeconds(seconds);
       setResendCount((c) => c + 1);
@@ -66,7 +82,7 @@ export function useOtpSignIn({ onAuthAttempt, onMfaRequired, onAuthenticated }) 
     setOtpError("");
     try {
       const result = await verifyLoginOtp({
-        ...parseIdentifier(otpIdentifier),
+        ...getOtpIdentifier(),
         token: otp.join(""),
       });
       if (result?.mfaRequired) {
@@ -90,7 +106,7 @@ export function useOtpSignIn({ onAuthAttempt, onMfaRequired, onAuthenticated }) 
     setOtpSending(true);
     setOtpError("");
     try {
-      const result = await requestLoginOtp(parseIdentifier(otpIdentifier));
+      const result = await requestLoginOtp(getOtpIdentifier());
       const seconds = Math.max(0, Math.round((new Date(result.expiresAt) - Date.now()) / 1000));
       setOtpInitialSeconds(seconds);
       setResendCount((c) => c + 1);
@@ -112,6 +128,8 @@ export function useOtpSignIn({ onAuthAttempt, onMfaRequired, onAuthenticated }) 
   return {
     otpStep,
     setOtpStep,
+    otpChannel,
+    setOtpChannel,
     otpIdentifier,
     setOtpIdentifier,
     otpIdentifierError,

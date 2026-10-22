@@ -127,6 +127,7 @@ export function MfaChallengeScreen({
 
 export function OtpVerifyScreen({
   otpIdentifier,
+  otpChannel,
   otp,
   setOtp,
   otpError,
@@ -154,7 +155,7 @@ export function OtpVerifyScreen({
             onClick={onBackToIdentifier}
             className="mt-1 !px-0"
           >
-            Use a different email
+            Use a different {otpChannel === "phone" ? "phone number" : "email"}
           </Button>
           <p
             className={`text-xs mt-2 ${otpCodeExpired ? "text-danger font-medium" : "text-gray-400"}`}

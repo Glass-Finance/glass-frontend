@@ -479,7 +479,7 @@ describe("SignIn one-time-code mode", () => {
     renderSignIn();
     switchToOtpMode();
 
-    fireEvent.change(screen.getByPlaceholderText("Enter your email or number"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter your email address"), {
       target: { value: "bad@" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Send Code" }));
@@ -498,7 +498,7 @@ describe("SignIn one-time-code mode", () => {
     auth.setSession.mockResolvedValue({ isPlatformAdmin: true, isAdmin: true });
     switchToOtpMode();
 
-    fireEvent.change(screen.getByPlaceholderText("Enter your email or number"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter your email address"), {
       target: { value: "Member@Example.com" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Send Code" }));
@@ -522,20 +522,59 @@ describe("SignIn one-time-code mode", () => {
     expect(auth.setSession).toHaveBeenCalledWith({ accessToken: "otp-token" });
   });
 
-  it("requests a code for a phone identifier as well as an email one", async () => {
+  it("switches to phone OTP, lets the user correct the number, and verifies by phone", async () => {
     renderSignIn();
     requestLoginOtp.mockResolvedValue({
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     });
     switchToOtpMode();
 
-    fireEvent.change(screen.getByPlaceholderText("Enter your email or number"), {
+    fireEvent.click(screen.getByRole("button", { name: "Use phone number instead" }));
+    const phoneInput = screen.getByPlaceholderText("Enter your phone number");
+    expect(phoneInput.getAttribute("inputmode")).toBe("tel");
+    fireEvent.change(phoneInput, {
       target: { value: "+2348012345678" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Send Code" }));
 
     expect(await screen.findByText("Enter Your Code")).toBeDefined();
     expect(requestLoginOtp).toHaveBeenCalledWith({ phoneNumber: "+2348012345678" });
+    fireEvent.click(screen.getByRole("button", { name: "Use a different phone number" }));
+
+    const editablePhoneInput = screen.getByPlaceholderText("Enter your phone number");
+    expect(editablePhoneInput.value).toBe("+2348012345678");
+    fireEvent.change(editablePhoneInput, { target: { value: "+2348098765432" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send Code" }));
+    await waitFor(() =>
+      expect(requestLoginOtp).toHaveBeenLastCalledWith({ phoneNumber: "+2348098765432" }),
+    );
+    expect(requestLoginOtp).toHaveBeenCalledTimes(2);
+
+    verifyLoginOtp.mockResolvedValue({ accessToken: "phone-otp-token" });
+    fireEvent.change(screen.getByLabelText("Verification code"), {
+      target: { value: "654321" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Verify & Sign In" }));
+
+    await waitFor(() =>
+      expect(verifyLoginOtp).toHaveBeenCalledWith({
+        phoneNumber: "+2348098765432",
+        token: "654321",
+      }),
+    );
+  });
+
+  it("requires a valid phone number before requesting an SMS code", () => {
+    renderSignIn();
+    switchToOtpMode();
+    fireEvent.click(screen.getByRole("button", { name: "Use phone number instead" }));
+    fireEvent.change(screen.getByPlaceholderText("Enter your phone number"), {
+      target: { value: "not a number" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Send Code" }));
+
+    expect(screen.getByText(/Enter a valid phone number/)).toBeDefined();
+    expect(requestLoginOtp).not.toHaveBeenCalled();
   });
 
   it("stays on the code screen and explains a rejected code", async () => {
@@ -549,7 +588,7 @@ describe("SignIn one-time-code mode", () => {
     });
     switchToOtpMode();
 
-    fireEvent.change(screen.getByPlaceholderText("Enter your email or number"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter your email address"), {
       target: { value: "member@example.com" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Send Code" }));

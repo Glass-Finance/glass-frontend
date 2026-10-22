@@ -108,6 +108,8 @@ export default function SignIn() {
   const {
     otpStep,
     setOtpStep,
+    otpChannel,
+    setOtpChannel,
     otpIdentifier,
     setOtpIdentifier,
     otpIdentifierError,
@@ -388,6 +390,7 @@ export default function SignIn() {
     return (
       <OtpVerifyScreen
         otpIdentifier={otpIdentifier}
+        otpChannel={otpChannel}
         otp={otp}
         setOtp={(next) => {
           setOtp(next);
@@ -520,21 +523,53 @@ export default function SignIn() {
         ) : (
           <>
             <div>
-              <Label htmlFor="otp-identifier">Email or Phone Number</Label>
+              <Label htmlFor="otp-identifier">
+                {otpChannel === "email" ? "Email address" : "Phone number"}
+              </Label>
               <TextInput
                 id="otp-identifier"
-                type="text"
-                placeholder="Enter your email or number"
+                type={otpChannel === "email" ? "email" : "tel"}
+                inputMode={otpChannel === "email" ? "email" : "tel"}
+                placeholder={
+                  otpChannel === "email" ? "Enter your email address" : "Enter your phone number"
+                }
                 value={otpIdentifier}
                 onChange={(e) => {
                   setOtpIdentifier(e.target.value);
                   setOtpIdentifierError("");
                 }}
-                autoComplete="username"
+                autoComplete={otpChannel === "email" ? "email" : "tel"}
                 disabled={otpSending}
                 error={otpIdentifierError}
               />
               <ErrorMessage message={otpIdentifierError} />
+              <p className="text-sm text-gray-500 mt-2">
+                <Button
+                  variant="tertiary"
+                  size="xs"
+                  fullWidth={false}
+                  aria-label={`Use ${otpChannel === "email" ? "phone number" : "email"} instead`}
+                  className="!px-0 !py-0 !h-auto !inline-flex font-semibold text-brand-navy hover:underline"
+                  disabled={otpSending}
+                  onClick={() => {
+                    setOtpChannel(otpChannel === "email" ? "phone" : "email");
+                    setOtpIdentifier("");
+                    setOtpIdentifierError("");
+                  }}
+                >
+                  <span className="text-gray-500 font-normal">Use </span>
+                  <span className="font-semibold text-brand-navy">
+                    {otpChannel === "email" ? "phone number" : "email"}
+                  </span>
+                  <span className="text-gray-500 font-normal"> instead</span>
+                </Button>
+              </p>
+              {otpChannel === "phone" && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Use a phone number added to and verified on your account. If you haven’t added or
+                  verified one, choose email.
+                </p>
+              )}
             </div>
 
             <PrimaryButton
