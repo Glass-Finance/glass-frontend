@@ -109,6 +109,11 @@ export default function Home() {
   const nextDue = data?.nextDue ?? null;
   const upcoming = (data?.upcoming ?? []).slice(0, 3);
   const totalUpcomingCount = (data?.upcoming ?? []).length;
+  const totalOutstanding = (data?.upcoming ?? []).reduce(
+    (total, payment) =>
+      total + Math.max(0, Number(payment.amount ?? 0) - Number(payment.amountPaid ?? 0)),
+    0,
+  );
   const history = (data?.history ?? []).slice(0, 3);
   const communityName = data?.community?.name ?? "Your Community";
   const communityInitial = communityName.charAt(0).toUpperCase();
@@ -176,11 +181,11 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative overflow-hidden min-h-screen pb-10 md:grid md:grid-cols-2 md:content-start md:gap-x-6 md:gap-y-4 md:pb-8">
+      <div className="relative overflow-hidden min-h-screen pb-10 md:grid md:grid-cols-2 md:content-start md:gap-x-6 md:gap-y-4 md:pb-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.08fr)] lg:gap-y-6">
         <GlassLogoGlow />
         <SideDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-        <div className="flex items-start justify-between pt-[25px] px-5 pb-5 md:col-span-2 md:items-center md:px-0 md:pt-2 md:pb-3">
+        <div className="flex items-start justify-between pt-[25px] px-5 pb-5 lg:hidden">
           <div className="flex flex-col gap-[7px] min-w-0">
             <div className="flex items-center gap-[15px] min-w-0">
               <Button
@@ -249,27 +254,51 @@ export default function Home() {
         </div>
 
         {!hasNoCommunity && !showNothingHappening && (
-          <div className="pt-1 px-5 pb-5 md:col-span-2 md:px-0 md:pt-0 md:pb-2">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-medium text-ink m-0">Hi {firstName(data?.user)},</h1>
-              {showKycBadge && (
-                <button
-                  onClick={() => setKycWizardOpen(true)}
-                  className="bg-transparent border-none cursor-pointer p-0"
-                  aria-label="Identity verification status"
-                >
-                  <KycStatusBadge status={kycSummary.status} />
-                </button>
+          <div className="pt-1 px-5 pb-5 md:col-span-2 md:px-0 md:pt-0 md:pb-2 lg:order-1 lg:pb-0">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-2xl font-medium text-ink m-0 lg:text-[28px] lg:font-semibold">
+                    Hi {firstName(data?.user)},
+                  </h1>
+                  {showKycBadge && (
+                    <button
+                      onClick={() => setKycWizardOpen(true)}
+                      className="bg-transparent border-none cursor-pointer p-0"
+                      aria-label="Identity verification status"
+                    >
+                      <KycStatusBadge status={kycSummary.status} />
+                    </button>
+                  )}
+                </div>
+                <p className="text-[13px] text-ink-ghost mt-[3px] font-normal lg:hidden">
+                  Here's Your Community At A Glance
+                </p>
+                <p className="hidden text-sm text-ink-ghost mt-1 font-normal lg:block">
+                  Here's your community at a glance
+                </p>
+              </div>
+              {!hasNoCommunity && (
+                <div className="hidden lg:block">
+                  <CommunitySwitcher
+                    communities={myCommunities}
+                    activeIdentifier={activeCommunityIdentifier}
+                    communityName={communityName}
+                    communityInitial={communityInitial}
+                    communityLogo={communityLogo}
+                    onSelect={handleSwitchCommunity}
+                    navigate={navigate}
+                  />
+                </div>
               )}
             </div>
-            <p className="text-[13px] text-ink-ghost mt-[3px] font-normal">
-              Here's Your Community At A Glance
-            </p>
           </div>
         )}
 
         {!hasNoCommunity && !showNothingHappening && data?.user && !data.user.phoneVerified && (
-          <ProfileNudge navigate={navigate} user={data.user} />
+          <div className="md:col-span-2 lg:order-5">
+            <ProfileNudge navigate={navigate} user={data.user} />
+          </div>
         )}
 
         {isLoading ? (
@@ -282,14 +311,23 @@ export default function Home() {
           <NothingHappeningState navigate={navigate} />
         ) : (
           <>
-            <HeroCard nextDue={nextDue} onPay={handlePay} error={error} onRefresh={refresh} />
+            <HeroCard
+              nextDue={nextDue}
+              totalOutstanding={totalOutstanding}
+              onPay={handlePay}
+              error={error}
+              onRefresh={refresh}
+            />
 
-            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border md:mx-0 md:mt-0">
+            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border md:mx-0 md:mt-0 lg:order-3 lg:rounded-md lg:border lg:bg-white lg:px-6 lg:pt-5 lg:pb-4">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-normal text-ink">Upcoming Payments</span>
+                  <span className="text-sm font-normal text-ink lg:hidden">Upcoming Payments</span>
+                  <span className="hidden text-[15px] font-semibold text-ink lg:inline">
+                    Also coming up
+                  </span>
                   {totalUpcomingCount > 0 && (
-                    <span className="text-[11px] font-bold text-brand-deep bg-[#E4E7F9] rounded-full py-px px-[7px] leading-normal">
+                    <span className="text-[11px] font-bold text-brand-deep bg-[#E4E7F9] rounded-full py-px px-[7px] leading-normal lg:hidden">
                       {totalUpcomingCount}
                     </span>
                   )}
@@ -307,13 +345,22 @@ export default function Home() {
               {upcoming.length === 0 && totalUpcomingCount === 0 ? (
                 <EmptyUpcomingState />
               ) : (
-                upcoming.map((p) => <UpcomingRow key={p.id} payment={p} onPay={handlePay} />)
+                upcoming.map((p) => (
+                  <UpcomingRow
+                    key={p.id}
+                    payment={p}
+                    onPay={handlePay}
+                    desktopOnly={p.id === nextDue?.id}
+                  />
+                ))
               )}
             </div>
 
-            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border md:mx-0 md:mt-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-normal text-ink">Payment History</span>
+            <div className="mx-4 mt-4 bg-surface-container rounded-lg px-4 pt-4 pb-1 border border-surface-container-border md:mx-0 md:mt-0 lg:order-4 lg:rounded-md lg:border lg:bg-white lg:px-6 lg:pt-5 lg:pb-4">
+              <div className="flex items-center justify-between mb-1 lg:mb-3">
+                <span className="text-sm font-normal text-ink lg:text-[15px] lg:font-semibold">
+                  Payment History
+                </span>
                 {history.length > 0 && (
                   <button
                     onClick={() => navigate("/member/transactions")}
@@ -323,6 +370,15 @@ export default function Home() {
                   </button>
                 )}
               </div>
+
+              {history.length > 0 && (
+                <div className="hidden grid-cols-[1fr_1.5fr_0.8fr_auto] gap-4 border-b border-surface-container-border pb-2 text-xs font-medium text-ink-faint lg:grid">
+                  <span>Date</span>
+                  <span>Item</span>
+                  <span className="text-right">Amount</span>
+                  <span className="w-[58px] text-center">Status</span>
+                </div>
+              )}
 
               {history.length === 0 ? (
                 <EmptyHistoryState />

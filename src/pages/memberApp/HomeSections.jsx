@@ -111,20 +111,20 @@ export function CommunitySwitcher({
   );
 }
 
-export function HeroCard({ nextDue, onPay, error, onRefresh }) {
+export function HeroCard({ nextDue, totalOutstanding = 0, onPay, error, onRefresh }) {
   if (!nextDue) {
     const isError = Boolean(error);
     return (
-      <div className="relative mx-4 rounded-lg overflow-hidden bg-white md:mx-0">
-        <div className="absolute inset-0 rounded-lg border-[1.5px] border-surface-container-border pointer-events-none" />
+      <div className="relative mx-4 rounded-lg overflow-hidden bg-white md:col-span-2 md:mx-0 lg:order-2 lg:rounded-md lg:border lg:border-surface-container-border">
+        <div className="absolute inset-0 rounded-lg border-[1.5px] border-surface-container-border pointer-events-none lg:hidden" />
         <div
-          className={`absolute inset-0 rounded-lg border-[1.5px] pointer-events-none ${isError ? "border-danger" : "border-brand"}`}
+          className={`absolute inset-0 rounded-lg border-[1.5px] pointer-events-none lg:hidden ${isError ? "border-danger" : "border-brand"}`}
           style={{
             maskImage: "linear-gradient(to bottom, black 0%, black 15%, transparent 55%)",
             WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 15%, transparent 55%)",
           }}
         />
-        <div className="pt-10 px-6 pb-5 flex flex-col items-center">
+        <div className="pt-10 px-6 pb-5 flex flex-col items-center lg:hidden">
           {isError ? (
             <div className="w-14 h-14 rounded-full flex items-center justify-center bg-danger-tint">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -148,7 +148,7 @@ export function HeroCard({ nextDue, onPay, error, onRefresh }) {
           )}
         </div>
 
-        <div className="text-center flex flex-col items-center px-6 pt-2 pb-8">
+        <div className="text-center flex flex-col items-center px-6 pt-2 pb-8 lg:hidden">
           {isError ? (
             <>
               <p className="text-lg text-ink font-bold mb-1.5">Couldn't load payments</p>
@@ -174,24 +174,95 @@ export function HeroCard({ nextDue, onPay, error, onRefresh }) {
             </>
           )}
         </div>
+
+        <div className="hidden items-center justify-between gap-6 px-7 py-6 lg:flex">
+          <div className="flex items-center gap-4">
+            {isError && (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-tint text-danger">
+                <span aria-hidden="true">!</span>
+              </div>
+            )}
+            <div>
+              <p className="mb-1 text-sm text-ink-muted">
+                {isError ? "Payment details unavailable" : "No payments due"}
+              </p>
+              <p className="m-0 text-lg font-semibold leading-tight text-ink">
+                {isError ? "—" : "You're all caught up"}
+              </p>
+            </div>
+          </div>
+          <div className="h-12 w-px flex-shrink-0 bg-surface-container-border" />
+          <div className="min-w-0 flex-1">
+            {isError ? (
+              <p className="m-0 text-sm text-ink-faint">Check your connection and try again.</p>
+            ) : nextDue ? (
+              <>
+                <span className="inline-flex max-w-full items-center truncate rounded-g-1 bg-brand-tint px-2.5 py-1.5 text-xs font-semibold text-brand">
+                  {nextDue.name} · {nextDue.type === "recurring" ? "Recurring" : "One-time"}
+                </span>
+                <p
+                  className={`mb-0 mt-2 text-sm font-semibold ${nextDue.dueDate && new Date(nextDue.dueDate) < new Date() ? "text-danger" : "text-ink-faint"}`}
+                >
+                  {nextDue.dueDate && new Date(nextDue.dueDate) < new Date()
+                    ? "Overdue since"
+                    : "Due"}{" "}
+                  {formatDate(nextDue.dueDate)}
+                </p>
+              </>
+            ) : (
+              <p className="m-0 text-sm text-ink-faint">New community dues will appear here.</p>
+            )}
+          </div>
+          {isError ? (
+            <Button
+              variant="outline-caution"
+              size="md"
+              fullWidth={false}
+              onClick={onRefresh}
+              className="flex-shrink-0"
+            >
+              Try again
+            </Button>
+          ) : nextDue ? (
+            <>
+              <div className="min-w-[125px] text-right">
+                <p className="m-0 text-xs text-ink-faint">Total outstanding</p>
+                <p className="m-0 text-lg font-bold text-ink">{formatNaira(totalOutstanding)}</p>
+              </div>
+              <Button
+                onClick={() => onPay(nextDue)}
+                variant={
+                  nextDue.dueDate && new Date(nextDue.dueDate) < new Date() ? "critical" : "primary"
+                }
+                size="md"
+                fullWidth={false}
+                className="h-12 w-[130px] flex-shrink-0"
+              >
+                Pay now
+              </Button>
+            </>
+          ) : null}
+        </div>
       </div>
     );
   }
 
   const isRecurring = nextDue.type === "recurring";
-  const isOverdue = new Date(nextDue.dueDate) < new Date();
+  const isOverdue = Boolean(nextDue.dueDate && new Date(nextDue.dueDate) < new Date());
 
   return (
-    <div className="relative mx-4 rounded-lg overflow-hidden bg-white md:mx-0">
-      <div className="absolute inset-0 rounded-lg border-[1.5px] border-surface-container-border pointer-events-none" />
+    <div
+      className={`relative mx-4 rounded-lg overflow-hidden bg-white md:col-span-2 md:mx-0 lg:order-2 lg:rounded-md lg:border-[1.5px] ${isOverdue ? "lg:border-danger" : "lg:border-brand"}`}
+    >
+      <div className="absolute inset-0 rounded-lg border-[1.5px] border-surface-container-border pointer-events-none lg:hidden" />
       <div
-        className={`absolute inset-0 rounded-lg border-[1.5px] pointer-events-none ${isOverdue ? "border-danger" : "border-brand"}`}
+        className={`absolute inset-0 rounded-lg border-[1.5px] pointer-events-none lg:hidden ${isOverdue ? "border-danger" : "border-brand"}`}
         style={{
           maskImage: "linear-gradient(to bottom, black 0%, black 15%, transparent 55%)",
           WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 15%, transparent 55%)",
         }}
       />
-      <div className="pt-5 px-5 flex flex-col items-center">
+      <div className="pt-5 px-5 flex flex-col items-center lg:hidden">
         <div className="border border-surface-container-border mb-3.5 py-1.5 px-[18px] rounded-full text-ink-strong text-xs font-medium flex items-center gap-1.5">
           <span
             className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isRecurring ? "bg-accent-purple" : "bg-danger"}`}
@@ -205,7 +276,7 @@ export function HeroCard({ nextDue, onPay, error, onRefresh }) {
         </p>
       </div>
 
-      <div className="px-5 pb-5 flex flex-col items-center">
+      <div className="px-5 pb-5 flex flex-col items-center lg:hidden">
         <div className="py-1.5 px-4 rounded-lg bg-brand-mist text-brand text-xs font-normal mb-2.5">
           {nextDue.name}
         </div>
@@ -227,37 +298,89 @@ export function HeroCard({ nextDue, onPay, error, onRefresh }) {
           Pay Now
         </Button>
       </div>
+
+      <div className="hidden items-center justify-between gap-6 px-7 py-6 lg:flex">
+        <div className="flex-shrink-0">
+          <p className="mb-1 text-sm text-ink-muted">Next payment due</p>
+          <p className="m-0 text-[42px] font-bold leading-none tracking-[-1px] text-ink">
+            {formatNaira(nextDue.amount)}
+          </p>
+        </div>
+        <div className="h-12 w-px flex-shrink-0 bg-surface-container-border" />
+        <div className="min-w-0 flex-1">
+          <span className="inline-flex max-w-full items-center truncate rounded-g-1 bg-brand-tint px-2.5 py-1.5 text-xs font-semibold text-brand">
+            {nextDue.name} · {isRecurring ? "Recurring" : "One-time"}
+          </span>
+          <p
+            className={`mb-0 mt-2 text-sm font-semibold ${isOverdue ? "text-danger" : "text-ink-faint"}`}
+          >
+            {isOverdue ? "Overdue since" : "Due"} {formatDate(nextDue.dueDate)}
+          </p>
+        </div>
+        <div className="min-w-[125px] text-right">
+          <p className="m-0 text-xs text-ink-faint">Total outstanding</p>
+          <p className="m-0 text-lg font-bold text-ink">{formatNaira(totalOutstanding)}</p>
+        </div>
+        <Button
+          onClick={() => onPay(nextDue)}
+          fullWidth={false}
+          variant={isOverdue ? "critical" : "primary"}
+          size="md"
+          className="h-12 w-[130px] flex-shrink-0"
+        >
+          Pay now
+        </Button>
+      </div>
     </div>
   );
 }
 
-export function UpcomingRow({ payment, onPay }) {
+export function UpcomingRow({ payment, onPay, desktopOnly = false }) {
   const isRecurring = payment.type === "recurring";
   const badgeLabel = isRecurring ? "Recurring" : "One-time";
   const badgeCls = isRecurring ? "text-brand-deep bg-[#E8ECF8]" : "text-[#9C27B0] bg-[#F3E5F5]";
+  const isOverdue = Boolean(payment.dueDate && new Date(payment.dueDate) < new Date());
 
   return (
-    <div className="py-3.5 px-3 my-4 rounded-lg bg-white flex items-center justify-between gap-3">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-0.5 mb-1.5">
-          <span className="text-[17px] font-bold text-ink">{formatNaira(payment.amount)}</span>
+    <>
+      <div
+        className={`py-3.5 px-3 my-4 rounded-lg bg-white flex items-center justify-between gap-3 lg:hidden ${desktopOnly ? "hidden" : ""}`}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-0.5 mb-1.5">
+            <span className="text-[17px] font-bold text-ink">{formatNaira(payment.amount)}</span>
+          </div>
+          <p className="text-[13px] text-ink font-normal mb-1">{payment.name}</p>
+          <div className="flex items-center gap-1 text-ink-ghost">
+            <Clock size={11} strokeWidth={1.8} />
+            <span className="text-xs">Due: {formatDateShort(payment.dueDate)}</span>
+          </div>
         </div>
-        <p className="text-[13px] text-ink font-normal mb-1">{payment.name}</p>
-        <div className="flex items-center gap-1 text-ink-ghost">
-          <Clock size={11} strokeWidth={1.8} />
-          <span className="text-xs">Due: {formatDateShort(payment.dueDate)}</span>
+        <div className="flex flex-col items-end gap-4 flex-shrink-0">
+          <span className={`text-[11px] font-semibold py-[3px] px-2.5 rounded-full ${badgeCls}`}>
+            {badgeLabel}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => onPay(payment)}>
+            Pay Now
+          </Button>
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-4 flex-shrink-0">
-        <span className={`text-[11px] font-semibold py-[3px] px-2.5 rounded-full ${badgeCls}`}>
-          {badgeLabel}
-        </span>
+      <div className="my-3 hidden items-center justify-between gap-4 rounded-md bg-surface-sunken px-4 py-3.5 lg:flex">
+        <div className="min-w-0">
+          <p className="mb-0.5 text-[17px] font-bold text-ink">{formatNaira(payment.amount)}</p>
+          <p className="m-0 truncate text-[13px] text-ink">{payment.name}</p>
+          <p
+            className={`mb-0 mt-0.5 text-xs ${isOverdue ? "font-semibold text-danger" : "text-ink-faint"}`}
+          >
+            {isOverdue ? "Overdue · " : ""}due {formatDateShort(payment.dueDate)}
+          </p>
+        </div>
         <Button variant="outline" size="sm" onClick={() => onPay(payment)}>
-          Pay Now
+          Pay now
         </Button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -266,16 +389,28 @@ export function HistoryRow({ item, onOpen }) {
   return (
     <div
       onClick={() => onOpen(item)}
-      className="flex items-center justify-between py-[13px] border-b border-[#F0F0F0] cursor-pointer"
+      className="cursor-pointer border-b border-[#F0F0F0] lg:border-0"
     >
-      <div>
-        <p className="text-sm font-medium text-ink mb-[3px]">{item.description}</p>
-        <p className="text-xs text-ink-ghost">{formatDateShort(item.date)}</p>
+      <div className="flex items-center justify-between py-[13px] lg:hidden">
+        <div>
+          <p className="text-sm font-medium text-ink mb-[3px]">{item.description}</p>
+          <p className="text-xs text-ink-ghost">{formatDateShort(item.date)}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-sm font-bold text-ink">{formatNaira(item.amount)}</span>
+          <span
+            className={`text-[11px] font-semibold py-0.5 px-2.5 rounded-full ${isSuccess ? "text-success-strong bg-success-wash" : "text-danger bg-danger-wash"}`}
+          >
+            {isSuccess ? "Success" : "Failed"}
+          </span>
+        </div>
       </div>
-      <div className="flex flex-col items-end gap-1">
-        <span className="text-sm font-bold text-ink">{formatNaira(item.amount)}</span>
+      <div className="hidden grid-cols-[1fr_1.5fr_0.8fr_auto] items-center gap-4 py-3 text-sm lg:grid">
+        <span className="text-ink-muted">{formatDateShort(item.date)}</span>
+        <span className="truncate font-medium text-ink">{item.description}</span>
+        <span className="text-right font-semibold text-ink">{formatNaira(item.amount)}</span>
         <span
-          className={`text-[11px] font-semibold py-0.5 px-2.5 rounded-full ${isSuccess ? "text-success-strong bg-success-wash" : "text-danger bg-danger-wash"}`}
+          className={`w-[58px] rounded-g-1 px-2 py-1 text-center text-[11px] font-semibold ${isSuccess ? "bg-success-wash text-success-strong" : "bg-danger-wash text-danger"}`}
         >
           {isSuccess ? "Success" : "Failed"}
         </span>
