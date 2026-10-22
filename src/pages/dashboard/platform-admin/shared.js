@@ -4,18 +4,15 @@
 import { formatNaira } from "../../../utils/format";
 import { normalizeImageObject } from "../../../utils/normalizeImageFields";
 
-// `minor` controls whether `amount` is in minor units (kobo) and needs
-// dividing by 100 — true for most money fields on this backend (e.g.
-// commissionCapMinor). The /admin/balances endpoint is the exception: it
-// returns already-major-unit decimals (e.g. 1036427.56 meaning ₦1,036,427.56),
-// so callers for that data pass { minor: false }.
-// `decimals` controls displayed precision — reconciliation/audit figures
-// (Balances) should show kobo-level precision so a small discrepancy isn't
-// silently rounded away; most other tables stay at whole-naira (decimals: 0).
+// Admin response amounts are already in major currency units: transactions,
+// settlements, payment links (including metrics), obligations, balances, and
+// reconciliation findings are converted by the backend before serialization.
+// Format those values directly, with two decimal places. Only explicitly
+// identified minor-unit fields may opt into conversion with { minor: true }.
 // `currency` is almost always "NGN" in practice, but settlement/reconciliation
 // records carry their own currency field, so it stays parameterized rather
 // than assuming NGN outright.
-export function fmt(amount, currency = "NGN", { minor = true, decimals = 0 } = {}) {
+export function fmt(amount, currency = "NGN", { minor = false, decimals = 2 } = {}) {
   if (amount == null) return "—";
   if (currency === "NGN") return formatNaira(amount, { decimals, minor });
   const value = minor ? amount / 100 : amount;

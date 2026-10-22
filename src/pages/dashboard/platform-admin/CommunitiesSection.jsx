@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Check, Building2, SlidersHorizontal, Edit2 } from "lucide-react";
 import ModalShell from "../../../components/dashboard/ModalShell";
@@ -6,7 +6,9 @@ import Toggle from "../../../components/common/Toggle";
 import { Button } from "../../../components/ui/Button";
 import { getAdminCommunities, setCommissionOverride } from "../../../api/admin";
 import { updateCommunitySettings } from "../../../api/communities";
-import { fmt, fmtDate, unwrap, pageParams, withSafeCommunityLogos } from "./shared";
+import { fmtDate, unwrap, pageParams, withSafeCommunityLogos } from "./shared";
+import { getErrorMessage } from "../../../utils/errorHandler";
+import { formatJson } from "../../../utils/formatJson";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
   StatusBadge,
@@ -17,13 +19,17 @@ import {
   TableFooter,
 } from "./SharedUI";
 
+const JsonEditor = lazy(() => import("../../../components/ui/JsonEditor"));
+
 function CommissionModal({ community, onClose }) {
   const queryClient = useQueryClient();
-  const [useDefault, setUseDefault] = useState(!community.commissionRate);
-  const [rate, setRate] = useState(String(community.commissionRate ?? ""));
-  const [cap, setCap] = useState(
-    community.commissionCapMinor ? String(Math.round(community.commissionCapMinor / 100)) : "",
-  );
+  const [useDefault, setUseDefault] = useState(community.commissionSchedule == null);
+  const [scheduleJson, setScheduleJson] = useState(() => {
+    if (community.commissionSchedule == null) return "";
+    // Keep unreadable content editable rather than silently replacing it.
+    return formatJson(community.commissionSchedule) ?? community.commissionSchedule;
+  });
+  const [error, setError] = useState("");
 
   const mutation = useMutation({
     mutationFn: (payload) => setCommissionOverride(community.slug ?? community.id, payload),
@@ -36,14 +42,22 @@ function CommissionModal({ community, onClose }) {
 
   function submit(e) {
     e.preventDefault();
-    mutation.mutate(
-      useDefault
-        ? { rate: null, capMinor: null }
-        : {
-            rate: Number(rate) || 0,
-            capMinor: cap ? Math.round(Number(cap) * 100) : 0,
-          },
-    );
+    try {
+      const schedule = useDefault ? null : JSON.parse(scheduleJson);
+      if (
+        !useDefault &&
+        (schedule == null || typeof schedule !== "object" || Array.isArray(schedule))
+      ) {
+        setError("Enter a JSON object for the commission schedule.");
+        return;
+      }
+      setError("");
+      mutation.mutate({ schedule });
+    } catch (err) {
+      setError(
+        err instanceof SyntaxError ? "Enter valid JSON for the commission schedule." : err.message,
+      );
+    }
   }
 
   return (
@@ -53,56 +67,54 @@ function CommissionModal({ community, onClose }) {
           <input
             type="checkbox"
             checked={useDefault}
-            onChange={(e) => setUseDefault(e.target.checked)}
+            onChange={(e) => {
+              setUseDefault(e.target.checked);
+              setError("");
+            }}
             className="w-4 h-4 accent-brand"
           />
-          <span className="text-xs font-semibold text-gray-700">Use platform default rate</span>
+          <span className="text-xs font-semibold text-gray-700">Use platform default</span>
         </label>
 
         {!useDefault && (
-          <>
-            <div>
-              <label
-                htmlFor="commission-rate"
-                className="block text-xs font-semibold text-gray-700 mb-1.5"
-              >
-                Rate{" "}
-                <span className="font-normal text-gray-400">(basis points — 100 bps = 1%)</span>
-              </label>
-              <input
-                id="commission-rate"
-                type="number"
-                min="0"
-                max="10000"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-hairline-strong text-placeholder text-gray-800 outline-none transition-colors focus:border-brand"
-                placeholder="e.g. 150 for 1.5%"
-              />
-              {Number(rate) > 0 && (
-                <p className="text-[10px] text-gray-400 mt-1">
-                  = {(Number(rate) / 100).toFixed(2)}%
+          <div>
+            <Suspense
+              fallback={
+                <p role="status" className="text-sm text-gray-500">
+                  Loading editor…
                 </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="commission-cap"
-                className="block text-xs font-semibold text-gray-700 mb-1.5"
-              >
-                Cap <span className="font-normal text-gray-400">(₦, leave blank for no cap)</span>
-              </label>
-              <input
-                id="commission-cap"
-                type="number"
-                min="0"
-                value={cap}
-                onChange={(e) => setCap(e.target.value)}
-                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-hairline-strong text-placeholder text-gray-800 outline-none transition-colors focus:border-brand"
-                placeholder="e.g. 500"
+              }
+            >
+              <JsonEditor
+                id="commission-schedule"
+                label="Commission schedule (JSON)"
+                value={scheduleJson}
+                onChange={(value) => {
+                  setScheduleJson(value);
+                  setError("");
+                }}
+                invalid={Boolean(error)}
+                describedBy={
+                  error
+                    ? "commission-schedule-help commission-schedule-error"
+                    : "commission-schedule-help"
+                }
               />
-            </div>
-          </>
+            </Suspense>
+            <p id="commission-schedule-help" className="text-xs text-gray-500 mt-2">
+              Enter a JSON object. Valid JSON formats automatically as you type.
+            </p>
+          </div>
+        )}
+        {error && (
+          <p id="commission-schedule-error" role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        )}
+        {mutation.isError && (
+          <p role="alert" className="text-sm text-danger">
+            {getErrorMessage(mutation.error)}
+          </p>
         )}
 
         <div className="flex gap-3 pt-1">
@@ -329,17 +341,8 @@ export default function CommunitiesSection() {
                   <StatusBadge status={c.status} />
                 </td>
                 <td className="px-4 py-3">
-                  {c.commissionRate > 0 ? (
-                    <div>
-                      <span className="text-[11px] font-semibold text-gray-800">
-                        {(c.commissionRate / 100).toFixed(2)}%
-                      </span>
-                      {c.commissionCapMinor > 0 && (
-                        <span className="text-[10px] text-gray-400 ml-1.5">
-                          cap {fmt(c.commissionCapMinor)}
-                        </span>
-                      )}
-                    </div>
+                  {c.commissionSchedule != null ? (
+                    <span className="text-[11px] font-semibold text-gray-800">Custom schedule</span>
                   ) : (
                     <span className="text-[11px] text-gray-400">Platform default</span>
                   )}

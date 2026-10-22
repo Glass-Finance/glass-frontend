@@ -172,6 +172,7 @@ describe("TransactionsSection", () => {
     expect(row.textContent).toContain("Acme Group");
     expect(row.textContent).toContain("ada lovelace");
     expect(row.textContent).toContain("SUCCESSFUL");
+    expect(row.textContent).toContain("₦500,000.00");
   });
 
   it("falls back to the user placeholder when there is no member", async () => {
@@ -194,6 +195,9 @@ describe("TransactionsSection", () => {
 
     expect(await screen.findByText("Gateway reference")).toBeDefined();
     expect(getAdminTransaction).toHaveBeenCalledWith("txn-1");
+    expect(screen.getAllByText("₦500,000.00")).toHaveLength(3);
+    expect(screen.getAllByText("₦450,000.00")).toHaveLength(2);
+    expect(screen.getByText("₦50,000.00")).toBeDefined();
   });
 
   it("surfaces the failure reason when the transaction failed", async () => {
@@ -268,6 +272,8 @@ describe("ObligationsSection", () => {
 
     expect(row.textContent).toContain("Acme Group");
     expect(row.textContent).toContain("OVERDUE");
+    expect(row.textContent).toContain("₦100,000.00");
+    expect(row.textContent).toContain("₦40,000.00");
     expect(row.textContent).toContain("3");
   });
 
@@ -304,6 +310,7 @@ describe("ObligationsSection", () => {
 
     const card = await screen.findByText("Outstanding").then((el) => el.parentElement);
     expect(card.textContent).not.toContain("—");
+    expect(card.textContent).toContain("₦60,000.00");
   });
 
   it("shows the retry counters, since a spent obligation won't self-heal", async () => {
