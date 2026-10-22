@@ -10,12 +10,17 @@ vi.mock("../../utils/toast", () => ({ toastSuccess: vi.fn() }));
 
 afterEach(cleanup);
 
-function renderMemberLayout({ path = "/member/transactions", isAdmin = false } = {}) {
+function renderMemberLayout({
+  path = "/member/transactions",
+  isAdmin = false,
+  firstName = "Casey",
+  lastName = "Member",
+} = {}) {
   useAuth.mockReturnValue({
     user: {
       email: "member@example.com",
-      firstName: "Casey",
-      lastName: "Member",
+      firstName,
+      lastName,
     },
     isAdmin,
     logout: vi.fn(),
@@ -52,5 +57,11 @@ describe("MemberAppLayout", () => {
     renderMemberLayout({ isAdmin: true });
 
     expect(screen.getByRole("link", { name: "Admin dashboard" })).toBeTruthy();
+  });
+
+  it("displays the account name in Pascal case in the sidebar", () => {
+    renderMemberLayout({ firstName: "david", lastName: "nwanoneze" });
+
+    expect(screen.getByText("David Nwanoneze")).toBeTruthy();
   });
 });
