@@ -119,7 +119,7 @@ test("member app uses desktop navigation and content layout", async ({ page }, t
 
   for (const { path, title, description } of responsivePages) {
     await page.setViewportSize({ width: 1440, height: 960 });
-    await page.goto(path);
+    await page.goto(path, { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
     await expect(page.getByText(description)).toBeVisible();
     await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
