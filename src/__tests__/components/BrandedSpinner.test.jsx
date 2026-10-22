@@ -19,26 +19,20 @@ afterEach(() => {
 });
 
 describe("BrandedSpinner", () => {
-  it("renders the assembled mark with accessible loading status and reduced-motion fallbacks", () => {
+  it("renders the fill animation with accessible loading status and reduced-motion fallback", () => {
     const { container } = render(<BrandedSpinner size={64} />);
     const status = screen.getByRole("status", { name: "Loading" });
     const layers = status.querySelectorAll(":scope > div");
 
     expect(status.style.width).toBe("64px");
     expect(status.style.height).toBe("60px");
-    expect(status.style.getPropertyValue("--lock-animation-duration")).toBe("3.6s");
-    expect(status.querySelectorAll("img")).toHaveLength(4);
-    expect(layers[1].className).toContain("animate-lock-drop");
+    expect(status.style.getPropertyValue("--logo-fill-duration")).toBe("2.6s");
+    expect(status.querySelectorAll("img")).toHaveLength(2);
+    expect(layers[0].className).toContain("opacity-[.14]");
+    expect(layers[0].className).toContain("grayscale");
+    expect(layers[1].className).toContain("animate-logo-fill");
     expect(layers[1].className).toContain("motion-reduce:animate-none");
-    expect(layers[1].style.clipPath).toContain("70.75%");
-    expect(layers[2].className).toContain("animate-lock-slide");
-    expect(layers[2].className).toContain("motion-reduce:animate-none");
-    expect(layers[2].style.clipPath).toContain("66.04%");
-    expect(layers[3].className).toContain("animate-lock-glint");
-    expect(layers[3].className).toContain("motion-reduce:animate-none");
-    expect(layers[3].className).toContain("opacity-0");
-    expect(layers[3].style.maskImage).toContain("linear-gradient");
-    expect(container.querySelectorAll("img[src*='glass/Glass']")).toHaveLength(4);
+    expect(container.querySelectorAll("img[src*='glass/Glass']")).toHaveLength(2);
   });
 
   it("speeds up on fast connections and slows down for slow or data-saving connections", async () => {
@@ -53,32 +47,24 @@ describe("BrandedSpinner", () => {
     render(<BrandedSpinner />);
     const status = screen.getByRole("status", { name: "Loading" });
 
-    await waitFor(() =>
-      expect(status.style.getPropertyValue("--lock-animation-duration")).toBe("1.8s"),
-    );
+    await waitFor(() => expect(status.style.getPropertyValue("--logo-fill-duration")).toBe("1.8s"));
 
     connection.downlink = 25;
     connection.rtt = 40;
     connection.dispatchEvent(new Event("change"));
-    await waitFor(() =>
-      expect(status.style.getPropertyValue("--lock-animation-duration")).toBe("0.9s"),
-    );
+    await waitFor(() => expect(status.style.getPropertyValue("--logo-fill-duration")).toBe("0.9s"));
 
     connection.downlink = 0.5;
     connection.rtt = 600;
     connection.effectiveType = "2g";
     connection.dispatchEvent(new Event("change"));
-    await waitFor(() =>
-      expect(status.style.getPropertyValue("--lock-animation-duration")).toBe("5.4s"),
-    );
+    await waitFor(() => expect(status.style.getPropertyValue("--logo-fill-duration")).toBe("5.4s"));
 
     connection.effectiveType = "4g";
     connection.downlink = 25;
     connection.rtt = 40;
     connection.saveData = true;
     connection.dispatchEvent(new Event("change"));
-    await waitFor(() =>
-      expect(status.style.getPropertyValue("--lock-animation-duration")).toBe("5.4s"),
-    );
+    await waitFor(() => expect(status.style.getPropertyValue("--logo-fill-duration")).toBe("5.4s"));
   });
 });
