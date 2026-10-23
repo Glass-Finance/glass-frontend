@@ -47,6 +47,12 @@ describe("MyCommunities desktop view", () => {
       screen.getByText(/Communities are how Glass brings your association, club or group together/),
     ).toBeTruthy();
     expect(screen.getByText("Start your own, or join one you've been invited to.")).toBeTruthy();
+    const illustrations = document.querySelectorAll('img[alt=""][aria-hidden="true"]');
+    expect(illustrations).toHaveLength(2);
+    for (const illustration of illustrations) {
+      expect(illustration.className).toContain("h-20");
+      expect(illustration.className).toContain("w-20");
+    }
     fireEvent.click(screen.getAllByRole("button", { name: "View invitations" })[0]);
     expect(navigateSpy).toHaveBeenCalledWith("/member/invites");
   });

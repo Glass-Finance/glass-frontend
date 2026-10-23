@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronDown, Download, Gift, Loader2 } from "lucide-react";
 import { useTransactions } from "../../hooks/useTransactions";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
-import PageLoadingState from "../../components/common/PageLoadingState";
+import { TransactionsSkeleton } from "../../components/memberApp/MemberPageSkeletons";
 import { Button } from "../../components/ui/Button";
 import { formatNaira, toTitleCase } from "../../utils/format";
 import { transactionStatusLabel, transactionStatusStyle } from "../../utils/transactionStatus";
@@ -206,7 +206,7 @@ export default function Transactions() {
       </div>
 
       {isLoading ? (
-        <PageLoadingState size={56} padding="36px 24px" />
+        <TransactionsSkeleton />
       ) : error ? (
         <div className="text-center py-8">
           <p className="text-danger text-sm mb-3">Couldn't load transactions.</p>

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
 import { ChevronDown, Inbox } from "lucide-react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
-import PageLoadingState from "../../../../components/common/PageLoadingState";
+import { VerificationAttemptsSkeleton } from "../../../../components/memberApp/MemberPageSkeletons";
 import { useKycAttempts } from "../../../../hooks/useKyc";
 import { kycStatusStyle, idTypeLabel } from "../../../../utils/kycStatus";
 import { formatDate } from "../../../../utils/format";
@@ -86,7 +86,7 @@ export default function VerifyIdentityHistory() {
           />
         </div>
 
-        {isLoading && <PageLoadingState />}
+        {isLoading && <VerificationAttemptsSkeleton />}
 
         {isError && (
           <div className="border border-surface-container-border bg-white rounded-2xl p-5 text-center">

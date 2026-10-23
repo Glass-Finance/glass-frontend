@@ -2,19 +2,11 @@ import { useState } from "react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
-import {
-  AlertTriangle,
-  ChevronRight,
-  Loader2,
-  LogOut,
-  MoreVertical,
-  Plus,
-  UsersRound,
-  X,
-} from "lucide-react";
+import { AlertTriangle, ChevronRight, Loader2, LogOut, MoreVertical, Plus, X } from "lucide-react";
 import { useMyCommunities, useLeaveCommunity } from "../../../../hooks/useMyAccount";
 import { resolveIsPayingAdmin } from "../../../../utils/communityRole";
-import PageLoadingState from "../../../../components/common/PageLoadingState";
+import { CommunityCardsSkeleton } from "../../../../components/memberApp/MemberPageSkeletons";
+import communityEmptyIllustration from "../../../../assets/memberApp/empty-states/my-communities-icon.svg";
 import KycWizardModal from "../../../../components/kyc/KycWizardModal";
 import { Button } from "../../../../components/ui/Button";
 import { useKycGate } from "../../../../hooks/useKycGate";
@@ -110,6 +102,19 @@ function LeaveConfirmModal({ community, onCancel, onConfirm, leaving }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function CommunityEmptyIllustration() {
+  return (
+    <img
+      src={communityEmptyIllustration}
+      alt=""
+      aria-hidden="true"
+      className="h-20 w-20 flex-shrink-0 object-contain"
+      draggable={false}
+      loading="lazy"
+    />
   );
 }
 
@@ -356,19 +361,14 @@ export default function MyCommunities() {
 
       <div className="px-4 md:px-0">
         {isLoading ? (
-          <div className="md:rounded-g-2 md:border md:border-surface-container-border md:bg-white">
-            <PageLoadingState size={56} padding="36px 24px" />
-          </div>
+          <CommunityCardsSkeleton />
         ) : communities.length === 0 ? (
           // Shaped like a real community row below (same w-11 h-11
           // rounded-xl avatar tile, same card layout) but dashed and empty.
           <>
             <section className="flex min-h-[calc(100dvh-155px)] flex-col items-center justify-center px-4 pb-8 text-center md:hidden">
-              <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
-                <UsersRound size={38} strokeWidth={1.8} />
-                <span className="absolute right-0 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
-                  <Plus size={16} strokeWidth={2.5} />
-                </span>
+              <div className="mb-3">
+                <CommunityEmptyIllustration />
               </div>
               <h2 className="m-0 max-w-[320px] text-sm font-semibold leading-[1.2] text-ink">
                 You haven't joined any communities yet
@@ -407,11 +407,8 @@ export default function MyCommunities() {
               </div>
             </section>
             <section className="hidden min-h-[545px] flex-col items-center px-8 pb-10 pt-5 text-center md:flex">
-              <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
-                <UsersRound size={38} strokeWidth={1.8} />
-                <span className="absolute right-0 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
-                  <Plus size={16} strokeWidth={2.5} />
-                </span>
+              <div className="mb-3">
+                <CommunityEmptyIllustration />
               </div>
               <h2 className="m-0 text-sm font-semibold text-ink">You're not in a community yet</h2>
               <p className="mt-1 max-w-[430px] text-[13px] leading-[1.5] text-ink-faint">

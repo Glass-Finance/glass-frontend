@@ -18,7 +18,10 @@ import {
   resolveNotificationBody,
 } from "../../utils/notificationContent";
 import { useAuth } from "../../store/AuthContext";
-import PageLoadingState from "../../components/common/PageLoadingState";
+import {
+  InviteCardsSkeleton,
+  NotificationsSkeleton,
+} from "../../components/memberApp/MemberPageSkeletons";
 import { formatRelativeDateTime } from "../../utils/format";
 import paymentsEmptyIllustration from "../../assets/memberApp/empty-states/notifications-payments-empty.webp";
 import communityEmptyIllustration from "../../assets/memberApp/empty-states/notifications-community-empty.webp";
@@ -365,7 +368,7 @@ export default function Notifications() {
         <div className="px-4">
           {activeTab === "Payments" &&
             (notifsLoading ? (
-              <PageLoadingState size={56} padding="36px 24px" />
+              <NotificationsSkeleton />
             ) : paymentNotifs.length === 0 ? (
               <EmptyState
                 illustration={paymentsEmptyIllustration}
@@ -378,7 +381,7 @@ export default function Notifications() {
 
           {activeTab === "Community" &&
             (notifsLoading ? (
-              <PageLoadingState size={56} padding="36px 24px" />
+              <NotificationsSkeleton />
             ) : communityNotifs.length === 0 ? (
               <EmptyState
                 illustration={communityEmptyIllustration}
@@ -395,7 +398,7 @@ export default function Notifications() {
 
           {activeTab === "Invites" &&
             (invitesLoading ? (
-              <PageLoadingState size={56} padding="36px 24px" />
+              <InviteCardsSkeleton />
             ) : invites.length === 0 ? (
               <EmptyState
                 illustration={invitesEmptyIllustration}

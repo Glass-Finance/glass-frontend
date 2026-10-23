@@ -41,7 +41,16 @@ describe("UpcomingPayments desktop empty state", () => {
     renderPage();
 
     expect(screen.getByText("You're all caught up")).toBeTruthy();
-    expect(screen.getByText("Nothing due right now")).toBeTruthy();
+    const mobileHeading = screen.getByText("Nothing due right now");
+    expect(mobileHeading).toBeTruthy();
+    expect(mobileHeading.className).toContain("text-sm");
+    expect(mobileHeading.className).not.toContain("text-[22px]");
+    const illustrations = document.querySelectorAll('img[alt=""][aria-hidden="true"]');
+    expect(illustrations).toHaveLength(2);
+    for (const illustration of illustrations) {
+      expect(illustration.className).toContain("h-20");
+      expect(illustration.className).toContain("w-20");
+    }
     expect(screen.getByText("You're up to date on all payments.")).toBeTruthy();
     expect(
       screen.getByText(/When a community adds a payment, it will show up here with its due date/),

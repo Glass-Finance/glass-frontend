@@ -4,7 +4,7 @@ import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { usePayments, useManagePayments } from "../../hooks/usePayments";
-import PageLoadingState from "../../components/common/PageLoadingState";
+import { ManagePlanCardsSkeleton } from "../../components/memberApp/MemberPageSkeletons";
 import EmptyState from "../../components/common/EmptyState";
 import managePaymentsEmptyIllustration from "../../assets/memberApp/empty-states/manage-payments-empty.webp";
 import Toggle from "../../components/common/Toggle";
@@ -260,7 +260,7 @@ export default function ManagePayments() {
         {/* Cards */}
         <div className="flex flex-col gap-3.5">
           {isLoading ? (
-            <PageLoadingState size={56} padding="36px 24px" />
+            <ManagePlanCardsSkeleton />
           ) : recurringPlans.length === 0 ? (
             // Same vertical placement as the Notifications empty state:
             // both centre their block in 55vh, but that page's content

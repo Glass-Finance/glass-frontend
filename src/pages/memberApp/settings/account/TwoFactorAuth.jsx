@@ -1,7 +1,7 @@
 import { useState } from "react";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
-import PageLoadingState from "../../../../components/common/PageLoadingState";
 import LoadingState from "../../../../components/common/LoadingState";
+import { TwoFactorSettingsSkeleton } from "../../../../components/memberApp/MemberPageSkeletons";
 import SuccessBadge from "../../../../components/common/SuccessBadge";
 import { useNavigate } from "react-router-dom";
 import { goBackInApp } from "../../../../utils/memberBack";
@@ -397,7 +397,7 @@ export default function TwoFactorAuth() {
 
       <div className="px-4">
         {isLoading ? (
-          <PageLoadingState size={56} padding="36px 24px" />
+          <TwoFactorSettingsSkeleton />
         ) : flow === "setup" ? (
           <SetupFlow onSuccess={handleSuccess} onCancel={() => setFlow(null)} />
         ) : flow === "disable" ? (

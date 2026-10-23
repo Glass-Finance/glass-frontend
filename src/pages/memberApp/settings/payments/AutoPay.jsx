@@ -8,7 +8,7 @@ import {
   useManagePayments,
   isAuthorisationExpired,
 } from "../../../../hooks/usePayments";
-import PageLoadingState from "../../../../components/common/PageLoadingState";
+import { AutoPayRowsSkeleton } from "../../../../components/memberApp/MemberPageSkeletons";
 import Toggle from "../../../../components/common/Toggle";
 import ConfirmSheet from "../../../../components/memberApp/ConfirmSheet";
 import { formatNaira } from "../../../../utils/format";
@@ -114,7 +114,7 @@ export default function AutoPay() {
         )}
         <div className="rounded-xl bg-surface-container border border-black/10 overflow-hidden">
           {isLoading ? (
-            <PageLoadingState size={56} padding="36px 24px" />
+            <AutoPayRowsSkeleton />
           ) : allPlans.length === 0 ? (
             // Shaped like a real plan row below (flex justify-between p-4,
             // a Toggle on the right, disabled+off so it renders muted).
