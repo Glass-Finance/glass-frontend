@@ -34,7 +34,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => navigateSpy };
 });
 
-function mockPayments({ nextDue = null, upcoming = [], history = [] } = {}) {
+function mockPayments({
+  nextDue = null,
+  upcoming = [],
+  history = [],
+  hasNoCommunity = false,
+} = {}) {
   usePayments.mockReturnValue({
     data: {
       nextDue,
@@ -45,7 +50,7 @@ function mockPayments({ nextDue = null, upcoming = [], history = [] } = {}) {
     isLoading: false,
     error: null,
     refresh: vi.fn(),
-    hasNoCommunity: false,
+    hasNoCommunity,
     hasPendingCommunity: false,
     pendingCommunity: null,
     // >= 2 would route empty sections to the separate "nothing happening"
@@ -136,6 +141,25 @@ describe('Home\'s Upcoming Payments / Payment History "See All" links', () => {
 });
 
 describe("Home desktop overview", () => {
+  it("shows the no-community empty state with compact desktop styling and working actions", () => {
+    mockPayments({ hasNoCommunity: true });
+    renderHome();
+
+    expect(screen.getByText("You're not part of any community yet.")).toBeDefined();
+    const joinButton = screen.getByRole("button", { name: "Join a community" });
+    expect(joinButton.className).toContain("md:w-[280px]");
+    expect(joinButton.className).toContain("md:h-12");
+    expect(screen.getByText("You're not part of any community yet.").className).toContain(
+      "md:text-xl",
+    );
+
+    joinButton.click();
+    expect(navigateSpy).toHaveBeenCalledWith("/member/communities/search");
+
+    screen.getByRole("button", { name: "Check your invites" }).click();
+    expect(navigateSpy).toHaveBeenCalledWith("/member/notifications");
+  });
+
   it("shows the next due payment and total remaining balance from upcoming payments", () => {
     mockPayments({
       nextDue: {
