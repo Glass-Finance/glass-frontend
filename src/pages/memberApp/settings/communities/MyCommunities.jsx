@@ -413,9 +413,7 @@ export default function MyCommunities() {
                   <Plus size={16} strokeWidth={2.5} />
                 </span>
               </div>
-              <h2 className="m-0 text-sm font-semibold text-ink">
-                You're not in a community yet
-              </h2>
+              <h2 className="m-0 text-sm font-semibold text-ink">You're not in a community yet</h2>
               <p className="mt-1 max-w-[430px] text-[13px] leading-[1.5] text-ink-faint">
                 Communities are how Glass brings your association, club or group together. Start
                 your own, or join one you've been invited to.
