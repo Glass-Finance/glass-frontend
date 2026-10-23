@@ -20,9 +20,9 @@ import { toastSuccess } from "../utils/toast";
 
 const TABS = [
   { to: "/member/home", label: "Home", Icon: Home },
-  { to: "/member/transactions", label: "Transactions", Icon: ArrowLeftRight },
+  { to: "/member/transactions", label: "History", Icon: ArrowLeftRight },
   { to: "/member/upcoming", label: "Upcoming", Icon: CalendarClock },
-  { to: "/member/notifications", label: "Notifications", Icon: Bell },
+  { to: "/member/notifications", label: "Alerts", Icon: Bell },
 ];
 
 const DESKTOP_LINKS = [
@@ -201,7 +201,7 @@ export default function MemberAppLayout() {
           className="fixed bottom-0 inset-x-0 z-30 bg-[linear-gradient(180deg,rgba(249,249,251,0)_0%,var(--color-surface-bg)_28%)] md:hidden"
           aria-label="Main navigation"
         >
-          <div className="mx-auto max-w-[390px] px-3 pb-3">
+          <div className="ml-0 mr-auto w-[calc(100%-80px)] max-w-[310px] pl-3 pr-0 pb-3">
             <div className="rounded-2xl border border-surface-container-border bg-white shadow-[0_2px_20px_rgba(0,0,0,0.1)]">
               <ul className="flex items-center justify-around px-2 py-2">
                 {TABS.map(({ to, label, Icon }) => {

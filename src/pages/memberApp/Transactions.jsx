@@ -217,20 +217,20 @@ export default function Transactions() {
       ) : groups.length === 0 ? (
         <>
           <section className="hidden min-h-[470px] flex-col items-center px-6 pt-16 text-center md:flex">
-            <div className="mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
-              <Gift size={56} strokeWidth={1.7} />
+            <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
+              <Gift size={38} strokeWidth={1.7} />
             </div>
-            <h2 className="m-0 text-[23px] font-semibold text-ink">No Payment History</h2>
-            <p className="mt-2 max-w-[410px] text-[15px] leading-6 text-ink-muted">
+            <h2 className="m-0 text-sm font-semibold text-ink">No Payment History</h2>
+            <p className="mt-1 max-w-[260px] text-[13px] leading-[1.5] text-ink-faint">
               Once you make payment, your transaction history will appear here.
             </p>
           </section>
           <div className="mx-3 flex flex-col items-center gap-2 px-6 py-12 text-center md:hidden">
-            <div className="mb-1 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-stacked-container">
-              <Gift size={22} strokeWidth={1.6} className="text-ink-faint" />
+            <div className="mb-1 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
+              <Gift size={38} strokeWidth={1.7} />
             </div>
-            <p className="m-0 text-base font-medium text-ink">No Payment History</p>
-            <p className="m-0 text-sm font-normal text-ink/60">
+            <p className="m-0 text-sm font-semibold text-ink">No Payment History</p>
+            <p className="m-0 max-w-[260px] text-[13px] leading-[1.5] text-ink-ghost">
               Once you make payment, your transaction history will appear here.
             </p>
           </div>
