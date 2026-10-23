@@ -240,6 +240,7 @@ describe("Sidebar community context — exactly one admin community", () => {
     expect(name.parentElement.className).toContain("md:flex-row");
     expect(name.className).toContain("break-words");
     expect(name.className).not.toContain("truncate");
+    expect(name.parentElement.parentElement.parentElement.className).toContain("py-3");
     expect(screen.getByText("Owner")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Switch community" })).toBeTruthy();
   });

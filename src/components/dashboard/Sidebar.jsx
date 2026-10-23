@@ -649,15 +649,12 @@ export default function Sidebar({ mobileOpen, onCloseMobile, onOpenTour }) {
         {/* ── White nav panel ────────────────────────────────────────────────── */}
         {!onCommunitiesOverview && (
           <div className="bg-white md:bg-surface-container md:w-[220px] w-full md:border-r md:border-surface-container-border flex flex-col overflow-hidden transition-[width] duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]">
-            {/* Org header
-            Mobile geometry comes straight from Figma's drawer (node
-            326:18669): a 44px row -- 6px vertical padding against a 32px
-            community logo -- with 18px insets, closed by a full-bleed
-            hairline at y=92. Desktop keeps py-3.5/min-h-14/px-3 exactly as
-            they were; only the paddings carry a md: variant here. */}
-            <div className="relative py-1.5 md:py-3.5 md:pb-[13px] px-4 md:px-3 border-b border-[var(--color-hairline)] flex items-center justify-between gap-2 min-h-11 md:min-h-14">
+            {/* The mobile community context uses extra vertical room so the logo
+            and two-line name/role stack don't feel cramped. Desktop spacing is
+            unchanged. */}
+            <div className="relative py-3 md:py-3.5 md:pb-[13px] px-4 md:px-3 border-b border-[var(--color-hairline)] flex items-center justify-between gap-2 min-h-11 md:min-h-14">
               {activeCommunity ? (
-                <div className="min-w-0 flex-1 flex items-start gap-2 md:items-center">
+                <div className="min-w-0 flex-1 flex items-center gap-2">
                   {/* Community logo -- 32x32, radius 4 (node 326:18711). The
                   desktop panel never had one, so this stays mobile-only. */}
                   <span className="md:hidden flex-shrink-0 w-8 h-8 rounded-g-1 overflow-hidden bg-surface-sunken">
