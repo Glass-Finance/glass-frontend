@@ -344,7 +344,7 @@ export default function Notifications() {
           <div className="flex items-center justify-end gap-4 px-5 pb-3">
             <Button
               variant="tertiary"
-              size="sm"
+              size="sm-tight"
               fullWidth={false}
               onClick={() => markAllRead()}
               disabled={isMarkingAllRead}

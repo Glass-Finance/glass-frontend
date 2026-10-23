@@ -421,23 +421,26 @@ export function HistoryRow({ item, onOpen }) {
 
 export function NoCommunityState({ navigate }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[60px] pb-20 text-center md:col-span-2 md:mx-auto md:min-h-[400px] md:w-full md:max-w-2xl md:rounded-2xl md:border md:border-surface-container-border md:bg-white md:px-10 md:py-10">
+    <div className="flex-1 flex flex-col items-center justify-center px-6 pt-[60px] pb-20 text-center md:col-span-2 md:mx-auto md:min-h-[calc(100dvh-140px)] md:w-full md:max-w-none md:rounded-none md:border-0 md:bg-transparent md:px-10 md:py-0">
       <img
         src={noCommunityIcon}
         alt=""
-        className="w-28 h-28 object-contain mb-7 flex-shrink-0"
+        className="w-28 h-28 object-contain mb-7 flex-shrink-0 md:h-20 md:w-20 md:mb-6"
         loading="lazy"
       />
 
-      <p className="text-lg font-semibold text-ink mb-2.5 leading-snug">
+      <p className="text-lg font-semibold text-ink mb-2.5 leading-snug md:text-xl">
         You're not part of any community yet.
       </p>
-      <p className="text-sm text-ink-ghost mb-9 leading-relaxed">
+      <p className="text-sm text-ink-ghost mb-9 leading-relaxed md:mb-6 md:text-[15px]">
         Join a community or check your invitations to get started.
       </p>
 
-      <Button onClick={() => navigate("/member/communities/search")} className="mb-4">
-        Join A Community
+      <Button
+        onClick={() => navigate("/member/communities/search")}
+        className="mb-4 md:mb-3 md:h-12 md:w-[280px] md:px-6 md:py-3 md:text-[14px]"
+      >
+        Join a community
       </Button>
 
       <Button
@@ -446,7 +449,7 @@ export function NoCommunityState({ navigate }) {
         fullWidth={false}
         onClick={() => navigate("/member/notifications")}
       >
-        Check Your Invites
+        Check your invites
       </Button>
     </div>
   );

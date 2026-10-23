@@ -364,16 +364,16 @@ export default function MyCommunities() {
           // rounded-xl avatar tile, same card layout) but dashed and empty.
           <>
             <section className="flex min-h-[calc(100dvh-155px)] flex-col items-center justify-center px-4 pb-8 text-center md:hidden">
-              <div className="relative mb-6 flex h-[112px] w-[112px] items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
-                <UsersRound size={50} strokeWidth={1.8} />
-                <span className="absolute right-[7px] top-[19px] flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
+              <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
+                <UsersRound size={38} strokeWidth={1.8} />
+                <span className="absolute right-0 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
                   <Plus size={16} strokeWidth={2.5} />
                 </span>
               </div>
-              <h2 className="m-0 max-w-[320px] text-[22px] font-semibold leading-[1.2] text-ink">
+              <h2 className="m-0 max-w-[320px] text-sm font-semibold leading-[1.2] text-ink">
                 You haven't joined any communities yet
               </h2>
-              <p className="mt-3 max-w-[340px] text-[15px] leading-[1.5] text-ink-muted">
+              <p className="mt-1 max-w-[340px] text-[13px] leading-[1.5] text-ink-faint">
                 Start your own, or join one you've been invited to.
               </p>
               <div className="mt-7 flex w-full max-w-[360px] flex-col gap-2.5">
@@ -407,16 +407,16 @@ export default function MyCommunities() {
               </div>
             </section>
             <section className="hidden min-h-[545px] flex-col items-center px-8 pb-10 pt-5 text-center md:flex">
-              <div className="relative mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
-                <UsersRound size={52} strokeWidth={1.8} />
-                <span className="absolute right-[-1px] top-[20px] flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
+              <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
+                <UsersRound size={38} strokeWidth={1.8} />
+                <span className="absolute right-0 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
                   <Plus size={16} strokeWidth={2.5} />
                 </span>
               </div>
-              <h2 className="m-0 text-[23px] font-semibold text-ink">
+              <h2 className="m-0 text-sm font-semibold text-ink">
                 You're not in a community yet
               </h2>
-              <p className="mt-2 max-w-[430px] text-[15px] leading-6 text-ink-muted">
+              <p className="mt-1 max-w-[430px] text-[13px] leading-[1.5] text-ink-faint">
                 Communities are how Glass brings your association, club or group together. Start
                 your own, or join one you've been invited to.
               </p>
