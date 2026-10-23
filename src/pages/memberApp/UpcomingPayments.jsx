@@ -1,14 +1,28 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Check, ChevronDown, Download, Loader2, RefreshCw } from "lucide-react";
+import { ChevronDown, Download, Loader2, RefreshCw } from "lucide-react";
 import { usePayments } from "../../hooks/usePayments";
-import PageLoadingState from "../../components/common/PageLoadingState";
+import { UpcomingPaymentsSkeleton } from "../../components/memberApp/MemberPageSkeletons";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
 import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
+import upcomingPaymentsEmptyIllustration from "../../assets/memberApp/empty-states/upcoming-payments-icon.svg";
+
+function UpcomingPaymentsEmptyIllustration() {
+  return (
+    <img
+      src={upcomingPaymentsEmptyIllustration}
+      alt=""
+      aria-hidden="true"
+      className="h-20 w-20 flex-shrink-0 object-contain"
+      draggable={false}
+      loading="lazy"
+    />
+  );
+}
 
 const FILTER_OPTIONS = ["All", "Recurring", "One-time"];
 
@@ -146,9 +160,7 @@ export default function UpcomingPayments() {
         {/* List */}
         <div className="mx-4 flex flex-col gap-3 md:mx-0">
           {isLoading ? (
-            <div className="border border-surface-container-border bg-white rounded-2xl">
-              <PageLoadingState size={56} padding="36px 24px" />
-            </div>
+            <UpcomingPaymentsSkeleton />
           ) : loadError ? (
             <div className="border border-surface-container-border bg-white rounded-2xl text-center py-5">
               <p className="text-danger text-sm mt-0 mx-0 mb-2">Couldn't load upcoming payments.</p>
@@ -160,11 +172,8 @@ export default function UpcomingPayments() {
             <>
               <section className="hidden md:block">
                 <div className="flex min-h-[420px] flex-col items-center px-8 pb-0 pt-14 text-center">
-                  <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
-                    <CalendarDays size={38} strokeWidth={1.7} />
-                    <span className="absolute bottom-[12px] right-[10px] flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#eef1ff] bg-success text-white">
-                      <Check size={13} strokeWidth={2.5} />
-                    </span>
+                  <div className="mb-3">
+                    <UpcomingPaymentsEmptyIllustration />
                   </div>
                   <h2 className="m-0 text-sm font-semibold text-ink">You're all caught up</h2>
                   <p className="mt-1 max-w-[260px] text-[13px] leading-[1.5] text-ink-faint">
@@ -199,16 +208,13 @@ export default function UpcomingPayments() {
                 </div>
               </section>
               <div className="flex min-h-[calc(100dvh-245px)] flex-col items-center justify-center px-6 pb-8 text-center md:hidden">
-                <div className="relative mb-6 flex h-[112px] w-[112px] items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
-                  <CalendarDays size={56} strokeWidth={1.7} />
-                  <span className="absolute bottom-[19px] right-[16px] flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#eef1ff] bg-success text-white">
-                    <Check size={16} strokeWidth={2.5} />
-                  </span>
+                <div className="mb-3">
+                  <UpcomingPaymentsEmptyIllustration />
                 </div>
-                <h2 className="m-0 text-[22px] font-semibold leading-[1.2] text-ink">
+                <h2 className="m-0 text-sm font-semibold leading-[1.2] text-ink">
                   Nothing due right now
                 </h2>
-                <p className="mt-2 text-[15px] leading-[1.5] text-ink-muted">
+                <p className="mt-1 text-[13px] leading-[1.5] text-ink-faint">
                   You're up to date on all payments.
                 </p>
                 <Button

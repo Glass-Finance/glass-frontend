@@ -4,7 +4,7 @@ import { goBackInApp } from "../../../../utils/memberBack";
 import GlassLogoGlow from "../../../../components/memberApp/GlassLogoGlow";
 import { CreditCard, Trash2 } from "lucide-react";
 import { useManagePayments } from "../../../../hooks/usePayments";
-import PageLoadingState from "../../../../components/common/PageLoadingState";
+import { SavedCardsSkeleton } from "../../../../components/memberApp/MemberPageSkeletons";
 import ConfirmSheet from "../../../../components/memberApp/ConfirmSheet";
 import MemberPageHeader from "../../../../components/memberApp/MemberPageHeader";
 
@@ -32,7 +32,7 @@ export default function SavedCards() {
         )}
         <div className="rounded-xl bg-surface-container border border-black/10 overflow-hidden">
           {isLoading ? (
-            <PageLoadingState size={56} padding="36px 24px" />
+            <SavedCardsSkeleton />
           ) : error ? (
             <p className="text-center text-danger text-[13px] py-6">
               Couldn't load saved payment methods.

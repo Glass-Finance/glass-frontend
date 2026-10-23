@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock, Home, Info, Undo2, XCircle } from "lucide-react";
 import { getInvite } from "../../api/invites";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
-import PageLoadingState from "../../components/common/PageLoadingState";
+import { InviteCardsSkeleton } from "../../components/memberApp/MemberPageSkeletons";
 import { PENDING_INVITE_KEY } from "../InviteLanding";
 import { Button } from "../../components/ui/Button";
 import { isKycRequiredError, KYC_ACCEPT_BLOCK_COPY } from "../../utils/kycStatus";
@@ -171,7 +171,7 @@ export default function Invites() {
           </div>
         )}
         {isLoading || joinRequestsLoading ? (
-          <PageLoadingState size={56} padding="36px 24px" />
+          <InviteCardsSkeleton />
         ) : error ? (
           <p className="text-[13px] text-danger py-6 px-1">
             Couldn't load invitations. Try again later.
