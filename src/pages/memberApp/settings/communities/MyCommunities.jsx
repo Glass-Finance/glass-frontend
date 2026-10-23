@@ -323,27 +323,29 @@ export default function MyCommunities() {
         }
       />
 
-      <div className="px-4 pb-4 md:hidden">
-        <Button
-          onClick={createCommunity}
-          disabled={kycGate.isLoading}
-          aria-busy={kycGate.isLoading}
-          size="md"
-          fullWidth={false}
-        >
-          {kycGate.isLoading ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Checking…
-            </>
-          ) : (
-            <>
-              <Plus size={16} />
-              Create a Community
-            </>
-          )}
-        </Button>
-      </div>
+      {(isLoading || communities.length > 0) && (
+        <div className="px-4 pb-4 md:hidden">
+          <Button
+            onClick={createCommunity}
+            disabled={kycGate.isLoading}
+            aria-busy={kycGate.isLoading}
+            size="md"
+            fullWidth={false}
+          >
+            {kycGate.isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Checking…
+              </>
+            ) : (
+              <>
+                <Plus size={16} />
+                Create a Community
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
       <KycWizardModal
         open={kycWizardOpen || kycGate.gateOpen}
@@ -361,10 +363,49 @@ export default function MyCommunities() {
           // Shaped like a real community row below (same w-11 h-11
           // rounded-xl avatar tile, same card layout) but dashed and empty.
           <>
-            <div className="flex items-center gap-3 rounded-2xl border border-surface-container-border bg-white p-3.5 md:hidden">
-              <div className="h-11 w-11 flex-shrink-0 rounded-xl border-2 border-dashed border-gray-200" />
-              <p className="m-0 text-sm text-ink-ghost">You haven't joined any communities yet</p>
-            </div>
+            <section className="flex min-h-[calc(100dvh-155px)] flex-col items-center justify-center px-4 pb-8 text-center md:hidden">
+              <div className="relative mb-6 flex h-[112px] w-[112px] items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
+                <UsersRound size={50} strokeWidth={1.8} />
+                <span className="absolute right-[7px] top-[19px] flex h-6 w-6 items-center justify-center rounded-full bg-[#1837b7] text-white">
+                  <Plus size={16} strokeWidth={2.5} />
+                </span>
+              </div>
+              <h2 className="m-0 max-w-[320px] text-[22px] font-semibold leading-[1.2] text-ink">
+                You haven't joined any communities yet
+              </h2>
+              <p className="mt-3 max-w-[340px] text-[15px] leading-[1.5] text-ink-muted">
+                Start your own, or join one you've been invited to.
+              </p>
+              <div className="mt-7 flex w-full max-w-[360px] flex-col gap-2.5">
+                <Button
+                  onClick={createCommunity}
+                  disabled={kycGate.isLoading}
+                  aria-busy={kycGate.isLoading}
+                  size="md"
+                  fullWidth
+                >
+                  {kycGate.isLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Checking…
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Create a community
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  onClick={() => navigate("/member/invites")}
+                >
+                  View invitations
+                </Button>
+              </div>
+            </section>
             <section className="hidden min-h-[545px] flex-col items-center px-8 pb-10 pt-5 text-center md:flex">
               <div className="relative mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#4f60dc]">
                 <UsersRound size={52} strokeWidth={1.8} />

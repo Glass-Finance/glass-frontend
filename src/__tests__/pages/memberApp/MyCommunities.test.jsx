@@ -42,10 +42,12 @@ describe("MyCommunities desktop view", () => {
     renderPage();
 
     expect(screen.getByText("You're not in a community yet")).toBeTruthy();
+    expect(screen.getByText("You haven't joined any communities yet")).toBeTruthy();
     expect(
       screen.getByText(/Communities are how Glass brings your association, club or group together/),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "View invitations" }));
+    expect(screen.getByText("Start your own, or join one you've been invited to.")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "View invitations" })[0]);
     expect(navigateSpy).toHaveBeenCalledWith("/member/invites");
   });
 

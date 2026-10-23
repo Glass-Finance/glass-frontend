@@ -47,9 +47,11 @@ describe("MemberAppLayout", () => {
     expect(screen.getByRole("link", { name: "Payment history" }).getAttribute("aria-current")).toBe(
       "page",
     );
-    expect(screen.getByRole("navigation", { name: "Main navigation" }).className).toContain(
-      "md:hidden",
-    );
+    const mobileNav = screen.getByRole("navigation", { name: "Main navigation" });
+    expect(mobileNav.className).toContain("md:hidden");
+    expect(mobileNav.firstElementChild.className).toContain("w-[calc(100%-80px)]");
+    expect(screen.getByRole("link", { name: "History" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Alerts" })).toBeTruthy();
     expect(screen.getByText("Transaction list")).toBeTruthy();
   });
 

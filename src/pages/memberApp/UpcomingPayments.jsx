@@ -160,32 +160,32 @@ export default function UpcomingPayments() {
             <>
               <section className="hidden md:block">
                 <div className="flex min-h-[420px] flex-col items-center px-8 pb-0 pt-14 text-center">
-                  <div className="relative mb-6 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
-                    <CalendarDays size={58} strokeWidth={1.7} />
-                    <span className="absolute bottom-[22px] right-[19px] flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#eef1ff] bg-success text-white">
-                      <Check size={16} strokeWidth={2.5} />
+                  <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
+                    <CalendarDays size={38} strokeWidth={1.7} />
+                    <span className="absolute bottom-[12px] right-[10px] flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#eef1ff] bg-success text-white">
+                      <Check size={13} strokeWidth={2.5} />
                     </span>
                   </div>
-                  <h2 className="m-0 text-[23px] font-semibold text-ink">You're all caught up</h2>
-                  <p className="mt-2 max-w-[430px] text-[15px] leading-6 text-ink-muted">
+                  <h2 className="m-0 text-sm font-semibold text-ink">You're all caught up</h2>
+                  <p className="mt-1 max-w-[260px] text-[13px] leading-[1.5] text-ink-faint">
                     Nothing is due right now. When a community adds a payment, it will show up here
                     with its due date.
                   </p>
-                  <div className="mt-7 flex items-center gap-3">
-                    <Button size="md" fullWidth={false} onClick={refresh}>
+                  <div className="mt-4 flex items-center gap-3">
+                    <Button size="sm" fullWidth={false} onClick={refresh}>
                       <RefreshCw size={16} />
                       Check again
                     </Button>
                     <Button
                       variant="outline-neutral"
-                      size="md"
+                      size="sm"
                       fullWidth={false}
                       onClick={() => navigate("/member/transactions")}
                     >
                       View payment history
                     </Button>
                   </div>
-                  <p className="mt-7 flex flex-wrap items-center justify-center gap-1 text-[13px] text-ink-muted">
+                  <p className="mt-4 flex max-w-[420px] flex-wrap items-center justify-center gap-1 text-xs text-ink-faint">
                     Last checked just now <span aria-hidden="true">·</span> Want a heads-up when
                     something is due?{" "}
                     <button
@@ -198,13 +198,26 @@ export default function UpcomingPayments() {
                   </p>
                 </div>
               </section>
-              <div className="flex flex-col items-center gap-2 rounded-2xl border border-surface-container-border bg-white px-6 py-12 text-center md:hidden">
-                <div className="mb-1 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand-mist">
-                  <Check size={22} className="text-brand" />
+              <div className="flex min-h-[calc(100dvh-245px)] flex-col items-center justify-center px-6 pb-8 text-center md:hidden">
+                <div className="relative mb-6 flex h-[112px] w-[112px] items-center justify-center rounded-full bg-[#eef1ff] text-[#5868df]">
+                  <CalendarDays size={56} strokeWidth={1.7} />
+                  <span className="absolute bottom-[19px] right-[16px] flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#eef1ff] bg-success text-white">
+                    <Check size={16} strokeWidth={2.5} />
+                  </span>
                 </div>
-                <p className="m-0 text-sm font-semibold text-ink-strong">Nothing due right now</p>
-                <p className="m-0 text-[13px] text-ink-faint">You're up to date on all payments.</p>
-                <Button variant="tertiary" size="sm" fullWidth={false} onClick={refresh}>
+                <h2 className="m-0 text-[22px] font-semibold leading-[1.2] text-ink">
+                  Nothing due right now
+                </h2>
+                <p className="mt-2 text-[15px] leading-[1.5] text-ink-muted">
+                  You're up to date on all payments.
+                </p>
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  fullWidth={false}
+                  onClick={refresh}
+                  className="mt-5"
+                >
                   Check again
                 </Button>
               </div>

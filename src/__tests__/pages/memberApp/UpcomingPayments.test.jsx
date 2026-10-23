@@ -41,6 +41,8 @@ describe("UpcomingPayments desktop empty state", () => {
     renderPage();
 
     expect(screen.getByText("You're all caught up")).toBeTruthy();
+    expect(screen.getByText("Nothing due right now")).toBeTruthy();
+    expect(screen.getByText("You're up to date on all payments.")).toBeTruthy();
     expect(
       screen.getByText(/When a community adds a payment, it will show up here with its due date/),
     ).toBeTruthy();
