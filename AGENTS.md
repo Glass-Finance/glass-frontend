@@ -19,6 +19,21 @@ npm audit --audit-level=high && npm run format:check && npm run lint && npm run 
 
 Focused test: `npx vitest run src/__tests__/path/to.test.js` (suite runs plain `vitest run`, jsdom). Tests live in `src/__tests__/` mirroring `src/`; mock API modules at the boundary, never require prod credentials.
 
+### Local pace gates (default)
+
+The CI battery above runs in CI on every PR — it is not what you run locally for each task. The default local gate is:
+
+```bash
+npx prettier --write <changed files> && npm run lint && npm run typecheck \
+  && npx vitest run <tests touching the changed files>   # B: no local e2e unless the task is a UI flow
+```
+
+- **A — no full suite locally by default.** Run `npm run test` only when the change is shared/cross-cutting (utils, hooks, components/common, routing) or when explicitly asked; CI is the safety net for everything else.
+- **B — no local Playwright** unless the task is specifically a UI flow; CI runs `e2e/`.
+- **C — pipeline, don't serialize.** Commit and push as soon as the local gate is green, then let CI run in parallel; poll the check-runs once (~2 min) instead of in a loop. Full `npm run build` only when the change touches `vite.config.js`, PWA (`src/sw.js`), or env/config.
+
+The slow path (full CI battery locally, repeated CI polling, e2e repros for non-UI bugs) is reserved for release cuts or when explicitly requested.
+
 The suite used to be pinned to `--pool=forks --maxWorkers=1`, serialised, which took ~21 min for 148 files. That was never a deliberate decision — it arrived in `51ecd6c` ("chore: add prettier formatting") alongside an unrelated reformat, and no commit or doc explains it. Vitest's default `isolate: true` already gives every file a fresh module registry and jsdom, so serialising bought nothing but wall-clock. The scripts are now plain `vitest run` and let Vitest size the pool itself; don't reintroduce a fixed worker count without measuring memory first, since each forked worker carries its own jsdom.
 
 `testTimeout` is raised to 15s (Vitest's default is 5s) for the tests that pull modules in with `await import(...)` inside the test body — 58 such imports across 20 files, all of which bill module loading against the timeout. This is not slack for slow tests; `communityListConsumers.test.jsx` sat right on the 5s boundary and failed intermittently even serialised.
