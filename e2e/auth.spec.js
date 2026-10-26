@@ -89,7 +89,7 @@ test("hard-redirects to sign-in with the expiry toast when refresh fails", async
   await expect(page.getByRole("row", { name: /member@example\.test/ })).toBeVisible();
 
   scenario.expired = true;
-  await page.getByPlaceholder("Search users…").fill("mona");
+  await page.getByPlaceholder("Search name or email").fill("mona");
 
   await page.waitForURL("**/sign-in");
   await expect(page.getByText("Session expired")).toBeVisible();
