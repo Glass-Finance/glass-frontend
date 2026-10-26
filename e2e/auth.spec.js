@@ -18,7 +18,7 @@ test("signs in and lands in the platform admin shell", async ({ page }, testInfo
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
 
   await page.waitForURL("**/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Platform Admin" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("accessToken")))
     .toBe(ADMIN_PERSONA.accessToken);
@@ -58,7 +58,7 @@ test("logs out from the dashboard shell", async ({ page }, testInfo) => {
   await preparePage(page, ADMIN_PERSONA);
 
   await page.goto("/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Platform Admin" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
 
   await page.locator('[title="Log out"]').first().click();
 
@@ -78,14 +78,14 @@ test("hard-redirects to sign-in with the expiry toast when refresh fails", async
   await preparePage(page, ADMIN_PERSONA);
 
   await page.goto("/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Platform Admin" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
 
-  // Load the Users tab so its list query is live, then expire the session.
+  // Load the Users section so its list query is live, then expire the session.
   // The search input's 350ms debounce produces a new queryKey → a fresh
   // GET /admin/users → 401 → POST /auth/token/refresh → 401 →
   // clearSessionAndRedirect (client.js) → hard navigation + expiry flag →
   // SignIn's one-shot toast.
-  await page.getByRole("button", { name: "Users", exact: true }).click();
+  await page.getByRole("button", { name: /^Users/ }).click();
   await expect(page.getByRole("row", { name: /member@example\.test/ })).toBeVisible();
 
   scenario.expired = true;
