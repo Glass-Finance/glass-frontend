@@ -23,8 +23,8 @@ test("suspends a user through the confirmation flow", async ({ page }, testInfo)
   // Row-scoped: "Suspended" also exists as a filter option label.
   await expect(row.getByText("Active", { exact: true })).toBeVisible();
 
-  // Row actions are opacity-0 group-hover:opacity-100 — hover first.
-  await row.hover();
+  // Row actions moved behind the overflow menu: open it, then Suspend.
+  await row.getByRole("button", { name: /^Actions for/ }).click();
   await row.getByRole("button", { name: "Suspend", exact: true }).click();
 
   // ModalShell renders no role="dialog" — scope by the modal's own content.

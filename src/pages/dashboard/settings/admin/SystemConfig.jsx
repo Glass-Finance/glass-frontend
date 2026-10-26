@@ -14,6 +14,7 @@ import {
 import { useSystemConfigs } from "../../../../hooks/useSystemConfigs";
 import { useDebounce } from "../../../../hooks/useDebounce";
 import LoadingState from "../../../../components/common/LoadingState";
+import Toggle from "../../../../components/common/Toggle";
 import { Button } from "../../../../components/ui/Button";
 import { formatJson } from "../../../../utils/formatJson";
 
@@ -48,17 +49,20 @@ function EnvBadge({ environment }) {
   );
 }
 
-function ValueCell({ value, valueType }) {
+// BOOLEAN rows render as an inline switch (design: System config — the
+// ENABLED column) instead of a true/false badge; flipping it PATCHes just the
+// value (the backend's UpdateSystemConfigRequest is a partial update with
+// explicit valueSet/nameSet flags). Every switch asks for confirmation first —
+// the design's footer note is a rule, not a suggestion.
+function ValueCell({ value, valueType, config, onToggle }) {
   if (valueType === "BOOLEAN") {
     const on = value === "true" || value === true;
     return (
-      <span
-        className={`inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-          on ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400"
-        }`}
-      >
-        {on ? "true" : "false"}
-      </span>
+      <Toggle
+        on={on}
+        ariaLabel={`${config?.name ?? config?.key ?? "config"} enabled`}
+        onChange={() => onToggle(config, !on)}
+      />
     );
   }
   return (
@@ -68,6 +72,52 @@ function ValueCell({ value, valueType }) {
     >
       {value ?? <span className="text-gray-300">—</span>}
     </span>
+  );
+}
+
+// Confirm dialog shown before a BOOLEAN value flips.
+function ToggleConfirmModal({ config, next, onClose, onConfirm, isSaving }) {
+  const label = config.name || config.key;
+  return (
+    <div
+      className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/20"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-surface-bg rounded-2xl w-full max-w-md shadow-2xl border border-surface-container-border px-6 py-6">
+        <h2 className="m-0 text-sm font-bold text-gray-900">
+          {next ? "Turn on" : "Turn off"} {label}?
+        </h2>
+        <p className="m-0 mt-2 text-xs text-gray-500 leading-relaxed">
+          This sets <span className="font-mono">{config.key}</span> to{" "}
+          <span className="font-mono">{String(next)}</span> immediately after you confirm.
+        </p>
+        <div className="flex gap-3 mt-5">
+          <Button
+            type="button"
+            variant="outline-neutral"
+            onClick={onClose}
+            disabled={isSaving}
+            fullWidth={false}
+            size="sm"
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={onConfirm}
+            loading={isSaving}
+            fullWidth={false}
+            size="sm"
+            className="flex-1"
+          >
+            {next ? "Turn on" : "Turn off"}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -275,6 +325,7 @@ export default function SystemConfig() {
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState(null);
+  const [toggling, setToggling] = useState(null);
 
   // Debounce search to avoid firing a request on every keystroke
   const debouncedSetSearch = useDebounce((val) => {
@@ -307,6 +358,20 @@ export default function SystemConfig() {
 
   function handleSave(form) {
     update.mutate({ id: editing.id, payload: form }, { onSuccess: () => setEditing(null) });
+  }
+
+  // Value-only PATCH: name/description are untouched, which is what the
+  // backend's valueSet flag is for.
+  function confirmToggle() {
+    update.mutate(
+      { id: toggling.config.id, payload: { value: String(toggling.next) } },
+      { onSuccess: () => setToggling(null) },
+    );
+  }
+
+  // The switch opens the confirmation instead of writing immediately.
+  function handleToggleTarget(cfg, next) {
+    setToggling({ config: cfg, next });
   }
 
   function handleCategoryChange(cat) {
@@ -444,7 +509,12 @@ export default function SystemConfig() {
 
                     {/* Value */}
                     <td className="px-4 py-3">
-                      <ValueCell value={cfg.value} valueType={cfg.valueType} />
+                      <ValueCell
+                        value={cfg.value}
+                        valueType={cfg.valueType}
+                        config={cfg}
+                        onToggle={handleToggleTarget}
+                      />
                     </td>
 
                     {/* Category */}
@@ -539,6 +609,17 @@ export default function SystemConfig() {
           config={editing}
           onClose={() => setEditing(null)}
           onSave={handleSave}
+          isSaving={update.isPending}
+        />
+      )}
+
+      {/* BOOLEAN value confirmation */}
+      {toggling && (
+        <ToggleConfirmModal
+          config={toggling.config}
+          next={toggling.next}
+          onClose={() => setToggling(null)}
+          onConfirm={confirmToggle}
           isSaving={update.isPending}
         />
       )}

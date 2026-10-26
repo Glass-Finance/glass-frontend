@@ -47,6 +47,10 @@ function renderPage(Component = UsersSection) {
   return client;
 }
 async function openApproval() {
+  // UsersSection: the action lives in the row overflow menu (list loads
+  // async). KycSection: it's a direct button inside the attempt dialog.
+  const menuTrigger = await screen.findByRole("button", { name: /^Actions for/ }).catch(() => null);
+  if (menuTrigger) fireEvent.click(menuTrigger);
   fireEvent.click(await screen.findByRole("button", { name: "Approve manually" }));
   return screen.findByRole("dialog");
 }
@@ -176,6 +180,7 @@ describe("manual KYC approval", () => {
       actor.role = role;
       renderPage();
       await screen.findByText("ada@example.com");
+      fireEvent.click(await screen.findByRole("button", { name: /^Actions for/ }));
       expect(screen.queryByRole("button", { name: "Approve manually" })).toBeNull();
       expect(api.getAdminUser).not.toHaveBeenCalled();
     },
@@ -192,6 +197,7 @@ describe("manual KYC approval", () => {
     api.getAdminUsers.mockResolvedValue(response({ content: [target(overrides)] }));
     renderPage();
     await screen.findByText("ada@example.com");
+    fireEvent.click(await screen.findByRole("button", { name: /^Actions for/ }));
     expect(screen.queryByRole("button", { name: "Approve manually" })).toBeNull();
   });
 });
@@ -202,7 +208,8 @@ describe("user-level KYC revocation", () => {
     api.getAdminUsers.mockResolvedValue(response({ content: [approved] }));
     api.getAdminUser.mockResolvedValue(response(approved));
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Revoke KYC" }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Actions for/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke KYC", exact: true }));
     const dialog = await screen.findByRole("dialog");
     await within(dialog).findByLabelText("Reason");
     submit(dialog, "  Approval withdrawn  ");

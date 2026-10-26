@@ -66,6 +66,12 @@ async function findRow() {
   return email.closest("tr");
 }
 
+// Row actions live behind the overflow menu now — open it first.
+function openMenu(row, itemName) {
+  fireEvent.click(within(row).getByRole("button", { name: /^Actions for/ }));
+  return within(row).getByRole("button", { name: itemName, exact: true });
+}
+
 beforeEach(() => {
   getAdminUsers.mockResolvedValue(page([userFixture()]));
   getAdminUser.mockResolvedValue({
@@ -100,11 +106,31 @@ describe("UsersSection — rendering", () => {
     renderSection();
     const row = await findRow();
 
+    expect(screen.getByRole("heading", { name: "Users", level: 1 })).toBeTruthy();
     expect(within(row).getByText("Ada Lovelace")).toBeTruthy();
     expect(within(row).getByText("Active")).toBeTruthy();
-    expect(within(row).getByText("Yes")).toBeTruthy();
+    expect(within(row).getByText("✓ Verified")).toBeTruthy();
     expect(within(row).getByText("2")).toBeTruthy();
-    expect(within(row).getByRole("button", { name: "Suspend" })).toBeTruthy();
+    expect(openMenu(row, "Suspend")).toBeTruthy();
+  });
+
+  it("maps each filter tab onto its backend query flag", async () => {
+    renderSection();
+    await findRow();
+
+    // Initial mount is All users — no backend filter flags at all.
+    expect(getAdminUsers.mock.calls[0][0]).not.toHaveProperty("enabled");
+    expect(getAdminUsers.mock.calls[0][0]).not.toHaveProperty("emailVerified");
+
+    fireEvent.click(screen.getByRole("button", { name: "Suspended" }));
+    await waitFor(() =>
+      expect(getAdminUsers).toHaveBeenCalledWith(expect.objectContaining({ enabled: false })),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Unverified" }));
+    await waitFor(() =>
+      expect(getAdminUsers).toHaveBeenCalledWith(expect.objectContaining({ emailVerified: false })),
+    );
   });
 
   it("renders the Access denied shell on a 403", async () => {
@@ -185,11 +211,12 @@ describe("UsersSection — details", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it.each(["Suspend", "Delete", "Anonymize"])(
+  it.each(["Suspend", "Delete user…", "Anonymize…"])(
     "does not open details for the %s action",
     async (name) => {
       renderSection();
-      fireEvent.click(await screen.findByRole("button", { name, exact: true }));
+      const row = await findRow();
+      fireEvent.click(openMenu(row, name));
       expect(screen.queryByRole("dialog", { name: "User details" })).toBeNull();
       expect(getAdminUser).not.toHaveBeenCalled();
     },
@@ -207,7 +234,8 @@ describe("UsersSection — details", () => {
       page([userFixture({ platformRole: "USER", kycStatus: "APPROVED" })]),
     );
     renderSection();
-    fireEvent.click(await screen.findByRole("button", { name: "Revoke KYC", exact: true }));
+    const row = await findRow();
+    fireEvent.click(openMenu(row, "Revoke KYC"));
     expect(await screen.findByRole("dialog", { name: "Revoke KYC" })).toBeDefined();
     expect(screen.queryByRole("dialog", { name: "User details" })).toBeNull();
     await waitFor(() => expect(getAdminUser).toHaveBeenCalledTimes(1));
@@ -261,7 +289,7 @@ describe("UsersSection — suspend", () => {
     suspendUser.mockResolvedValue({});
     renderSection();
     const row = await findRow();
-    fireEvent.click(within(row).getByRole("button", { name: "Suspend" }));
+    fireEvent.click(openMenu(row, "Suspend"));
 
     expect(screen.getByText("Suspend User")).toBeTruthy();
     const textarea = screen.getByPlaceholderText("Why is this user being suspended?");
@@ -283,7 +311,7 @@ describe("UsersSection — suspend", () => {
     suspendUser.mockRejectedValue({ response: { status: 400, data: { message: "nope" } } });
     renderSection();
     const row = await findRow();
-    fireEvent.click(within(row).getByRole("button", { name: "Suspend" }));
+    fireEvent.click(openMenu(row, "Suspend"));
 
     const textarea = screen.getByPlaceholderText("Why is this user being suspended?");
     fireEvent.change(textarea, { target: { value: "spam" } });
@@ -296,7 +324,7 @@ describe("UsersSection — suspend", () => {
   it("cancels without calling the API", async () => {
     renderSection();
     const row = await findRow();
-    fireEvent.click(within(row).getByRole("button", { name: "Suspend" }));
+    fireEvent.click(openMenu(row, "Suspend"));
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
@@ -321,31 +349,39 @@ describe("UsersSection — unsuspend / delete / anonymize", () => {
     await waitFor(() => expect(screen.queryByText("Unsuspend User")).toBeNull());
   });
 
-  it("marks an account for deletion with a required reason", async () => {
+  it("marks an account for deletion only after the identifier is typed", async () => {
     markUserForDeletion.mockResolvedValue({});
     renderSection();
     const row = await findRow();
-    fireEvent.click(within(row).getByRole("button", { name: "Delete" }));
+    fireEvent.click(openMenu(row, "Delete user…"));
 
-    expect(screen.getByText("Mark User for Deletion")).toBeTruthy();
-    const textarea = screen.getByPlaceholderText("Why is this account being marked for deletion?");
-    const form = textarea.closest("form");
-    expect(within(form).getByRole("button", { name: "Mark for Deletion" }).disabled).toBe(true);
+    expect(screen.getByText("Delete Ada Lovelace?")).toBeTruthy();
+    const input = screen.getByPlaceholderText("Type the email to confirm");
+    const form = input.closest("form");
+    const submit = within(form).getByRole("button", { name: "Delete user" });
+    expect(submit.disabled).toBe(true);
 
-    fireEvent.change(textarea, { target: { value: "GDPR request" } });
+    // A near-miss keeps the destructive button armed-off.
+    fireEvent.change(input, { target: { value: "ada@wrong.example.com" } });
+    expect(submit.disabled).toBe(true);
+
+    fireEvent.change(input, { target: { value: "ada@example.com" } });
+    expect(submit.disabled).toBe(false);
     fireEvent.submit(form);
 
     await waitFor(() =>
-      expect(markUserForDeletion).toHaveBeenCalledWith("user-1", { reason: "GDPR request" }),
+      expect(markUserForDeletion).toHaveBeenCalledWith("user-1", {
+        reason: "Confirmed by typing the account identifier before deletion",
+      }),
     );
-    await waitFor(() => expect(screen.queryByText("Mark User for Deletion")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Delete Ada Lovelace?")).toBeNull());
   });
 
   it("anonymizes an account with a required reason", async () => {
     anonymizeUser.mockResolvedValue({});
     renderSection();
     const row = await findRow();
-    fireEvent.click(within(row).getByRole("button", { name: "Anonymize" }));
+    fireEvent.click(openMenu(row, "Anonymize…"));
 
     expect(screen.getByText("Anonymize User")).toBeTruthy();
     const textarea = screen.getByPlaceholderText("Why is this account being anonymized now?");

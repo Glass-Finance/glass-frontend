@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
-import { Download, ScrollText, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
-import ModalShell from "../../../components/dashboard/ModalShell";
+import { Download, ScrollText, RefreshCw, CheckCircle2, XCircle, X } from "lucide-react";
 import LoadingState from "../../../components/common/LoadingState";
 import { getErrorMessage } from "../../../utils/errorHandler";
 import { useExportJob } from "../../../hooks/useExportJob";
@@ -42,15 +41,6 @@ function ResultCell({ result }) {
   return <span className="text-[11px] text-gray-400">—</span>;
 }
 
-function DetailRow({ label, value, mono = false }) {
-  return (
-    <div>
-      <p className="text-[10px] text-gray-400 mb-0.5">{label}</p>
-      <p className={`text-xs text-gray-900 break-all ${mono ? "font-mono" : ""}`}>{value ?? "—"}</p>
-    </div>
-  );
-}
-
 // oldValue/newValue arrive as free-form JSON captured at write time. They are
 // rendered as pretty-printed text via JSON.stringify, never injected as HTML —
 // they carry whatever the audited entity happened to contain, including
@@ -73,57 +63,114 @@ function JsonBlock({ label, value }) {
   );
 }
 
-function AuditLogDetailModal({ auditLogId, onClose }) {
+function humanize(value) {
+  if (!value) return "";
+  const s = String(value).replace(/_/g, " ").toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// One label/value strip in the drawer — the design's rows are stacked
+// label-over-value pairs separated by hairlines, not the old modal's 2-col grid.
+function DrawerRow({ label, value, mono = false }) {
+  return (
+    <div className="px-6 py-3.5 border-b border-surface-sunken">
+      <p className="m-0 text-[11px] text-gray-400 mb-1">{label}</p>
+      <p className={`m-0 text-[13px] text-gray-900 break-all ${mono ? "font-mono" : ""}`}>
+        {value ?? "—"}
+      </p>
+    </div>
+  );
+}
+
+// Right-side drawer for one audit event (design: Admin – Audit logs (event
+// detail)). Opens over the list instead of the old centred modal so the row
+// you clicked stays visible for context.
+function AuditEventDrawer({ auditLogId, onClose }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-audit-log", auditLogId],
     queryFn: () => getAdminAuditLog(auditLogId).then((r) => r.data?.data),
     staleTime: 30_000,
   });
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const rawIds = [
+    ["actor", data?.actorUserId],
+    ["entity", data?.entityId],
+    ["community", data?.communityId],
+    ["correlation", data?.correlationId],
+  ].filter(([, v]) => v);
+
   return (
-    <ModalShell size="wide" title="Audit log" subtitle={data?.event} onClose={onClose}>
-      <div className="p-6 max-h-[70vh] overflow-y-auto">
-        {isLoading ? (
-          <LoadingState className="py-10" />
-        ) : error ? (
-          <p className="text-xs text-danger">{getErrorMessage(error)}</p>
-        ) : (
-          <>
-            <div className="flex items-center justify-between gap-3 mb-5">
-              <p className="text-sm font-bold text-gray-900">{data.description ?? data.event}</p>
-              <ResultCell result={data.result} />
-            </div>
+    <div className="fixed inset-0 z-70">
+      {/* Invisible click-catcher: the design leaves the list undimmed, so this
+          closes the drawer on an outside click without a backdrop tint. */}
+      <div className="absolute inset-0" aria-hidden="true" onClick={onClose} />
+      <aside
+        role="dialog"
+        aria-label="Audit event"
+        className="absolute top-0 right-0 h-full w-full max-w-[460px] bg-white shadow-2xl border-l border-surface-container-border flex flex-col"
+      >
+        <header className="flex items-center justify-between px-6 py-4 border-b border-surface-sunken shrink-0">
+          <h2 className="m-0 text-sm font-bold text-gray-900">Audit event</h2>
+          <Button variant="tertiary" size="icon-sm" onClick={onClose} aria-label="Close">
+            <X size={15} />
+          </Button>
+        </header>
 
-            {data.comment && (
-              <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-surface-container-border">
-                <p className="text-[10px] text-gray-400 mb-0.5">Comment</p>
-                <p className="text-xs text-gray-700">{data.comment}</p>
+        <div className="min-h-0 overflow-y-auto flex-1">
+          {isLoading ? (
+            <LoadingState className="py-10" />
+          ) : error ? (
+            <p className="m-0 px-6 py-8 text-xs text-danger">{getErrorMessage(error)}</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2.5 px-6 py-4 border-b border-surface-sunken">
+                <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-tint text-brand uppercase tracking-wide">
+                  {(data.event ?? "").split("_")[0]}
+                </span>
+                <span className="text-sm font-bold text-gray-900">{humanize(data.event)}</span>
               </div>
-            )}
 
-            <div className="grid grid-cols-2 gap-4 mb-5">
-              <DetailRow label="Event" value={data.event} />
-              <DetailRow label="Occurred at" value={fmtDateTime(data.occurredAt)} />
-              <DetailRow label="Actor" value={data.actorUserId} mono />
-              <DetailRow label="Actor role" value={data.platformRoleName} />
-              <DetailRow label="Entity type" value={data.entityType} />
-              <DetailRow label="Entity id" value={data.entityId} mono />
-              <DetailRow label="Community id" value={data.communityId} mono />
-              <DetailRow label="Correlation id" value={data.correlationId} mono />
-              <DetailRow label="IP address" value={data.ipAddress} mono />
-              <DetailRow label="User agent" value={data.userAgent} />
-            </div>
+              <DrawerRow label="Result" value={<ResultCell result={data.result} />} />
+              <DrawerRow label="Description" value={data.description} />
+              {data.comment && <DrawerRow label="Comment" value={data.comment} />}
+              <DrawerRow label="Occurred at" value={fmtDateTime(data.occurredAt)} />
+              <DrawerRow label="Actor" value={data.platformRoleName} />
+              <DrawerRow label="Entity" value={data.entityType} />
+              <DrawerRow label="IP address" value={data.ipAddress} mono />
+              <DrawerRow label="User agent" value={data.userAgent} />
 
-            {/* The list response is evidence-free by design; the change diff
-                only exists on this detail payload. */}
-            <div className="flex flex-col gap-4">
-              <JsonBlock label="Previous value" value={data.oldValue} />
-              <JsonBlock label="New value" value={data.newValue} />
-            </div>
-          </>
-        )}
-      </div>
-    </ModalShell>
+              {rawIds.length > 0 && (
+                <div className="px-6 py-3.5 border-b border-surface-sunken">
+                  <p className="m-0 text-[11px] text-gray-400 mb-1.5">Raw IDs</p>
+                  <div className="flex flex-col gap-1">
+                    {rawIds.map(([label, value]) => (
+                      <p key={label} className="m-0 text-[11px] text-gray-700 break-all">
+                        <span className="text-gray-400">{label}</span> {value}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* The list response is evidence-free by design; the change diff
+                  only exists on this detail payload. */}
+              <div className="px-6 py-4 flex flex-col gap-4">
+                <JsonBlock label="Previous value" value={data.oldValue} />
+                <JsonBlock label="New value" value={data.newValue} />
+              </div>
+            </>
+          )}
+        </div>
+      </aside>
+    </div>
   );
 }
 
@@ -255,7 +302,7 @@ export default function AuditLogsSection() {
         onPage={setPage}
       />
 
-      {openId && <AuditLogDetailModal auditLogId={openId} onClose={() => setOpenId(null)} />}
+      {openId && <AuditEventDrawer auditLogId={openId} onClose={() => setOpenId(null)} />}
     </div>
   );
 }
