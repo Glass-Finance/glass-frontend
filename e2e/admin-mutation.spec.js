@@ -11,9 +11,9 @@ test("suspends a user through the confirmation flow", async ({ page }, testInfo)
 
   await page.goto("/dashboard/admin-panel");
   // Default section — the shell renders no page-level header of its own.
-  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 
-  // Default section is Communities — switch to Users via the shell's rail
+  // Default section is Overview — switch to Users via the shell's rail
   // (the section heading carries the same words but isn't a button; the
   // row's count badge makes the row's accessible name "Users <n>").
   await page.getByRole("button", { name: /^Users/ }).click();

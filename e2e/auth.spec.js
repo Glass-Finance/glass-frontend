@@ -18,7 +18,7 @@ test("signs in and lands in the platform admin shell", async ({ page }, testInfo
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
 
   await page.waitForURL("**/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("accessToken")))
     .toBe(ADMIN_PERSONA.accessToken);
@@ -58,7 +58,7 @@ test("logs out from the dashboard shell", async ({ page }, testInfo) => {
   await preparePage(page, ADMIN_PERSONA);
 
   await page.goto("/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 
   await page.locator('[title="Log out"]').first().click();
 
@@ -78,7 +78,7 @@ test("hard-redirects to sign-in with the expiry toast when refresh fails", async
   await preparePage(page, ADMIN_PERSONA);
 
   await page.goto("/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 
   // Load the Users section so its list query is live, then expire the session.
   // The search input's 350ms debounce produces a new queryKey → a fresh
