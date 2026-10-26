@@ -11,7 +11,7 @@ import {
   getAdminTransactions,
   exportAdminTransactions,
 } from "../../../api/admin";
-import { fmt, fmtDateTime, unwrap, pageParams } from "./shared";
+import { fmt, fmtDateTime, unwrap, pageParams, initialSearchFromUrl } from "./shared";
 import { useDebounce } from "../../../hooks/useDebounce";
 import {
   StatusBadge,
@@ -143,8 +143,8 @@ function TransactionDetailModal({ transactionId, onClose }) {
 }
 
 export default function TransactionsSection() {
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(initialSearchFromUrl);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearchFromUrl);
   const [status, setStatus] = useState("ALL");
   const [page, setPage] = useState(0);
   const [openId, setOpenId] = useState(null);

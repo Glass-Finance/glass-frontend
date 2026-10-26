@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
+import AdminSidebar from "../components/dashboard/admin/AdminSidebar";
+import AdminTopbar from "../components/dashboard/admin/AdminTopbar";
 import DashboardTour from "../components/dashboard/DashboardTour";
 import { Button } from "../components/ui/Button";
 import {
@@ -19,6 +21,13 @@ export default function DashboardLayout() {
   // -- the default tour is written in singular-community language ("this is
   // where you manage your community's dues"), which doesn't fit this page.
   const isCommunitiesHome = location.pathname === "/dashboard/home";
+  // The platform-admin routes get their own shell (design: Overview@1x) —
+  // grouped rail + jump-to topbar — instead of the member Sidebar/Topbar.
+  // /dashboard/system-config rides along because it renders the same
+  // SystemConfig section the shell's nav links to.
+  const isAdminChrome =
+    location.pathname.startsWith("/dashboard/admin-panel") ||
+    location.pathname === "/dashboard/system-config";
   // Sidebar is an off-canvas drawer below the md breakpoint (see
   // Sidebar.jsx) -- this state is lifted here since the hamburger that
   // opens it lives in the sibling Topbar, not Sidebar itself.
@@ -106,11 +115,15 @@ export default function DashboardLayout() {
     <KeyboardShortcutsProvider>
       <div className="h-dvh w-screen flex overflow-hidden bg-surface-bg">
         {/* ── Sidebar ── */}
-        <Sidebar
-          mobileOpen={mobileNavOpen}
-          onCloseMobile={() => setMobileNavOpen(false)}
-          onOpenTour={() => setTourOpen(true)}
-        />
+        {isAdminChrome ? (
+          <AdminSidebar mobileOpen={mobileNavOpen} onCloseMobile={() => setMobileNavOpen(false)} />
+        ) : (
+          <Sidebar
+            mobileOpen={mobileNavOpen}
+            onCloseMobile={() => setMobileNavOpen(false)}
+            onOpenTour={() => setTourOpen(true)}
+          />
+        )}
 
         {/* ── Main ──
             Background lives on this inner wrapper (the area right of the
@@ -129,14 +142,29 @@ export default function DashboardLayout() {
             entirely. That's why it was invisible. Reusing the same asset +
             technique the onboarding pages already rely on for this exact
             problem: bg-page-default is a landscape image sized for this
-            aspect ratio, shown with bg-contain (never crops) + bg-center. */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-contain bg-center bg-no-repeat bg-page-default">
+            aspect ratio, shown with bg-contain (never crops) + bg-center.
+
+            The admin chrome (isAdminChrome) drops the image — the design's
+            admin pages sit on a flat background, which the outer container's
+            surface-bg already provides. */}
+        <div
+          className={`flex-1 flex flex-col overflow-hidden ${
+            isAdminChrome ? "" : "bg-contain bg-center bg-no-repeat bg-page-default"
+          }`}
+        >
           {/* Topbar */}
-          <Topbar
-            isCommunitiesHome={isCommunitiesHome}
-            onMenuClick={() => setMobileNavOpen(true)}
-            onOpenTour={() => setTourOpen(true)}
-          />
+          {isAdminChrome ? (
+            <AdminTopbar
+              onMenuClick={() => setMobileNavOpen(true)}
+              onOpenTour={() => setTourOpen(true)}
+            />
+          ) : (
+            <Topbar
+              isCommunitiesHome={isCommunitiesHome}
+              onMenuClick={() => setMobileNavOpen(true)}
+              onOpenTour={() => setTourOpen(true)}
+            />
+          )}
 
           {/* Page content — background texture lives on the wrapper above so
               every dashboard page gets it uniformly, instead of each page

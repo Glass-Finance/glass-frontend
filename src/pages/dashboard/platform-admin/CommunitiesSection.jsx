@@ -6,7 +6,13 @@ import Toggle from "../../../components/common/Toggle";
 import { Button } from "../../../components/ui/Button";
 import { getAdminCommunities, setCommissionOverride } from "../../../api/admin";
 import { updateCommunitySettings } from "../../../api/communities";
-import { fmtDate, unwrap, pageParams, withSafeCommunityLogos } from "./shared";
+import {
+  fmtDate,
+  unwrap,
+  pageParams,
+  withSafeCommunityLogos,
+  initialSearchFromUrl,
+} from "./shared";
 import { getErrorMessage } from "../../../utils/errorHandler";
 import { formatJson } from "../../../utils/formatJson";
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -222,8 +228,8 @@ function CommunitySettingsModal({ community, onClose }) {
 }
 
 export default function CommunitiesSection() {
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(initialSearchFromUrl);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearchFromUrl);
   const [status, setStatus] = useState("ALL");
   const [page, setPage] = useState(0);
   const [editingCommission, setEditingCommission] = useState(null);

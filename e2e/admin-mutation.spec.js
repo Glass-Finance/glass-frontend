@@ -10,11 +10,13 @@ test("suspends a user through the confirmation flow", async ({ page }, testInfo)
   await preparePage(page, ADMIN_PERSONA);
 
   await page.goto("/dashboard/admin-panel");
-  await expect(page.getByRole("heading", { name: "Platform Admin" })).toBeVisible();
+  // Default section — the shell renders no page-level header of its own.
+  await expect(page.getByRole("heading", { name: "Communities" })).toBeVisible();
 
-  // Default tab is Communities — switch to Users (tab button; the section
-  // heading and filter options carry the same words but aren't buttons).
-  await page.getByRole("button", { name: "Users", exact: true }).click();
+  // Default section is Communities — switch to Users via the shell's rail
+  // (the section heading carries the same words but isn't a button; the
+  // row's count badge makes the row's accessible name "Users <n>").
+  await page.getByRole("button", { name: /^Users/ }).click();
 
   const row = page.getByRole("row", { name: /member@example\.test/ });
   await expect(row).toBeVisible();

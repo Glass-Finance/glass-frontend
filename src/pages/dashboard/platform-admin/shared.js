@@ -70,6 +70,15 @@ export function withSafeCommunityLogos(page) {
 
 export const PAGE_SIZE = 20;
 
+// The shell's ⌘K palette jumps with ?tab=…&q=… (AdminTopbar.jump); PlatformAdmin
+// remounts the section on a q change, so each section seeds both its visible
+// and debounced search from here on mount and the first query already carries
+// the term. window.location rather than useSearchParams: these sections are
+// also rendered directly in unit tests, outside a router.
+export function initialSearchFromUrl() {
+  return new URLSearchParams(window.location.search).get("q") ?? "";
+}
+
 // Backend pagination DTOs (CommunityQueryDto, AdminUserQueryDto, and other
 // admin query DTOs) all extend a shared PageQueryDto with fields:
 // { search, pageNumber, pageSize, sortBy, dir } — NOT `page`/`size`.

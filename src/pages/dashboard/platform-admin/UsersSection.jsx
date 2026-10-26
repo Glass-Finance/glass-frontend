@@ -5,7 +5,7 @@ import ModalShell from "../../../components/dashboard/ModalShell";
 import { Button } from "../../../components/ui/Button";
 import { toTitleCase } from "../../../utils/format";
 import { suspendUser, unsuspendUser, markUserForDeletion, anonymizeUser } from "../../../api/admin";
-import { pageParams, fmtDateTime } from "./shared";
+import { pageParams, fmtDateTime, initialSearchFromUrl } from "./shared";
 import { useAdminUsers } from "../../../hooks/useAdminKyc";
 import AdminUserKycActions from "../../../components/dashboard/AdminUserKycActions";
 import { kycStatusLabel } from "../../../utils/kycStatus";
@@ -240,8 +240,8 @@ function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
 
 export default function UsersSection() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(initialSearchFromUrl);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearchFromUrl);
   const [enabledFilter, setEnabledFilter] = useState("ALL");
   const [page, setPage] = useState(0);
   const [suspending, setSuspending] = useState(null);
