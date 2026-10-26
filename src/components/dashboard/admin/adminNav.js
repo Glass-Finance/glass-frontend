@@ -11,6 +11,7 @@
 // page, in DashboardLayout) and the page itself.
 
 import {
+  LayoutGrid,
   Building2,
   Users,
   ShieldCheck,
@@ -25,6 +26,9 @@ import {
   Bell,
   SlidersHorizontal,
 } from "lucide-react";
+
+// Landing page — sits above the groups with no header (design: Overview@1x).
+export const ADMIN_NAV_TOP = { id: "overview", label: "Overview", Icon: LayoutGrid };
 
 export const ADMIN_NAV_GROUPS = [
   {
@@ -57,5 +61,5 @@ export const ADMIN_NAV_GROUPS = [
   },
 ];
 
-export const ADMIN_NAV_ITEMS = ADMIN_NAV_GROUPS.flatMap((group) => group.items);
+export const ADMIN_NAV_ITEMS = [ADMIN_NAV_TOP, ...ADMIN_NAV_GROUPS.flatMap((group) => group.items)];
 export const ADMIN_TAB_IDS = ADMIN_NAV_ITEMS.map((item) => item.id);

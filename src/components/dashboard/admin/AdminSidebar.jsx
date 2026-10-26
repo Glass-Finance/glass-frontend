@@ -14,7 +14,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { LogOut, Monitor } from "lucide-react";
 import { Button } from "../../ui/Button";
 import { MobileOverlay } from "../SidebarPrimitives";
-import { ADMIN_NAV_GROUPS } from "./adminNav";
+import { ADMIN_NAV_GROUPS, ADMIN_NAV_TOP } from "./adminNav";
 import { useAdminNavCounts } from "../../../hooks/useAdminNavCounts";
 import { useAuth } from "../../../store/AuthContext";
 import { getInitials } from "../../../utils/getInitials";
@@ -34,7 +34,7 @@ export default function AdminSidebar({ mobileOpen, onCloseMobile }) {
   const activeTab =
     location.pathname === "/dashboard/system-config"
       ? "system-config"
-      : (searchParams.get("tab") ?? "communities");
+      : (searchParams.get("tab") ?? "overview");
 
   function goToTab(id) {
     // Fresh search string: switching sections drops any ?q= the ⌘K palette
@@ -58,6 +58,35 @@ export default function AdminSidebar({ mobileOpen, onCloseMobile }) {
     ? toPascalCaseName(`${user.firstName} ${user.lastName ?? ""}`.trim())
     : (user?.email ?? "");
 
+  function renderRow({ id, label, Icon, count }) {
+    const active = activeTab === id;
+    return (
+      // Nav rows are full-width left-aligned text rows rather than
+      // any Figma button role, hence the layout/color overrides on
+      // top of the tertiary variant.
+      <Button
+        key={id}
+        variant="tertiary"
+        size="sm"
+        onClick={() => goToTab(id)}
+        aria-current={active ? "page" : undefined}
+        className={`w-full justify-start! px-3! rounded-g-2! ${
+          active
+            ? "bg-brand-tint! text-brand! font-semibold hover:bg-brand-tint!"
+            : "text-ink! hover:bg-surface-sunken!"
+        }`}
+      >
+        <Icon size={15} className="flex-shrink-0" />
+        <span className="flex-1 text-left truncate">{label}</span>
+        {count && counts?.[id] != null && (
+          <span className="text-[11px] font-normal text-gray-400">
+            {counts[id].toLocaleString()}
+          </span>
+        )}
+      </Button>
+    );
+  }
+
   return (
     <>
       <MobileOverlay mobileOpen={mobileOpen} onClose={onCloseMobile} />
@@ -78,39 +107,14 @@ export default function AdminSidebar({ mobileOpen, onCloseMobile }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 pb-3" aria-label="Platform admin">
+          {/* Overview — landing row above the group headers */}
+          <div className="mt-1">{renderRow(ADMIN_NAV_TOP)}</div>
           {ADMIN_NAV_GROUPS.map((group) => (
-            <div key={group.label} className="mt-3 first:mt-1">
+            <div key={group.label} className="mt-3">
               <p className="m-0 px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                 {group.label}
               </p>
-              {group.items.map(({ id, label, Icon, count }) => {
-                const active = activeTab === id;
-                return (
-                  // Nav rows are full-width left-aligned text rows rather than
-                  // any Figma button role, hence the layout/color overrides on
-                  // top of the tertiary variant.
-                  <Button
-                    key={id}
-                    variant="tertiary"
-                    size="sm"
-                    onClick={() => goToTab(id)}
-                    aria-current={active ? "page" : undefined}
-                    className={`w-full justify-start! px-3! rounded-g-2! ${
-                      active
-                        ? "bg-brand-tint! text-brand! font-semibold hover:bg-brand-tint!"
-                        : "text-ink! hover:bg-surface-sunken!"
-                    }`}
-                  >
-                    <Icon size={15} className="flex-shrink-0" />
-                    <span className="flex-1 text-left truncate">{label}</span>
-                    {count && counts?.[id] != null && (
-                      <span className="text-[11px] font-normal text-gray-400">
-                        {counts[id].toLocaleString()}
-                      </span>
-                    )}
-                  </Button>
-                );
-              })}
+              {group.items.map(renderRow)}
             </div>
           ))}
         </nav>

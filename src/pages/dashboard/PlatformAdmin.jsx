@@ -4,6 +4,7 @@ import { usePageTitle } from "../../hooks/usePageTitle";
 import { useRegisterShortcutGroup } from "../../hooks/useKeyboardShortcuts";
 import { ADMIN_NAV_ITEMS, ADMIN_TAB_IDS } from "../../components/dashboard/admin/adminNav";
 import SystemConfig from "./settings/admin/SystemConfig";
+import OverviewSection from "./platform-admin/OverviewSection";
 import CommunitiesSection from "./platform-admin/CommunitiesSection";
 import AccountsSection from "./platform-admin/AccountsSection";
 import UsersSection from "./platform-admin/UsersSection";
@@ -25,7 +26,7 @@ export default function PlatformAdmin() {
   // DashboardLayout. Unknown/absent values fall back to the first row.
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const activeTab = ADMIN_TAB_IDS.includes(tabParam) ? tabParam : "communities";
+  const activeTab = ADMIN_TAB_IDS.includes(tabParam) ? tabParam : "overview";
   // Seeded by the ⌘K palette (?tab=…&q=…). Part of the remount key below so
   // a jump into an already-mounted section still starts with its search.
   const query = searchParams.get("q") ?? "";
@@ -52,6 +53,7 @@ export default function PlatformAdmin() {
     // remounting on a palette jump (or a back/forward across ?q=) is what
     // makes the URL seed land — and keeps stale state out of the next tab.
     <div key={`${activeTab}:${query}`} className="px-4 py-6 md:px-8 md:py-8 min-h-full">
+      {activeTab === "overview" && <OverviewSection />}
       {activeTab === "communities" && <CommunitiesSection />}
       {activeTab === "accounts" && <AccountsSection />}
       {activeTab === "users" && <UsersSection />}
