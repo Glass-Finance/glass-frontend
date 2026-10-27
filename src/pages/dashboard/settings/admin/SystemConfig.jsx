@@ -427,21 +427,34 @@ export default function SystemConfig() {
         </div>
       </div>
 
-      {/* Category filter tabs */}
-      <div className="flex gap-1 mb-4 flex-wrap">
-        {availableCategories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleCategoryChange(cat)}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
-              activeCategory === cat
-                ? "bg-brand text-white border-brand"
-                : "bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-gray-700"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Category filter tabs — segmented control matching the platform-admin
+          Users filter (gray container, active tab raised white). Container
+          padding/gap kept tight so the active tab fills more of the track. */}
+      <div
+        role="group"
+        aria-label="Filter configs by category"
+        className="inline-flex flex-wrap items-center gap-0.5 p-0.5 rounded-g-2 bg-surface-sunken border border-surface-container-border mb-4"
+      >
+        {availableCategories.map((cat) => {
+          const active = activeCategory === cat;
+          return (
+            <Button
+              key={cat}
+              variant={active ? "outline-neutral" : "tertiary"}
+              size="xs"
+              fullWidth={false}
+              aria-pressed={active}
+              onClick={() => handleCategoryChange(cat)}
+              className={
+                active
+                  ? "bg-white! shadow-sm! border-black/10! text-gray-900!"
+                  : "text-gray-500! hover:text-gray-700!"
+              }
+            >
+              {cat}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Table */}

@@ -88,6 +88,8 @@ export function TableShell({
   isEmpty,
   error,
   emptyIcon,
+  emptyIllustration,
+  emptyIllustrationClassName,
   emptyLabel = "No results found",
   forbiddenMessage = DEFAULT_FORBIDDEN_MESSAGE,
   children,
@@ -107,7 +109,17 @@ export function TableShell({
           </p>
         </div>
       ) : isEmpty ? (
-        <EmptyState icon={emptyIcon} title={emptyLabel} className="py-16" />
+        <EmptyState
+          icon={emptyIcon}
+          illustration={emptyIllustration}
+          illustrationClassName={emptyIllustrationClassName}
+          title={emptyLabel}
+          // In-table empties keep the compact title even when they swap the
+          // icon for an illustration asset — the page-level 28px title is for
+          // full-page states, not a row of cells.
+          titleClassName={emptyIllustration ? "text-sm font-semibold text-gray-900" : undefined}
+          className="py-16"
+        />
       ) : (
         <div className="overflow-x-auto">{children}</div>
       )}

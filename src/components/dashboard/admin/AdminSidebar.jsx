@@ -11,7 +11,7 @@
  */
 import { useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { LogOut, Monitor } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "../../ui/Button";
 import { MobileOverlay } from "../SidebarPrimitives";
 import { ADMIN_NAV_GROUPS, ADMIN_NAV_TOP } from "./adminNav";
@@ -70,10 +70,10 @@ export default function AdminSidebar({ mobileOpen, onCloseMobile }) {
         size="sm"
         onClick={() => goToTab(id)}
         aria-current={active ? "page" : undefined}
-        className={`w-full justify-start! px-3! rounded-g-2! ${
+        className={`w-full justify-start! px-3! rounded-g-1! ${
           active
-            ? "bg-brand-tint! text-brand! font-semibold hover:bg-brand-tint!"
-            : "text-ink! hover:bg-surface-sunken!"
+            ? "bg-brand-tint! text-brand! font-medium hover:bg-brand-tint!"
+            : "text-ink! font-normal hover:bg-surface-sunken!"
         }`}
       >
         <Icon size={15} className="flex-shrink-0" />
@@ -97,12 +97,16 @@ export default function AdminSidebar({ mobileOpen, onCloseMobile }) {
       >
         {/* Brand */}
         <div className="flex items-center gap-2.5 px-4 pt-4 pb-3.5">
-          <span className="w-8 h-8 rounded-g-1 bg-brand text-white flex items-center justify-center flex-shrink-0">
-            <Monitor size={15} strokeWidth={2.5} />
-          </span>
-          <div className="min-w-0">
+          <img
+            src="/Glass.webp"
+            alt="Glass"
+            className="w-8 h-8 object-contain flex-shrink-0 select-none"
+          />
+          <div className="min-w-0 flex items-center gap-1.5">
             <p className="m-0 text-sm font-bold text-ink leading-tight">Glass</p>
-            <p className="m-0 mt-0.5 text-[11px] text-ink-muted leading-tight">Platform Admin</p>
+            <span className="px-1.5 py-[3px] rounded-full bg-brand-tint text-brand text-[9px] font-bold uppercase tracking-wide whitespace-nowrap leading-none">
+              Platform Admin
+            </span>
           </div>
         </div>
 
