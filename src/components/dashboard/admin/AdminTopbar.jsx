@@ -104,7 +104,7 @@ export default function AdminTopbar({ onMenuClick, onOpenTour }) {
         data-tour="topbar-search"
         className="relative flex-1 max-w-[540px] hidden md:block"
       >
-        <div className="flex items-center gap-2 bg-gray-100 rounded-g-2 px-3.5 py-2.5 border border-transparent focus-within:border-brand transition-colors">
+        <div className="flex items-center gap-2 bg-gray-100 rounded-g-1 px-3.5 py-2.5 border border-transparent focus-within:border-brand transition-colors">
           {isSearching ? (
             <Loader2 size={14} className="text-gray-400 flex-shrink-0 animate-spin" />
           ) : (
@@ -122,13 +122,13 @@ export default function AdminTopbar({ onMenuClick, onOpenTour }) {
             placeholder="Jump to a user, community or transaction reference"
             className="flex-1 min-w-0 bg-transparent border-none outline-none text-[13px] text-gray-700 placeholder-gray-400"
           />
-          <kbd className="hidden lg:inline-flex items-center flex-shrink-0 text-[10px] font-semibold text-gray-400 bg-white border border-gray-200 rounded px-1.5 py-0.5">
+          <kbd className="hidden lg:inline-flex items-center flex-shrink-0 text-[10px] font-semibold text-gray-400 bg-white border border-gray-200 rounded-g-1 px-1.5 py-0.5">
             ⌘K
           </kbd>
         </div>
 
         {open && (
-          <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-xl border border-surface-container-border shadow-lg z-50 max-h-[420px] overflow-y-auto">
+          <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-g-1 border border-surface-container-border shadow-lg z-50 max-h-[420px] overflow-y-auto">
             {!hasResults ? (
               <p className="m-0 text-xs text-gray-400 px-4 py-4">No results for "{term.trim()}"</p>
             ) : (

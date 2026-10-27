@@ -44,7 +44,7 @@ export default function UserDetailModal({ userId, onClose }) {
   return (
     <GlassModal
       appearance="dashboard"
-      className="sm:max-w-3xl"
+      className="rounded-g-1! sm:max-w-3xl"
       title="User details"
       subtitle={user?.email}
       onClose={onClose}

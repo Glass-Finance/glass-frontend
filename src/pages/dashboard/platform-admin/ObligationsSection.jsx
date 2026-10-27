@@ -77,7 +77,12 @@ function ObligationDetailModal({ obligationId, onClose }) {
       : null;
 
   return (
-    <ModalShell title="Obligation" subtitle={data?.member?.memberRef} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Obligation"
+      subtitle={data?.member?.memberRef}
+      onClose={onClose}
+    >
       <div className="p-6 max-h-[70vh] overflow-y-auto">
         {isLoading ? (
           <LoadingState className="py-10" />
@@ -91,11 +96,11 @@ function ObligationDetailModal({ obligationId, onClose }) {
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Amount paid</p>
                 <p className="text-sm font-bold text-gray-900">{fmt(paid, "NGN")}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Outstanding</p>
                 <p
                   className={`text-sm font-bold ${outstanding != null ? "text-red-600" : "text-gray-900"}`}
@@ -109,15 +114,15 @@ function ObligationDetailModal({ obligationId, onClose }) {
                 OVERDUE while auto-debit has already burned every attempt, in
                 which case waiting will never resolve it. */}
             <div className="grid grid-cols-3 gap-3 mb-5">
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Attempts</p>
                 <p className="text-sm font-bold text-gray-900">{data.attemptCount ?? 0}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Auto-debit</p>
                 <p className="text-sm font-bold text-gray-900">{data.autoDebitAttemptCount ?? 0}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Manual</p>
                 <p className="text-sm font-bold text-gray-900">{data.manualAttemptCount ?? 0}</p>
               </div>

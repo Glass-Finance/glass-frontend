@@ -40,7 +40,7 @@ export default function CommunityDetailModal({ identifier, onClose }) {
   return (
     <GlassModal
       appearance="dashboard"
-      className="sm:max-w-3xl"
+      className="rounded-g-1! sm:max-w-3xl"
       title="Community details"
       subtitle={data?.name}
       onClose={onClose}

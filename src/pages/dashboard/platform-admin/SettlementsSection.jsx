@@ -32,7 +32,12 @@ function SettlementDetailModal({ settlementId, onClose }) {
   const transactions = data?.transactions ?? [];
 
   return (
-    <ModalShell title="Settlement" subtitle={data?.gatewaySettlementId} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Settlement"
+      subtitle={data?.gatewaySettlementId}
+      onClose={onClose}
+    >
       <div className="p-6 max-h-[70vh] overflow-y-auto">
         {isLoading ? (
           <LoadingState className="py-10" />
@@ -41,21 +46,21 @@ function SettlementDetailModal({ settlementId, onClose }) {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Gross</p>
                 <p className="text-sm font-bold text-gray-900">{fmt(data.gross, data.currency)}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Net</p>
                 <p className="text-sm font-bold text-gray-900">{fmt(data.net, data.currency)}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Fees + Deductions</p>
                 <p className="text-sm font-bold text-gray-900">
                   {fmt((data.fees ?? 0) + (data.deductions ?? 0), data.currency)}
                 </p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Variance</p>
                 <p
                   className={`text-sm font-bold ${data.variance ? "text-red-600" : "text-gray-900"}`}
@@ -83,7 +88,7 @@ function SettlementDetailModal({ settlementId, onClose }) {
                 {transactions.map((t) => (
                   <div
                     key={t.id}
-                    className="bg-white rounded-lg p-3 flex items-center justify-between gap-3 border border-surface-container-border"
+                    className="bg-white rounded-g-1 p-3 flex items-center justify-between gap-3 border border-surface-container-border"
                   >
                     <div className="min-w-0">
                       <p className="text-xs font-mono text-gray-700 truncate">{t.reference}</p>

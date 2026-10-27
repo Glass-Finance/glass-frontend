@@ -40,7 +40,7 @@ export default function BalancesSection() {
               is false here. Shown to 2dp since this is a reconciliation
               figure — rounding to whole naira could hide a real
               discrepancy that should surface as "Out of balance". */}
-          <div className="bg-surface-container rounded-2xl p-5 mb-4 flex items-center justify-between border border-surface-container-border">
+          <div className="bg-surface-container rounded-g-1 p-5 mb-4 flex items-center justify-between border border-surface-container-border">
             <div>
               <p className="text-xs text-gray-400 mb-1">Platform Residual</p>
               <p className="text-2xl font-bold text-gray-900">
@@ -59,7 +59,7 @@ export default function BalancesSection() {
             {balances.map((b) => (
               <div
                 key={b.code}
-                className="bg-surface-container rounded-2xl p-5 border border-surface-container-border"
+                className="bg-surface-container rounded-g-1 p-5 border border-surface-container-border"
               >
                 <p className="text-[10px] text-gray-400 font-mono mb-1">{b.code}</p>
                 <p className="text-[15px] font-bold text-gray-900 mb-0.5">
