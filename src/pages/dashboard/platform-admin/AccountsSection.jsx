@@ -74,7 +74,12 @@ function CreateCommunityAccountModal({ onClose }) {
   const items = data?.content ?? [];
 
   return (
-    <ModalShell title="Create Payout Account" subtitle="Choose a community" onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Create Payout Account"
+      subtitle="Choose a community"
+      onClose={onClose}
+    >
       <div className="px-6 py-5">
         <SearchBar
           value={search}
@@ -95,16 +100,16 @@ function CreateCommunityAccountModal({ onClose }) {
               <button
                 key={c.id}
                 onClick={() => setSelectedCommunity(c)}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-left bg-transparent hover:bg-gray-50 transition-colors cursor-pointer border-none"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-g-1 text-left bg-transparent hover:bg-gray-50 transition-colors cursor-pointer border-none"
               >
                 {c.logo?.url ? (
                   <img
                     src={c.logo.url}
                     alt=""
-                    className="w-7 h-7 rounded-lg object-cover flex-shrink-0"
+                    className="w-7 h-7 rounded-g-1 object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-lg bg-brand-tint flex items-center justify-center text-brand font-bold text-[10px] flex-shrink-0">
+                  <div className="w-7 h-7 rounded-g-1 bg-brand-tint flex items-center justify-center text-brand font-bold text-[10px] flex-shrink-0">
                     {(c.name ?? "C")[0].toUpperCase()}
                   </div>
                 )}
@@ -173,7 +178,12 @@ function ReviewAccountModal({ account, onClose, onSubmit, submitting }) {
   const chosen = REVIEW_DECISIONS.find((d) => d.value === decision);
 
   return (
-    <ModalShell title="Review Payout Account" subtitle={account.accountNumber} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Review Payout Account"
+      subtitle={account.accountNumber}
+      onClose={onClose}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -192,7 +202,7 @@ function ReviewAccountModal({ account, onClose, onSubmit, submitting }) {
             code before deciding.
           </p>
         ) : (
-          <div className={`rounded-lg p-4 ${nameMatches ? "bg-success-wash" : "bg-danger-wash"}`}>
+          <div className={`rounded-g-1 p-4 ${nameMatches ? "bg-success-wash" : "bg-danger-wash"}`}>
             <p className="text-xs text-gray-500 mb-1">On file:</p>
             <p className="text-sm font-semibold text-gray-900 mb-3">{account.accountName}</p>
             <p className="text-xs text-gray-500 mb-1">Paystack says:</p>
@@ -217,7 +227,7 @@ function ReviewAccountModal({ account, onClose, onSubmit, submitting }) {
                 key={value}
                 type="button"
                 onClick={() => setDecision(value)}
-                className={`flex flex-col items-center gap-1 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border ${decision === value ? activeCls : "bg-white border-surface-container-border text-gray-500"}`}
+                className={`flex flex-col items-center gap-1 py-2.5 rounded-g-1 text-[11px] font-semibold cursor-pointer transition-all border ${decision === value ? activeCls : "bg-white border-surface-container-border text-gray-500"}`}
               >
                 <Icon size={14} />
                 {label}
@@ -236,7 +246,7 @@ function ReviewAccountModal({ account, onClose, onSubmit, submitting }) {
               onChange={(e) => setComment(e.target.value)}
               rows={3}
               required={commentRequired}
-              className={`w-full px-3 py-2.5 rounded-lg text-xs text-gray-800 outline-none resize-none transition-colors border border-hairline-strong ${chosen?.focusCls ?? "focus:border-brand"}`}
+              className={`w-full px-3 py-2.5 rounded-g-1 text-xs text-gray-800 outline-none resize-none transition-colors border border-hairline-strong ${chosen?.focusCls ?? "focus:border-brand"}`}
               placeholder={
                 decision === "REJECT"
                   ? "Why is this account being rejected?"

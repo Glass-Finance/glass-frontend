@@ -85,7 +85,7 @@ function ToggleConfirmModal({ config, next, onClose, onConfirm, isSaving }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-surface-bg rounded-2xl w-full max-w-md shadow-2xl border border-surface-container-border px-6 py-6">
+      <div className="bg-surface-bg rounded-g-1 w-full max-w-md shadow-2xl border border-surface-container-border px-6 py-6">
         <h2 className="m-0 text-sm font-bold text-gray-900">
           {next ? "Turn on" : "Turn off"} {label}?
         </h2>
@@ -161,7 +161,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-surface-bg rounded-2xl w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden shadow-2xl border border-surface-container-border">
+      <div className="bg-surface-bg rounded-g-1 w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden shadow-2xl border border-surface-container-border">
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
           <div>
@@ -229,7 +229,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
                       key={v}
                       type="button"
                       onClick={() => setForm((f) => ({ ...f, value: v }))}
-                      className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                      className={`flex-1 py-2.5 rounded-g-1 text-xs font-semibold border transition-all cursor-pointer ${
                         form.value === v
                           ? "bg-brand text-white border-brand"
                           : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
@@ -245,7 +245,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
                   aria-label={`${config.label ?? "Config"} value`}
                   value={form.value}
                   onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-                  className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
+                  className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
                   placeholder={`Enter ${(config.valueType ?? "value").toLowerCase()}…`}
                 />
               )}
@@ -269,7 +269,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
                 id="system-config-display-name"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
+                className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 text-placeholder text-gray-800 outline-none transition-colors border border-hairline-strong focus:border-brand"
                 placeholder="Human-readable label"
               />
             </div>
@@ -287,7 +287,7 @@ function EditModal({ config, onClose, onSave, isSaving }) {
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 rows={3}
-                className="w-full h-12 min-h-8 px-4 py-1 rounded-lg text-placeholder text-gray-800 outline-none transition-colors resize-none border border-hairline-strong focus:border-brand"
+                className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 text-placeholder text-gray-800 outline-none transition-colors resize-none border border-hairline-strong focus:border-brand"
                 placeholder="What does this configuration control?"
               />
             </div>
@@ -421,7 +421,7 @@ export default function SystemConfig() {
               placeholder="Search configs…"
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-8 pr-4 py-2 rounded-lg text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-brand transition-colors border border-hairline-strong w-[200px] bg-white"
+              className="pl-8 pr-4 py-2 rounded-g-1 text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-brand transition-colors border border-hairline-strong w-[200px] bg-white"
             />
           </div>
         </div>
@@ -433,7 +433,7 @@ export default function SystemConfig() {
       <div
         role="group"
         aria-label="Filter configs by category"
-        className="inline-flex flex-wrap items-center gap-0.5 p-0.5 rounded-g-2 bg-surface-sunken border border-surface-container-border mb-4"
+        className="inline-flex flex-wrap items-center gap-0.5 p-0.5 rounded-g-1 bg-surface-sunken border border-surface-container-border mb-4"
       >
         {availableCategories.map((cat) => {
           const active = activeCategory === cat;
@@ -458,7 +458,7 @@ export default function SystemConfig() {
       </div>
 
       {/* Table */}
-      <div className="bg-surface-container rounded-2xl overflow-hidden border border-surface-container-border">
+      <div className="bg-surface-container rounded-g-1 overflow-hidden border border-surface-container-border">
         {isLoading ? (
           <LoadingState className="py-20" />
         ) : error ? (
@@ -592,7 +592,7 @@ export default function SystemConfig() {
                 <button
                   key={i}
                   onClick={() => setPage(i)}
-                  className={`w-7 h-7 flex items-center justify-center rounded-lg text-[11px] font-semibold cursor-pointer transition-all ${
+                  className={`w-7 h-7 flex items-center justify-center rounded-g-1 text-[11px] font-semibold cursor-pointer transition-all ${
                     i === page
                       ? "bg-brand text-white border-none"
                       : "bg-white text-gray-500 hover:bg-gray-100 border border-surface-container-border"

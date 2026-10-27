@@ -69,7 +69,12 @@ function CommissionModal({ community, onClose }) {
   }
 
   return (
-    <ModalShell title="Commission Override" subtitle={community.name} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Commission Override"
+      subtitle={community.name}
+      onClose={onClose}
+    >
       <form onSubmit={submit} className="px-6 py-5 flex flex-col gap-4">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
@@ -178,7 +183,12 @@ function CommunitySettingsModal({ community, onClose }) {
   }
 
   return (
-    <ModalShell title="Joining & Visibility" subtitle={community.name} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Joining & Visibility"
+      subtitle={community.name}
+      onClose={onClose}
+    >
       <form onSubmit={submit} className="px-6 py-5 flex flex-col gap-1">
         <div className="flex items-center justify-between py-3 border-b border-gray-100">
           <div className="min-w-0 pr-4">
@@ -325,10 +335,10 @@ export default function CommunitiesSection() {
                       <img
                         src={c.logo.url}
                         alt=""
-                        className="w-7 h-7 rounded-lg object-cover flex-shrink-0"
+                        className="w-7 h-7 rounded-g-1 object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-lg bg-brand-tint flex items-center justify-center text-brand font-bold text-[10px] flex-shrink-0">
+                      <div className="w-7 h-7 rounded-g-1 bg-brand-tint flex items-center justify-center text-brand font-bold text-[10px] flex-shrink-0">
                         {(c.name ?? "C")[0].toUpperCase()}
                       </div>
                     )}

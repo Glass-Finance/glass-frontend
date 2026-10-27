@@ -56,7 +56,7 @@ function JsonBlock({ label, value }) {
   return (
     <div>
       <p className="text-[10px] text-gray-400 mb-1">{label}</p>
-      <pre className="bg-gray-50 rounded-lg p-3 text-[11px] font-mono text-gray-700 overflow-x-auto whitespace-pre-wrap break-all border border-surface-container-border">
+      <pre className="bg-gray-50 rounded-g-1 p-3 text-[11px] font-mono text-gray-700 overflow-x-auto whitespace-pre-wrap break-all border border-surface-container-border">
         {text}
       </pre>
     </div>

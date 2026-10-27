@@ -65,12 +65,12 @@ function SendNotificationModal({ onClose }) {
 
   if (confirming) {
     return (
-      <ModalShell title="Confirm Send" onClose={onClose}>
+      <ModalShell className="rounded-g-1!" title="Confirm Send" onClose={onClose}>
         <div className="px-6 py-5 flex flex-col gap-4">
           <p className="text-xs text-gray-600 leading-relaxed">
             This sends a real notification now — there's no undo once it's queued.
           </p>
-          <div className="bg-stacked-container rounded-xl p-3 flex flex-col gap-2">
+          <div className="bg-stacked-container rounded-g-1 p-3 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-gray-500">Recipients</span>
               <span className="text-xs font-semibold text-gray-900">
@@ -126,7 +126,7 @@ function SendNotificationModal({ onClose }) {
   }
 
   return (
-    <ModalShell title="Send Notification" onClose={onClose}>
+    <ModalShell className="rounded-g-1!" title="Send Notification" onClose={onClose}>
       <form
         onSubmit={requestSend}
         className="px-6 py-5 flex flex-col gap-4 max-h-[70vh] overflow-y-auto"
@@ -143,7 +143,7 @@ function SendNotificationModal({ onClose }) {
                 key={val}
                 type="button"
                 onClick={() => setTargetMode(val)}
-                className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                className={`flex-1 py-2 rounded-g-1 text-xs font-semibold border transition-all cursor-pointer ${
                   targetMode === val
                     ? "bg-brand text-white border-brand"
                     : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
@@ -158,7 +158,7 @@ function SendNotificationModal({ onClose }) {
             onChange={(e) => setTargets(e.target.value)}
             rows={3}
             required
-            className="w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-hairline-strong text-placeholder text-gray-800 outline-none resize-none font-mono transition-colors focus:border-brand"
+            className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 border border-hairline-strong text-placeholder text-gray-800 outline-none resize-none font-mono transition-colors focus:border-brand"
             placeholder={
               targetMode === "emails" ? "user@example.com, another@example.com" : "uuid1, uuid2"
             }
@@ -175,7 +175,7 @@ function SendNotificationModal({ onClose }) {
             <select
               value={notificationType}
               onChange={(e) => setNotificationType(e.target.value)}
-              className="w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-hairline-strong text-placeholder text-gray-700 outline-none focus:border-brand appearance-none !pr-9"
+              className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 border border-hairline-strong text-placeholder text-gray-700 outline-none focus:border-brand appearance-none !pr-9"
             >
               {NOTIF_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -196,7 +196,7 @@ function SendNotificationModal({ onClose }) {
                 key={ch}
                 type="button"
                 onClick={() => toggleChannel(ch)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-g-1 text-[11px] font-semibold border transition-all cursor-pointer ${
                   channels.includes(ch)
                     ? "bg-brand text-white border-brand"
                     : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
@@ -221,7 +221,7 @@ function SendNotificationModal({ onClose }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-hairline-strong text-placeholder text-gray-800 outline-none transition-colors focus:border-brand"
+            className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 border border-hairline-strong text-placeholder text-gray-800 outline-none transition-colors focus:border-brand"
             placeholder="Notification title"
           />
         </div>
@@ -234,7 +234,7 @@ function SendNotificationModal({ onClose }) {
             onChange={(e) => setMessage(e.target.value)}
             rows={4}
             required
-            className="w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-hairline-strong text-placeholder text-gray-800 outline-none resize-none transition-colors focus:border-brand"
+            className="w-full h-12 min-h-8 px-4 py-1 rounded-g-1 border border-hairline-strong text-placeholder text-gray-800 outline-none resize-none transition-colors focus:border-brand"
             placeholder="Notification body…"
           />
         </div>

@@ -131,7 +131,7 @@ function statusCell(status) {
 
 function StatCard({ label, value, caption }) {
   return (
-    <div className="bg-white border border-surface-container-border rounded-xl p-4">
+    <div className="bg-white border border-surface-container-border rounded-g-1 p-4">
       <p className="m-0 text-[13px] text-gray-500">{label}</p>
       <p className="m-0 mt-1.5 text-[26px] leading-none font-bold text-gray-900">
         {typeof value === "number" ? value.toLocaleString() : "—"}
@@ -143,7 +143,7 @@ function StatCard({ label, value, caption }) {
 
 function Panel({ title, meta, right, isLoading, error, children, className = "" }) {
   return (
-    <section className={`bg-white border border-surface-container-border rounded-xl ${className}`}>
+    <section className={`bg-white border border-surface-container-border rounded-g-1 ${className}`}>
       <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-surface-sunken">
         <div className="flex items-center gap-2.5 min-w-0">
           <h2 className="m-0 text-[15px] font-bold text-gray-900">{title}</h2>
@@ -400,7 +400,7 @@ export default function OverviewSection() {
       {stats.isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-[104px] rounded-xl" />
+            <Skeleton key={i} className="h-[104px] rounded-g-1" />
           ))}
         </div>
       ) : stats.error ? (

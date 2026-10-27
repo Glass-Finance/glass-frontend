@@ -67,7 +67,7 @@ export function Pager({ page, totalPages, onPage }) {
           onClick={() => onPage(i)}
           aria-label={`Page ${i + 1}`}
           aria-current={i === page ? "page" : undefined}
-          className={`w-7 h-7 flex items-center justify-center rounded-lg text-[11px] font-semibold cursor-pointer transition-all ${
+          className={`w-7 h-7 flex items-center justify-center rounded-g-1 text-[11px] font-semibold cursor-pointer transition-all ${
             i === page
               ? "bg-brand text-white border-none"
               : "bg-white text-gray-500 hover:bg-gray-100 border border-surface-container-border"
@@ -96,7 +96,7 @@ export function TableShell({
 }) {
   const is403 = error?.response?.status === 403;
   return (
-    <div className="bg-surface-container rounded-2xl overflow-hidden border border-surface-container-border">
+    <div className="bg-surface-container rounded-g-1 overflow-hidden border border-surface-container-border">
       {isLoading ? (
         <LoadingState className="py-16" />
       ) : error ? (
@@ -163,7 +163,7 @@ export function SearchBar({ value, onChange, placeholder = "Search…", width = 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label ?? placeholder}
-        className="pl-8 pr-4 py-2 rounded-lg text-xs text-gray-700 placeholder-gray-400 outline-none border border-hairline-strong bg-white focus:border-brand"
+        className="pl-8 pr-4 py-2 rounded-g-1 text-xs text-gray-700 placeholder-gray-400 outline-none border border-hairline-strong bg-white focus:border-brand"
         style={{ width }}
       />
     </div>
@@ -176,7 +176,7 @@ export function FilterSelect({ value, onChange, options, label }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-label={label}
-      className="px-3 py-2 rounded-lg text-xs text-gray-700 outline-none cursor-pointer border border-hairline-strong bg-white focus:border-brand"
+      className="px-3 py-2 rounded-g-1 text-xs text-gray-700 outline-none cursor-pointer border border-hairline-strong bg-white focus:border-brand"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

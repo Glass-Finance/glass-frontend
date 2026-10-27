@@ -124,6 +124,7 @@ function KycDetailModal({ attemptId, onClose }) {
 
   return (
     <ModalShell
+      className="rounded-g-1!"
       size="wide"
       title="KYC attempt"
       subtitle={d?.id ? `Attempt ${d.id.slice(0, 8)}…` : "Loading…"}
@@ -214,7 +215,7 @@ function KycDetailModal({ attemptId, onClose }) {
               <span className="text-[11px] text-gray-400">{fmtDateTime(d.createdAt)}</span>
             </div>
 
-            <div className="bg-white rounded-xl border border-surface-container-border p-3 mb-3">
+            <div className="bg-white rounded-g-1 border border-surface-container-border p-3 mb-3">
               <Row
                 label="User"
                 value={
@@ -243,14 +244,14 @@ function KycDetailModal({ attemptId, onClose }) {
             </div>
 
             {Array.isArray(d.reviewReasons) && d.reviewReasons.length > 0 && (
-              <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-3">
+              <div className="bg-amber-50 border border-amber-100 rounded-g-1 p-3 mb-3">
                 <p className="text-[11px] font-semibold text-amber-800 m-0 mb-1">Review reasons</p>
                 <p className="text-[11px] text-amber-700 m-0">{d.reviewReasons.join(", ")}</p>
               </div>
             )}
 
             {evidence && (
-              <div className="bg-white rounded-xl border border-surface-container-border p-3 mb-3">
+              <div className="bg-white rounded-g-1 border border-surface-container-border p-3 mb-3">
                 <p className="text-[11px] font-semibold text-gray-500 m-0 mb-1">Evidence</p>
                 <Row
                   label="Authority name"
@@ -276,7 +277,7 @@ function KycDetailModal({ attemptId, onClose }) {
             )}
 
             {d.matchedAccounts && Object.keys(d.matchedAccounts).length > 0 && (
-              <div className="bg-white rounded-xl border border-surface-container-border p-3 mb-3">
+              <div className="bg-white rounded-g-1 border border-surface-container-border p-3 mb-3">
                 <p className="text-[11px] font-semibold text-gray-500 m-0 mb-1">Matched accounts</p>
                 {Object.entries(d.matchedAccounts).map(([ref, v]) => (
                   <Row

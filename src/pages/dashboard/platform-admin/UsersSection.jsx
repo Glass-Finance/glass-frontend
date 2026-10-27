@@ -53,7 +53,12 @@ function SuspendModal({ user, onClose }) {
   });
 
   return (
-    <ModalShell title="Suspend User" subtitle={user.email} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Suspend User"
+      subtitle={user.email}
+      onClose={onClose}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -68,7 +73,7 @@ function SuspendModal({ user, onClose }) {
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             required
-            className="w-full px-3 py-2.5 rounded-lg text-xs text-gray-800 outline-none resize-none transition-colors border border-[#D0D0D0] focus:border-brand"
+            className="w-full px-3 py-2.5 rounded-g-1 text-xs text-gray-800 outline-none resize-none transition-colors border border-[#D0D0D0] focus:border-brand"
             placeholder="Why is this user being suspended?"
           />
         </div>
@@ -108,7 +113,12 @@ function SuspendModal({ user, onClose }) {
 
 function UnsuspendModal({ user, onClose, onConfirm, unsuspending }) {
   return (
-    <ModalShell title="Unsuspend User" subtitle={user.email} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Unsuspend User"
+      subtitle={user.email}
+      onClose={onClose}
+    >
       <div className="px-6 py-5 flex flex-col gap-4">
         <p className="text-xs text-gray-600 leading-relaxed">
           This restores <strong>{user.email}</strong>'s access to the Platform. They'll be able to
@@ -158,7 +168,7 @@ function DeleteConfirmModal({ user, onClose, onConfirm, deleting }) {
   const matches = typed.trim() === target;
 
   return (
-    <ModalShell title={`Delete ${name}?`} onClose={onClose}>
+    <ModalShell className="rounded-g-1!" title={`Delete ${name}?`} onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -182,7 +192,7 @@ function DeleteConfirmModal({ user, onClose, onConfirm, deleting }) {
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
             autoComplete="off"
-            className="w-full px-3 py-2.5 rounded-lg text-xs text-gray-800 outline-none transition-colors border border-[#D0D0D0] focus:border-brand"
+            className="w-full px-3 py-2.5 rounded-g-1 text-xs text-gray-800 outline-none transition-colors border border-[#D0D0D0] focus:border-brand"
             placeholder={user.email ? "Type the email to confirm" : "Type the ID to confirm"}
           />
         </div>
@@ -219,7 +229,12 @@ function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
   const [reason, setReason] = useState("");
 
   return (
-    <ModalShell title="Anonymize User" subtitle={user.email} onClose={onClose}>
+    <ModalShell
+      className="rounded-g-1!"
+      title="Anonymize User"
+      subtitle={user.email}
+      onClose={onClose}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -239,7 +254,7 @@ function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             required
-            className="w-full px-3 py-2.5 rounded-lg text-xs text-gray-800 outline-none resize-none transition-colors border border-[#D0D0D0] focus:border-brand"
+            className="w-full px-3 py-2.5 rounded-g-1 text-xs text-gray-800 outline-none resize-none transition-colors border border-[#D0D0D0] focus:border-brand"
             placeholder="Why is this account being anonymized now?"
           />
         </div>
@@ -297,7 +312,7 @@ function RowMenu({ user, kycAction, onKycAction, onSuspend, onDelete, onAnonymiz
     <div
       role="menu"
       aria-label={`Actions for ${displayName(user) || user.email || user.id}`}
-      className="absolute right-0 top-full mt-1 z-60 w-52 bg-white rounded-g-2 border border-surface-container-border shadow-xl py-1.5"
+      className="absolute right-0 top-full mt-1 z-60 w-52 bg-white rounded-g-1 border border-surface-container-border shadow-xl py-1.5"
     >
       {kycAction && (
         <MenuButton onClick={() => onKycAction(kycAction)}>
@@ -417,7 +432,7 @@ export default function UsersSection() {
         <div
           role="group"
           aria-label="Filter users"
-          className="inline-flex items-center gap-1 p-1 rounded-g-2 bg-surface-sunken border border-surface-container-border"
+          className="inline-flex items-center gap-1 p-1 rounded-g-1 bg-surface-sunken border border-surface-container-border"
         >
           {FILTERS.map((tab) => {
             const active = filter === tab.value;

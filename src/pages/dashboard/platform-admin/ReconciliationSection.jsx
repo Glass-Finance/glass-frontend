@@ -198,12 +198,13 @@ function FindingReviewModal({ finding, mode, onClose }) {
 
   return (
     <ModalShell
+      className="rounded-g-1!"
       title={isResolve ? "Resolve Finding" : "Review Finding"}
       subtitle={finding.findingKey}
       onClose={onClose}
     >
       <div className="p-6">
-        <div className="bg-white rounded-xl p-3 mb-4 border border-surface-container-border">
+        <div className="bg-white rounded-g-1 p-3 mb-4 border border-surface-container-border">
           <p className="text-xs font-semibold text-gray-900 mb-1">
             {(finding.findingType ?? "").replace(/_/g, " ")}
           </p>
@@ -231,7 +232,7 @@ function FindingReviewModal({ finding, mode, onClose }) {
               onChange={(e) => setAnnotation(e.target.value)}
               rows={3}
               placeholder="Notes for this review…"
-              className="w-full border border-gray-300 px-3 py-2.5 rounded-lg text-xs outline-none focus:border-brand mb-4 transition-all resize-none"
+              className="w-full border border-gray-300 px-3 py-2.5 rounded-g-1 text-xs outline-none focus:border-brand mb-4 transition-all resize-none"
             />
           </>
         )}

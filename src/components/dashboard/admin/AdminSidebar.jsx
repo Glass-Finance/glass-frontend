@@ -104,7 +104,7 @@ export default function AdminSidebar({ mobileOpen, onCloseMobile }) {
           />
           <div className="min-w-0 flex items-center gap-1.5">
             <p className="m-0 text-sm font-bold text-ink leading-tight">Glass</p>
-            <span className="px-1.5 py-[3px] rounded-full bg-brand-tint text-brand text-[9px] font-bold uppercase tracking-wide whitespace-nowrap leading-none">
+            <span className="px-2 py-1 rounded-g-1 bg-brand-tint text-brand text-[9px] font-bold uppercase tracking-wide whitespace-nowrap leading-none">
               Platform Admin
             </span>
           </div>

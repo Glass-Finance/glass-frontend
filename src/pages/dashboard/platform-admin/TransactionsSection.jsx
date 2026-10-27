@@ -69,6 +69,7 @@ function TransactionDetailModal({ transactionId, onClose }) {
 
   return (
     <ModalShell
+      className="rounded-g-1!"
       size="wide"
       title="Transaction"
       subtitle={data?.internalReference}
@@ -87,7 +88,7 @@ function TransactionDetailModal({ transactionId, onClose }) {
             </div>
 
             {data.failureReason && (
-              <div className="bg-red-50 rounded-lg p-3 mb-4 border border-red-100">
+              <div className="bg-red-50 rounded-g-1 p-3 mb-4 border border-red-100">
                 <p className="text-[10px] text-red-400 mb-0.5">Failure reason</p>
                 <p className="text-xs text-red-700">{data.failureReason}</p>
               </div>
@@ -97,21 +98,21 @@ function TransactionDetailModal({ transactionId, onClose }) {
                 charge, so surface all three rather than guessing which one the
                 reader cares about. */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Base amount</p>
                 <p className="text-sm font-bold text-gray-900">{fmt(data.baseAmount, currency)}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Billed amount</p>
                 <p className="text-sm font-bold text-gray-900">
                   {fmt(data.billedAmount, currency)}
                 </p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Net</p>
                 <p className="text-sm font-bold text-gray-900">{fmt(data.net, currency)}</p>
               </div>
-              <div className="bg-white rounded-xl p-3 border border-surface-container-border">
+              <div className="bg-white rounded-g-1 p-3 border border-surface-container-border">
                 <p className="text-[10px] text-gray-400 mb-0.5">Fees</p>
                 <p className="text-sm font-bold text-gray-900">
                   {fmt((data.platformFee ?? 0) + (data.processorFee ?? 0), currency)}

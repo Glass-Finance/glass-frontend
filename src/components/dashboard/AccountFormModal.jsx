@@ -8,7 +8,7 @@ import BankSelect from "../common/BankSelect";
 import { Button } from "../ui/Button";
 
 const inputCls =
-  "w-full h-12 min-h-8 border-[1.5px] border-gray-300 px-4 py-1 rounded-lg text-placeholder text-gray-800 placeholder-gray-400 outline-none focus:border-brand transition-all";
+  "w-full h-12 min-h-8 border-[1.5px] border-gray-300 px-4 py-1 rounded-g-1 text-placeholder text-gray-800 placeholder-gray-400 outline-none focus:border-brand transition-all";
 
 // Bank account entry form — number + bank select, auto-resolves the account
 // name via Paystack, falls back to manual entry if resolution fails.
@@ -102,7 +102,7 @@ export default function AccountFormModal({
       {/* Modal — centred */}
       <div className="fixed inset-0 z-80 flex items-center justify-center p-4">
         <div
-          className="w-full max-w-xl rounded-xl p-7 shadow-2xl bg-surface-bg"
+          className="w-full max-w-xl rounded-g-1 p-7 shadow-2xl bg-surface-bg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
