@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, ShieldCheck, ShieldAlert, HelpCircle, Wallet, CreditCard } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldAlert, HelpCircle, Wallet } from "lucide-react";
+import payoutAccountsEmptyIcon from "../../../assets/dashboard/empty-states/payout-accounts-empty-state-icon.png";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import AccountFormModal from "../../../components/dashboard/AccountFormModal";
 import LoadingState from "../../../components/common/LoadingState";
@@ -375,7 +376,8 @@ export default function AccountsSection() {
         isLoading={isLoading}
         isEmpty={items.length === 0}
         error={error}
-        emptyIcon={CreditCard}
+        emptyIllustration={payoutAccountsEmptyIcon}
+        emptyIllustrationClassName="w-16 h-16 mb-3"
         emptyLabel="No payout accounts found"
       >
         <table className="w-full border-collapse">

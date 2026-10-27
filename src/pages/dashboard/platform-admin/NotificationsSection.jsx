@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Bell } from "lucide-react";
+import notificationsEmptyIcon from "../../../assets/dashboard/empty-states/notifications-empty-state-icon.png";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import { Button } from "../../../components/ui/Button";
 import { createAdminNotification, getAdminNotificationJobs } from "../../../api/admin";
@@ -304,7 +305,8 @@ export default function NotificationsSection() {
         isLoading={isLoading}
         isEmpty={items.length === 0}
         error={error}
-        emptyIcon={Bell}
+        emptyIllustration={notificationsEmptyIcon}
+        emptyIllustrationClassName="w-16 h-16 mb-3"
         emptyLabel="No notifications found"
       >
         <table className="w-full border-collapse">

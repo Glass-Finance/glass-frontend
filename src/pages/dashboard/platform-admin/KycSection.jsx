@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck, User as UserIcon } from "lucide-react";
+import kycEmptyIcon from "../../../assets/dashboard/empty-states/kyc-empty-state-icon.png";
 import { decideKyc, setKycAttemptPolicy } from "../../../api/admin";
 import { useDebounce } from "../../../hooks/useDebounce";
 import ModalShell from "../../../components/dashboard/ModalShell";
@@ -365,7 +366,8 @@ export default function KycSection() {
         isLoading={isLoading}
         isEmpty={items.length === 0}
         error={error}
-        emptyIcon={ShieldCheck}
+        emptyIllustration={kycEmptyIcon}
+        emptyIllustrationClassName="w-16 h-16 mb-3"
         emptyLabel="No KYC attempts found"
       >
         <table className="w-full border-collapse">
