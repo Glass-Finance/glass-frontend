@@ -1131,3 +1131,40 @@ html.dashboard-compact {
     animation: none;
   }
 }
+
+/* ── Crisp support-chat launcher ─────────────────────────────────────────
+   The stock widget is a ~60px circle carrying Crisp's default icon (or the
+   Glass wordmark set in the Crisp dashboard). Per design: a compact 48px
+   launcher whose 24px white bubble glyph sits on the icon-spec blue
+   (#2563EB, from glass_support_chat_icon_preview) — the glyph lives at
+   public/crisp-launcher-glyph.svg and is swapped in over whatever icon
+   source Crisp injects (both the <img> and background-image variants of
+   their loader are covered).
+
+   Selectors stick to stable hooks only: the #crisp-chatbox root, its
+   launcher anchor, and descendants of that anchor — the open chat window
+   is a sibling branch, so agent avatars inside it are never touched. These
+   rules are unlayered (same mechanism as the reduced-motion blocks above)
+   and carry !important because Crisp sets size via inline styles.
+   img-src 'self' already covers the self-hosted SVG in the CSP — no
+   vercel.json change. Verified against the live widget DOM via Playwright
+   on the Vercel PR preview. */
+#crisp-chatbox > div > a,
+#crisp-chatbox > div > a > div {
+  width: 48px !important;
+  height: 48px !important;
+  background-color: #2563eb !important;
+}
+
+#crisp-chatbox > div > a > div {
+  background-image: url("/crisp-launcher-glyph.svg") !important;
+  background-size: 24px 24px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+#crisp-chatbox > div > a img {
+  content: url("/crisp-launcher-glyph.svg") !important;
+  width: 24px !important;
+  height: 24px !important;
+}
