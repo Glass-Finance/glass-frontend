@@ -7,23 +7,49 @@ import { Crisp } from "crisp-sdk-web";
 //
 // Crisp's per-page settings only apply on full page loads — in an SPA we
 // have to re-apply visibility on every route change.
+//
+// Allow-list, not deny-list: the floating launcher only appears on the
+// public site (landing, member landing, invites), the legal pages and
+// Settings. Everywhere else in the signed-in app it stays hidden — a
+// permanently-visible third-party widget was too noisy for the product.
+// Sensitive pages below still win as a deny override for the one allowed
+// area that contains them (Settings → payment methods).
 
-// Pages where the widget must NOT be visible: users enter bank details,
-// card data, or identity documents here, and a visible chat invites pasting
-// them into a third-party log. (Support will never ask for these anyway —
-// that's stated in the dashboard welcome message.)
+// Public site + legal + Settings — the only areas where the launcher shows.
+const ALLOWED_PREFIXES = [
+  "/members", // member landing page (distinct from /member app routes)
+  "/invite",
+  "/invites",
+  "/privacy",
+  "/terms",
+  "/cookies",
+  "/acceptable-use",
+  "/refund-policy",
+  "/dashboard/settings",
+  "/member/settings",
+];
+
+// Pages where the widget must NOT be visible even inside an allowed area:
+// users enter bank details, card data, or identity documents here, and a
+// visible chat invites pasting them into a third-party log. (Support will
+// never ask for these anyway — that's stated in the dashboard welcome
+// message.)
 const SENSITIVE_PREFIXES = [
   "/onboarding/payment-profile", // bank/account details
   "/dashboard/verify-identity", // KYC document upload (+ /history)
   "/member/verify-identity",
   "/member/pay", // payment flow (+ /:paymentId, /success)
   "/payment/callback", // Paystack return with payment context
-  "/dashboard/finance/payment-methods",
+  "/dashboard/settings/finance/payment-methods", // card entry (under Settings)
   "/member/saved-cards",
 ];
 
-const isSensitive = (path) =>
-  SENSITIVE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+const matchesPrefix = (path, prefix) => path === prefix || path.startsWith(`${prefix}/`);
+
+const isSensitive = (path) => SENSITIVE_PREFIXES.some((p) => matchesPrefix(path, p));
+
+// "/" is exact-match only — every nested route lives under its own prefix.
+const isAllowed = (path) => path === "/" || ALLOWED_PREFIXES.some((p) => matchesPrefix(path, p));
 
 export default function CrispRouteBridge() {
   const { pathname } = useLocation();
@@ -47,8 +73,11 @@ export default function CrispRouteBridge() {
     // never reach the top-level ErrorBoundary and replace the whole app with
     // an error page: degrade to "widget not updated" instead.
     try {
-      if (isSensitive(pathname) || mobileDrawerOpen) Crisp.chat.hide();
-      else Crisp.chat.show();
+      if (mobileDrawerOpen || isSensitive(pathname) || !isAllowed(pathname)) {
+        Crisp.chat.hide();
+      } else {
+        Crisp.chat.show();
+      }
     } catch (error) {
       console.error("[crisp] chat visibility update failed", error);
     }

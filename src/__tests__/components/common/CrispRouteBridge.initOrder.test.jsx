@@ -80,13 +80,13 @@ describe("CrispRouteBridge with the real SDK", () => {
   // Mirrors the main.jsx composition (CrispChat mounted before the bridge's
   // tree): configure's effect flushes first, so show() finds a configured
   // client and the widget command actually lands — chat visible on first
-  // load, no boundary trip.
+  // load of an allowed page (the landing route), no boundary trip.
   it("shows the widget on first load when the chat mounts before the bridge", () => {
     render(
       <>
         <CrispChat />
         <CrashBoundary>
-          <MemoryRouter initialEntries={["/dashboard/home"]}>
+          <MemoryRouter initialEntries={["/"]}>
             <CrispRouteBridge />
           </MemoryRouter>
         </CrashBoundary>
