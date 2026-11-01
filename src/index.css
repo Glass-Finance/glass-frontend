@@ -1135,35 +1135,41 @@ html.dashboard-compact {
 /* ── Crisp support-chat launcher ─────────────────────────────────────────
    Kept in sync with glass-marketing's index.css — same Crisp website ID on
    both properties, so the app and the landing must render the same
-   launcher. Per design: a compact 48px launcher whose 24px white bubble
+   launcher. Per design: a compact 30px launcher whose 16px white bubble
    glyph (public/crisp-launcher-glyph.svg) sits on the icon-spec blue
-   (#2563EB).
+   (#2563EB). The Glass logo is not part of the widget at all: CrispChat's
+   observer permanently strips the dashboard-set website avatar from the
+   DOM (it is re-injected on every open/close repaint, so CSS hiding alone
+   always reverts) — the glyph is the only icon that ever renders.
 
    Structure verified against the live widget (2026-10-30): the launcher is
    a DIV, not an anchor — #crisp-chatbox > div > div[role="button"] — and
-   the icon stack is spans: the circle layer span[data-id="chat_closed"],
-   a white disc, then an innermost span whose background-image (the
-   dashboard-set Glass logo) arrives as an INLINE !important style. Inline
-   !important beats author !important, so that layer can only be hidden
-   (opacity), not repainted; the glyph is painted on the circle span
-   instead. The pre-chat entice toast is a sibling layer inside the button
-   and the open chat window is a separate branch — neither is touched.
-   Selectors avoid Crisp's hashed cc-* classes on purpose. img-src 'self'
-   in vercel.json covers the self-hosted SVG. */
+   the icon stack is spans: the circle layer span[data-id="chat_closed"]
+   and a white disc on top. The disc is neutralized here (opacity); the
+   glyph is painted on the circle span. The pre-chat entice toast is a
+   sibling layer inside the button and the open chat window is a separate
+   branch — neither is touched. Selectors avoid Crisp's hashed cc-* classes
+   on purpose. img-src 'self' in vercel.json covers the self-hosted SVG. */
 #crisp-chatbox > div > div[role="button"] {
-  width: 48px !important;
-  height: 48px !important;
+  width: 30px !important;
+  height: 30px !important;
 }
 
-#crisp-chatbox > div > div[role="button"] span[data-id="chat_closed"] {
+/* The icon layer is ONE span that Crisp toggles between data-id
+   chat_closed and chat_opened — the open-state node stays in the DOM as
+   the visible launcher after the chat closes — so the glyph is painted on
+   both identities and the icon can never revert to Crisp's default. */
+#crisp-chatbox > div > div[role="button"] span[data-id="chat_closed"],
+#crisp-chatbox > div > div[role="button"] span[data-id="chat_opened"] {
   background-color: #2563eb !important;
   background-image: url("/crisp-launcher-glyph.svg") !important;
-  background-size: 24px 24px !important;
+  background-size: 16px 16px !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
 
-/* Neutralize the inner icon stack (white disc + dashboard logo layer). */
-#crisp-chatbox > div > div[role="button"] span[data-id="chat_closed"] span {
+/* Neutralize the inner icon stack (white disc layer). */
+#crisp-chatbox > div > div[role="button"] span[data-id="chat_closed"] span,
+#crisp-chatbox > div > div[role="button"] span[data-id="chat_opened"] span {
   opacity: 0 !important;
 }

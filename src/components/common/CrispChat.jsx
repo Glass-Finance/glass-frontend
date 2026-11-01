@@ -10,6 +10,45 @@ import { toPascalCaseName } from "../../utils/format";
 // issue): the token is ALWAYS set/cleared before a session reset, and
 // identity (email etc.) is (re)pushed AFTER every reset — a reset wipes
 // session data, so pushing before it would silently lose the identity.
+//
+// The Crisp dashboard carries a Glass logo as the website avatar. Crisp
+// re-injects it into the widget on every repaint (chat open/close toggles
+// the launcher), so CSS alone always reverts — the observer below strips
+// the avatar from the DOM wherever it appears, making the custom launcher
+// glyph the only icon that ever renders. Scoped to #crisp-chatbox: the
+// logo must go from the widget entirely, nothing outside it is touched.
+const WEBSITE_AVATAR_MARK = "/avatar/website/";
+
+function isWebsiteAvatarUrl(url) {
+  return typeof url === "string" && url.includes(WEBSITE_AVATAR_MARK);
+}
+
+function stripWebsiteAvatar(node) {
+  if (!(node instanceof Element)) return;
+  const box = node.closest("#crisp-chatbox") ?? node.querySelector("#crisp-chatbox");
+  if (!box) return; // mutation outside the widget
+  for (const el of box.querySelectorAll("*")) {
+    if (isWebsiteAvatarUrl(el.style.backgroundImage)) {
+      el.style.removeProperty("background-image");
+    }
+    if (el.tagName === "IMG" && isWebsiteAvatarUrl(el.getAttribute("src"))) {
+      el.removeAttribute("src");
+      el.style.setProperty("display", "none", "important");
+    }
+    // Chat-window avatars are inline SVGs: the Glass logo sits in an
+    // <image> layer above the default Crisp avatar. Drop the href so the
+    // default shows through — the logo must never render anywhere.
+    if (
+      el.tagName === "image" &&
+      (isWebsiteAvatarUrl(el.getAttribute("xlink:href")) ||
+        isWebsiteAvatarUrl(el.getAttribute("href")))
+    ) {
+      el.removeAttribute("xlink:href");
+      el.removeAttribute("href");
+    }
+  }
+}
+
 export default function CrispChat() {
   const { user, loading } = useAuth();
   const configured = useRef(false);
@@ -28,6 +67,30 @@ export default function CrispChat() {
     // survives the login step.
     Crisp.configure(websiteId, { sessionMerge: true });
     configured.current = true;
+  }, [websiteId]);
+
+  useEffect(() => {
+    if (!websiteId) return;
+    // Permanently remove the Glass logo from the widget: watch the whole
+    // document (Crisp injects #crisp-chatbox asynchronously) but only act
+    // on mutations inside it. Re-stripping a stripped node is a no-op, so
+    // Crisp re-applying the avatar cannot loop the observer.
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === "attributes") {
+          stripWebsiteAvatar(mutation.target);
+        } else {
+          for (const node of mutation.addedNodes) stripWebsiteAvatar(node);
+        }
+      }
+    });
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["style", "src", "href", "xlink:href"],
+    });
+    return () => observer.disconnect();
   }, [websiteId]);
 
   useEffect(() => {
