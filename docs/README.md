@@ -7,6 +7,7 @@ This directory records the current frontend architecture, operational convention
 - [Authentication](authentication.md)
 - [Account, phone, and identity flows](account-verification.md)
 - [Authorization](authorization.md)
+- [Admin platform metrics — frontend integration](admin-platform-metrics-frontend-integration.md)
 - [Payments](payments.md)
 - [Community record book](community-record-book.md)
 - [KYC](kyc.md)
