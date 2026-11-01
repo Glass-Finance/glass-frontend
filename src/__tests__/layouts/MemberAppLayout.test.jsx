@@ -49,7 +49,9 @@ describe("MemberAppLayout", () => {
     );
     const mobileNav = screen.getByRole("navigation", { name: "Main navigation" });
     expect(mobileNav.className).toContain("md:hidden");
-    expect(mobileNav.firstElementChild.className).toContain("w-[calc(100%-80px)]");
+    // Full-width, edge-to-edge tab bar — no desktop-sidebar offset.
+    expect(mobileNav.firstElementChild.className).toContain("w-full");
+    expect(mobileNav.querySelector("ul").parentElement.className).toContain("rounded-t-2xl");
     expect(screen.getByRole("link", { name: "History" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Alerts" })).toBeTruthy();
     expect(screen.getByText("Transaction list")).toBeTruthy();

@@ -1,7 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { createScenario, installNetworkMock, preparePage, json } from "./support.js";
 
-test("member registration works on desktop and mobile", async ({ page }) => {
+test("member registration works on mobile", async ({ page }, testInfo) => {
+  // Desktop /member/join is device-gated to the QR handoff — covered by
+  // member-app-desktop.spec.js's device-gate test.
+  test.skip(testInfo.project.name !== "mobile-chromium", "member registration is mobile-only");
   const scenario = createScenario({
     overrides: [
       {

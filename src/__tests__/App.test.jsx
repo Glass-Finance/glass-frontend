@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import App from "../App";
 import { useAuth } from "../store/AuthContext";
+import { APP_ORIGIN } from "../utils/deviceRedirect";
 
 // App.jsx wires every route, guard, and lazy page boundary but had zero
 // coverage. These tests exercise only critical wiring — a public auth route
 // resolving through Suspense, the catch-all, the admin guard's redirect, the
-// responsive member join route, and the member auth guard — NOT every rendered
+// member join device gate, and the member auth guard — NOT every rendered
 // page (each page's own behavior belongs to its own test file). Guards'
 // internal decisions are already covered in routes/guards.test.jsx; this pins
 // that App actually mounts them where the comments say it does.
@@ -116,38 +117,38 @@ describe("App protected route integration", () => {
     ).toBeDefined();
   });
 
-  it("keeps the member app behind authentication on desktop", async () => {
+  it("sends a desktop member-app visitor to the QR handoff before auth even runs", async () => {
     renderAt("/member/home");
 
-    await waitFor(() => expect(window.location.pathname).toBe("/member/app-sign-in"));
-    expect(
-      await screen.findByText("Sign In To Your Account", {}, { timeout: LAZY_ROUTE_TIMEOUT }),
-    ).toBeDefined();
+    // Device gate fires outermost — a desktop never sees the sign-in bounce.
+    await waitFor(() =>
+      expect(window.location.pathname + window.location.search).toBe(
+        "/member/mobile-required?to=%2Fmember%2Fhome",
+      ),
+    );
   });
 
-  it("renders the responsive member registration form on desktop", async () => {
+  it("keeps desktop member registration device-gated", async () => {
     renderAt("/member/join");
 
-    expect(
-      await screen.findByRole(
-        "heading",
-        { level: 1, name: "Create Your Account" },
-        { timeout: LAZY_ROUTE_TIMEOUT },
+    await waitFor(() =>
+      expect(window.location.pathname + window.location.search).toBe(
+        "/member/mobile-required?to=%2Fmember%2Fjoin",
       ),
-    ).toBeDefined();
+    );
   });
 
-  it("redirects old mobile-handoff URLs to their responsive destination", async () => {
+  it("renders the QR handoff for a mobile-required URL with the encoded app target", async () => {
     renderAt("/member/mobile-required?to=%2Fmember%2Fjoin");
 
     expect(
-      await screen.findByRole(
-        "heading",
-        { level: 1, name: "Create Your Account" },
+      await screen.findByText(
+        "Scan To Continue On Your Phone",
+        {},
         { timeout: LAZY_ROUTE_TIMEOUT },
       ),
     ).toBeDefined();
-    expect(window.location.pathname).toBe("/member/join");
+    expect(screen.getByTestId("qr-value").textContent).toBe(`${APP_ORIGIN}/member/join`);
   });
 
   it("bounces a signed-out mobile session to member sign-in", async () => {

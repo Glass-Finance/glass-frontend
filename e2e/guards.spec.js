@@ -27,11 +27,11 @@ test("unauthenticated /member/home redirects to /member/app-sign-in on mobile", 
   await expect(page).toHaveURL(/\/member\/app-sign-in/);
 });
 
-test("unauthenticated desktop member route redirects to member sign-in", async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop-chromium", "desktop member app auth guard");
+test("desktop member route is device-gated to the QR handoff", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "desktop member device gate");
   await blockThirdParty(page);
   await page.goto("/member/home");
-  await expect(page).toHaveURL(/\/member\/app-sign-in/);
+  // MemberDeviceGuard fires outermost — desktops never even see the
+  // auth-guard sign-in bounce.
+  await expect(page).toHaveURL(/\/member\/mobile-required\?to=%2Fmember%2Fhome/);
 });

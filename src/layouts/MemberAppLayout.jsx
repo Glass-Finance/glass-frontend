@@ -78,6 +78,11 @@ const DESKTOP_LINKS = [
   },
 ];
 
+// Desktop sidebar — kept as a fallback only. MemberDeviceGuard keeps
+// desktop/tablet visitors out of the member app entirely (QR handoff), and
+// every reachable viewport for a verified mobile session is below the md
+// breakpoint, so this stays CSS-hidden; the full-width bottom tab bar is
+// the real navigation.
 function MemberDesktopSidebar({ user, isAdmin, onLogout }) {
   const location = useLocation();
   const name = toPascalCaseName(
@@ -201,8 +206,8 @@ export default function MemberAppLayout() {
           className="fixed bottom-0 inset-x-0 z-30 bg-[linear-gradient(180deg,rgba(249,249,251,0)_0%,var(--color-surface-bg)_28%)] md:hidden"
           aria-label="Main navigation"
         >
-          <div className="ml-0 mr-auto w-[calc(100%-80px)] max-w-[310px] pl-3 pr-0 pb-3">
-            <div className="rounded-2xl border border-surface-container-border bg-white shadow-[0_2px_20px_rgba(0,0,0,0.1)]">
+          <div className="w-full px-3 pb-3">
+            <div className="rounded-t-2xl border-t border-surface-container-border bg-white shadow-[0_-2px_20px_rgba(0,0,0,0.06)]">
               <ul className="flex items-center justify-around px-2 py-2">
                 {TABS.map(({ to, label, Icon }) => {
                   const isActive =

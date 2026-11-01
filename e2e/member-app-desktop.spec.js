@@ -1,139 +1,84 @@
 import { test, expect } from "@playwright/test";
 import { MEMBER_PERSONA, createScenario, installNetworkMock, preparePage } from "./support.js";
 
-test("member app uses desktop navigation and content layout", async ({ page }, testInfo) => {
-  test.setTimeout(90_000);
-  test.skip(testInfo.project.name !== "desktop-chromium", "desktop member-app shell");
+test("desktop member routes are device-gated to the QR handoff", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "desktop device gate");
   await page.setViewportSize({ width: 1440, height: 960 });
   await installNetworkMock(page, createScenario({ persona: MEMBER_PERSONA }));
   await preparePage(page, MEMBER_PERSONA);
 
+  // Even a fully authenticated member session never renders the member app
+  // on desktop — MemberDeviceGuard sends it to the QR handoff first.
   await page.goto("/member/home");
+  await expect(page).toHaveURL(/\/member\/mobile-required\?to=%2Fmember%2Fhome/);
+  await expect(page.getByRole("heading", { name: "Scan To Continue On Your Phone" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Member app navigation" })).toBeHidden();
 
-  await expect(page.getByRole("complementary", { name: "Member app navigation" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Overview" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeHidden();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true,
-  );
+  // /member/join is gated the same way.
+  await page.goto("/member/join");
+  await expect(page).toHaveURL(/\/member\/mobile-required\?to=%2Fmember%2Fjoin/);
+  await expect(page.getByRole("heading", { name: "Scan To Continue On Your Phone" })).toBeVisible();
+});
 
-  await page.getByRole("link", { name: "Payment history" }).click();
-  await expect(page).toHaveURL(/\/member\/transactions$/);
-  await expect(page.getByRole("heading", { name: "Payment History", exact: true })).toBeVisible();
+test("member app uses the mobile shell with a full-width tab bar", async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
+  test.skip(testInfo.project.name !== "mobile-chromium", "mobile member app shell");
+  await installNetworkMock(page, createScenario({ persona: MEMBER_PERSONA }));
+  await preparePage(page, MEMBER_PERSONA);
 
-  await page.getByRole("link", { name: "Manage payments" }).click();
-  await expect(page.getByRole("heading", { name: "Manage Payments" })).toBeVisible();
-  await expect(page.getByText("Review recurring plans and manage auto-pay.")).toBeVisible();
-  const managePaymentsWidth = await page
-    .locator(".member-app-page-content > div > header + div")
-    .evaluate((element) => element.getBoundingClientRect().width);
-  expect(managePaymentsWidth).toBeLessThanOrEqual(896);
-  await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
+  await page.goto("/member/home", { waitUntil: "domcontentloaded" });
 
-  await page.getByRole("link", { name: "Settings" }).click();
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  // The bottom tab bar spans the full screen width — no desktop offset.
+  // (Asserted before any data-dependent content: the shell renders before
+  // the mocked community fetches resolve.)
+  const mobileNav = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(mobileNav).toBeVisible({ timeout: 30_000 });
+  const navBox = await mobileNav.boundingBox();
+  const viewport = page.viewportSize();
+  expect(navBox.width).toBeGreaterThanOrEqual(viewport.width - 1);
+  expect(Math.abs(navBox.x)).toBeLessThanOrEqual(1);
+
+  // The member shell itself — home renders the community empty state for
+  // this persona once the mocked fetches settle.
+  await expect(page.getByText("You're not part of any community yet.")).toBeVisible({
+    timeout: 30_000,
+  });
+
   await expect(
-    page.getByText("Manage your account, payment preferences, and communities."),
-  ).toBeVisible();
-  const settingsWidth = await page
-    .locator(".member-app-page-content > div > header + div")
-    .evaluate((element) => element.getBoundingClientRect().width);
-  expect(settingsWidth).toBeLessThanOrEqual(768);
-  await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
-
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole("button", { name: "Back" })).toBeVisible();
-  await expect(
-    page.getByText("Manage your account, payment preferences, and communities."),
-  ).toBeHidden();
+    page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).resolves.toBe(true);
 
   const responsivePages = [
-    {
-      path: "/member/invites",
-      title: "Invitations",
-      description: "Review community invitations and join requests.",
-    },
-    {
-      path: "/member/notifications",
-      title: "Notifications",
-      description: "Stay up to date with payments, community activity, and invitations.",
-    },
-    {
-      path: "/member/communities/search",
-      title: "Browse Communities",
-      description: "Find communities and send a request to join.",
-    },
-    {
-      path: "/member/upcoming",
-      title: "Upcoming payments",
-      description: "Review upcoming dues and export your payment schedule.",
-    },
-    {
-      path: "/member/transactions",
-      title: "Payment History",
-      description: "View, filter, and export your past payments.",
-    },
-    {
-      path: "/member/transactions/txn-e2e-1",
-      title: "Transaction Details",
-      description: "Review the receipt and details for this payment.",
-    },
-    {
-      path: "/member/profile",
-      title: "Profile",
-      description: "Manage your personal details and contact information.",
-    },
-    {
-      path: "/member/security",
-      title: "Security",
-      description: "Manage password and multi-factor account protection.",
-    },
-    {
-      path: "/member/notification-settings",
-      title: "Notifications",
-      description: "Choose which updates you receive and where they appear.",
-    },
-    {
-      path: "/member/saved-cards",
-      title: "Payment Methods",
-      description: "Review and remove saved payment methods.",
-    },
-    {
-      path: "/member/auto-pay",
-      title: "Auto-Pay",
-      description: "Review and manage automatic payments for recurring plans.",
-    },
-    {
-      path: "/member/communities",
-      title: "My communities",
-      description: "View your memberships and switch between communities.",
-    },
-    {
-      path: "/member/verify-identity/history",
-      title: "Verification History",
-      description: "Review the status and details of previous identity checks.",
-    },
+    { path: "/member/invites", title: "Invitations" },
+    { path: "/member/notifications", title: "Notifications" },
+    { path: "/member/communities/search", title: "Browse Communities" },
+    { path: "/member/upcoming", title: "Upcoming payments" },
+    { path: "/member/transactions", title: "Payment History" },
+    { path: "/member/transactions/txn-e2e-1", title: "Transaction Details" },
+    { path: "/member/profile", title: "Profile" },
+    { path: "/member/security", title: "Security" },
+    { path: "/member/notification-settings", title: "Notifications" },
+    { path: "/member/saved-cards", title: "Payment Methods" },
+    { path: "/member/auto-pay", title: "Auto-Pay" },
+    { path: "/member/communities", title: "My communities" },
+    { path: "/member/verify-identity/history", title: "Verification History" },
   ];
 
-  for (const { path, title, description } of responsivePages) {
-    await page.setViewportSize({ width: 1440, height: 960 });
+  for (const { path, title } of responsivePages) {
     await page.goto(path, { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { level: 1, name: title, exact: true })).toBeVisible();
-    await expect(page.getByText(description)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Back" })).toBeHidden();
-    const contentWidth = await page
-      .locator(".member-app-page-content")
-      .evaluate((element) => element.getBoundingClientRect().width);
-    expect(contentWidth).toBeLessThanOrEqual(1152);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
-
-    await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.getByRole("button", { name: "Back" })).toBeVisible();
-    await expect(page.getByText(description)).toBeHidden();
   }
+
+  // Tab navigation still works from the restored tab bar.
+  await page.goto("/member/home");
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "History" })
+    .click();
+  await expect(page).toHaveURL(/\/member\/transactions$/);
+  await expect(page.getByRole("heading", { name: "Payment History", exact: true })).toBeVisible();
 });
