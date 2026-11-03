@@ -113,7 +113,7 @@ export default function ChoosePath() {
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
-                className={`relative flex flex-row lg:flex-col items-center text-left lg:text-center gap-4 lg:gap-0 px-5 lg:px-10 py-5 lg:py-8 rounded-2xl transition-all duration-200 cursor-pointer w-full lg:w-[380px] border bg-white ${isSelected ? "border-2 border-brand" : "border-white"}`}
+                className={`relative flex flex-row lg:flex-col items-center text-left lg:text-center gap-4 lg:gap-0 px-5 lg:px-10 py-5 lg:py-8 rounded-2xl transition-all duration-200 cursor-pointer w-full lg:w-[380px] bg-white ${isSelected ? "border-2 border-brand" : "border-2 border-black/10"}`}
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-[10px] bg-brand-wash lg:bg-transparent lg:rounded-none lg:w-14 lg:h-14 lg:mt-6 lg:mb-5">
                   <CloudImage
