@@ -120,14 +120,14 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="font-light underline text-brand"
+              className="font-medium underline text-brand"
             >
               Privacy Policy
             </Link>
           </span>
         </label>
 
-        {error && <p className="text-sm mt-4 mb-4 text-danger -mt-1">{error}</p>}
+        {error && <p className="text-sm my-4 text-danger">{error}</p>}
 
         {/* Always enabled, per Figma: a disabled Primary renders at 60%
             opacity, which read as a washed-out blue. An empty email is
