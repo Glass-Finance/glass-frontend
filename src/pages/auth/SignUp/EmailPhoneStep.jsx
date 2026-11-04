@@ -120,16 +120,19 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="font-medium underline text-brand"
+              className="font-light underline text-brand"
             >
               Privacy Policy
             </Link>
           </span>
         </label>
 
-        {error && <p className="text-sm text-danger -mt-1">{error}</p>}
+        {error && <p className="text-sm mt-4 mb-4 text-danger -mt-1">{error}</p>}
 
-        <PrimaryBtn type="submit" className="mt-2" disabled={!email.trim()} size="sm">
+        {/* Always enabled, per Figma: a disabled Primary renders at 60%
+            opacity, which read as a washed-out blue. An empty email is
+            caught on submit by getEmailError ("Email is required."). */}
+        <PrimaryBtn type="submit" className="mt-2" size="sm">
           Continue
         </PrimaryBtn>
       </form>
@@ -139,7 +142,16 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
 
       <p className="text-center text-sm mt-5 text-gray-500">
         Already Have An Account?{" "}
-        <Button variant="tertiary" size="sm" fullWidth={false} onClick={onSwitch}>
+        {/* Tertiary renders muted ink by default (design-system §2.1); Figma
+            draws this one in brand blue. `!` because two text-colour
+            utilities on one element have no guaranteed cascade order. */}
+        <Button
+          variant="tertiary"
+          size="sm"
+          fullWidth={false}
+          onClick={onSwitch}
+          className="text-brand!"
+        >
           Sign In
         </Button>
       </p>

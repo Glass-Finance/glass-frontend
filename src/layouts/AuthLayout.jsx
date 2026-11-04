@@ -6,7 +6,7 @@ export default function AuthLayout({ heroTitle, heroSubtitle, children }) {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-surface-bg md:p-1 relative">
+    <div className="h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-surface-bg relative">
       {/* Background — separate mobile/desktop images (different aspect
           ratios), swapped by breakpoint visibility rather than one shared
           background-image, since the two assets aren't the same crop.
@@ -43,13 +43,22 @@ export default function AuthLayout({ heroTitle, heroSubtitle, children }) {
 
       {/* ── Hero panel — desktop only ── */}
       <div className="hidden md:block md:w-[46%] md:h-full flex-shrink-0 relative z-10">
-        <div className="relative w-full h-full md:rounded-xl overflow-hidden">
+        <div className="relative w-full h-full overflow-hidden">
           <CloudImage
             publicId="glass/auth/auth-panel"
             alt="Glass Finance"
             width={1200}
             priority
-            className="absolute inset-0"
+            // w-full/h-full, not absolute inset-0: CloudImage's wrapper is
+            // already `relative`, and two position utilities on one element
+            // left the panel at the image's natural height, so on wide
+            // screens it stopped short of the bottom edge.
+            className="w-full h-full align-top"
+            // The Cloudinary asset has ~40px rounded, transparent corners baked
+            // in (3.3% of its width). Figma draws the panel square and
+            // full-bleed, so scale it just past that so the corners always
+            // sit outside the clipped box, at any viewport aspect.
+            imgClassName="scale-[1.08]"
             draggable={false}
           />
 
