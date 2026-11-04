@@ -28,6 +28,7 @@ function validateField(field, value, otherValue) {
 export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -168,7 +169,11 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
               autoComplete="new-password"
               value={form.password}
               onChange={handleChange}
-              onBlur={handleBlur}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={(e) => {
+                setPasswordFocused(false);
+                handleBlur(e);
+              }}
               placeholder="Enter Your Password"
               required
               error={fieldErrors.password}
@@ -185,7 +190,12 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </Button>
           </div>
-          <PasswordChecklist password={form.password} />
+          {/* Only while the field is focused -- except after a failed
+              check, because this list is the only place the password
+              error is explained (there is no SignUpFieldError here). */}
+          {(passwordFocused || fieldErrors.password) && (
+            <PasswordChecklist password={form.password} />
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">
