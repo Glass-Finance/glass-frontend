@@ -1,10 +1,8 @@
 /**
- * OverviewSection.jsx — platform-admin landing page (design:
- * Overview@1x (2).png). Every figure composes from endpoints the panel
- * already talks to; no new backend surface:
+ * OverviewSection.jsx — platform-admin landing page.
  *
- *   stat cards        pageSize:1 totalElements on the six list endpoints
- *                     (+ payment-links ACTIVE/EXPIRED, KYC IN_REVIEW)
+ *   stat cards        GET /admin/metrics is the sole source of its counters,
+ *                     including overdue/expired counts in needs attention.
  *   needs attention   obligations OVERDUE, transactions ABANDONED/FAILED,
  *                     payment-links EXPIRED, reconciliation findings NEW
  *   platform money    GET /admin/balances (displayNames come back exactly
@@ -24,15 +22,13 @@ import { Skeleton } from "../../../components/common/SkeletonUI";
 import {
   getAdminAuditLogs,
   getAdminBalances,
-  getAdminCommunities,
-  getAdminKycAttempts,
   getAdminObligations,
   getAdminPaymentLinks,
   getAdminReconciliationFindings,
   getAdminReconciliationRuns,
   getAdminTransactions,
-  getAdminUsers,
 } from "../../../api/admin";
+import { useAdminMetrics } from "../../../hooks/useAdminMetrics";
 import { fmt, fmtDate, unwrap } from "./shared";
 
 // Response order differs from the design's row order — reorder explicitly so
@@ -190,41 +186,7 @@ export default function OverviewSection() {
   const queryClient = useQueryClient();
   const [showAllToken, setShowAllToken] = useState(false);
 
-  const stats = useQuery({
-    queryKey: ["admin-overview", "stats"],
-    queryFn: async () => {
-      const [
-        communities,
-        users,
-        paymentLinks,
-        activeLinks,
-        expiredLinks,
-        transactions,
-        obligations,
-        kycInReview,
-      ] = await Promise.all([
-        total(getAdminCommunities),
-        total(getAdminUsers),
-        total(getAdminPaymentLinks),
-        total(getAdminPaymentLinks, { status: "ACTIVE" }),
-        total(getAdminPaymentLinks, { status: "EXPIRED" }),
-        total(getAdminTransactions),
-        total(getAdminObligations),
-        total(getAdminKycAttempts, { status: "IN_REVIEW" }),
-      ]);
-      return {
-        communities,
-        users,
-        paymentLinks,
-        activeLinks,
-        expiredLinks,
-        transactions,
-        obligations,
-        kycInReview,
-      };
-    },
-    staleTime: 30_000,
-  });
+  const stats = useAdminMetrics();
 
   const attention = useQuery({
     queryKey: ["admin-overview", "attention"],
@@ -284,7 +246,7 @@ export default function OverviewSection() {
   //    always-on queue row the design shows at the bottom. ──────────────────
   const issueRows = [];
   if (s && a) {
-    const overdueCount = a.overdue.totalElements;
+    const overdueCount = s.obligations.overdue;
     if (overdueCount > 0) {
       const names = a.overdue.content.map((o) => o.community?.name).filter(Boolean);
       let desc;
@@ -331,7 +293,7 @@ export default function OverviewSection() {
       });
     }
 
-    const expiredCount = a.expiredLinks.totalElements;
+    const expiredCount = s.paymentLinks.expired;
     if (expiredCount > 0) {
       const titles = a.expiredLinks.content
         .map((p) => p.title)
@@ -342,7 +304,7 @@ export default function OverviewSection() {
         key: "expired",
         chip: "Expired",
         chipClass: "bg-gray-100 text-gray-500",
-        title: `${expiredCount} of ${s.paymentLinks} payment links have expired`,
+        title: `${expiredCount} of ${s.paymentLinks.total} payment links have expired`,
         desc: `${joinList(titles)} ${titles.length === 1 ? "is" : "are"} no longer collecting${more > 0 ? `, and ${more} more` : ""}.`,
         action: { label: "Open payment links", href: toUrl("payment-links") },
       });
@@ -415,11 +377,15 @@ export default function OverviewSection() {
           <StatCard label="Users" value={s?.users} caption="Registered users" />
           <StatCard
             label="Payment links"
-            value={s?.paymentLinks}
-            caption={`${s?.activeLinks ?? 0} active · ${s?.expiredLinks ?? 0} expired`}
+            value={s?.paymentLinks.total}
+            caption={`${s?.paymentLinks.active ?? 0} active · ${s?.paymentLinks.expired ?? 0} expired`}
           />
           <StatCard label="Transactions" value={s?.transactions} caption="Across all communities" />
-          <StatCard label="Obligations" value={s?.obligations} caption="Across all communities" />
+          <StatCard
+            label="Obligations"
+            value={s?.obligations.total}
+            caption="Across all communities"
+          />
           <StatCard
             label="KYC in review"
             value={s?.kycInReview}
@@ -433,21 +399,21 @@ export default function OverviewSection() {
         <Panel
           title="Needs attention"
           className="lg:col-span-3"
-          isLoading={attention.isLoading}
-          error={attention.error}
+          isLoading={attention.isLoading || stats.isLoading}
+          error={stats.error || attention.error}
           meta={
             <span
               className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                 openIssues > 0 ? "bg-amber-50 text-amber-700" : "bg-green-50 text-green-700"
               }`}
             >
-              {openIssues > 0 ? `${openIssues} open` : "All clear"}
+              {stats.error || !s || !a ? "—" : openIssues > 0 ? `${openIssues} open` : "All clear"}
             </span>
           }
         >
           <>
-            {issueRows.map((row) => (
-              <AttentionRow key={row.key} {...row} />
+            {issueRows.map(({ key, ...row }) => (
+              <AttentionRow key={key} {...row} />
             ))}
             <div className="flex items-center gap-4 px-5 py-4 border-t border-surface-sunken first:border-t-0">
               <span

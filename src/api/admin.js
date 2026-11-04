@@ -1,5 +1,8 @@
 import client from "./client";
 
+// Platform overview counters; requires platform.reports.read.
+export const getAdminMetrics = (params) => client.get("/admin/metrics", { params });
+
 // ─── System Config ────────────────────────────────────────────────────────────
 export const getSystemConfigs = (params) => client.get("/admin/system-configs", { params });
 export const getSystemConfig = (identifier) => client.get(`/admin/system-configs/${identifier}`);

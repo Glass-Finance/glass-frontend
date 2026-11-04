@@ -270,6 +270,19 @@ async function handleApi(route, request, url, scenario) {
     return;
   }
 
+  // Aggregate counters have a different shape from paginated admin lists.
+  if (method === "GET" && path === "/admin/metrics") {
+    await ok(route, {
+      communities: 10,
+      users: 60,
+      paymentLinks: { total: 6, active: 2, expired: 4 },
+      transactions: 18,
+      obligations: { total: 16, due: 6, paid: 5, overdue: 3, waived: 2 },
+      kycInReview: 0,
+    });
+    return;
+  }
+
   // ── Defaults ──────────────────────────────────────────────────────────────
   if (method === "GET" || method === "HEAD") {
     if (path === "/notifications/unread-count") {
