@@ -30,8 +30,43 @@ import { toastSuccess } from "../../../../utils/toast";
 import { DeleteAccountModal } from "./ProfileSections";
 import { Skeleton } from "../../../../components/common/SkeletonUI";
 
+// Phone frame (iPhone 16 - 93) draws the fields at r=4 (rounded-g-1, the
+// design-system input radius); desktop keeps its existing rounded-lg.
 const inputCls =
-  "w-full h-12 min-h-8 px-4 py-1 rounded-lg text-black placeholder-black/60 text-placeholder outline-none transition-all border-[1.5px] focus:border-brand";
+  "w-full h-12 min-h-8 px-4 py-1 rounded-g-1 md:rounded-lg text-black placeholder-black/60 text-placeholder outline-none transition-all border-[1.5px] focus:border-brand";
+
+// Field labels: 14/500 black on the phone frame, the existing 12px grey on
+// desktop.
+const labelCls = "text-sm font-medium text-ink md:text-xs md:font-normal md:text-gray-600";
+
+// The email/phone fields are read-only displays (the pencil opens the
+// verified change flow). The phone frame draws them like the editable
+// fields -- white, black text -- while desktop keeps the greyed treatment.
+const readOnlyFieldCls =
+  "bg-surface-container text-black md:bg-gray-50 md:text-gray-500 border-gray-300 flex items-center justify-between gap-2";
+
+// Phone-only tap target over a read-only field. The phone frame draws no
+// pencil, so the field itself opens the verified change flow. An overlay
+// rather than a second copy of the field keeps the desktop markup untouched;
+// md:hidden takes it out of layout and the a11y tree on desktop. Labelled
+// distinctly from the desktop pencil so each control has its own name.
+function MobileFieldTap({ label, onActivate }) {
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      onClick={onActivate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onActivate();
+        }
+      }}
+      className="absolute inset-0 cursor-pointer md:hidden"
+    />
+  );
+}
 
 // ── Loading placeholder ─────────────────────────────────────────────────────
 // One label + one input is the page's repeating unit, so the skeleton is built
@@ -407,20 +442,33 @@ export default function Profile() {
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    // Phone frame (iPhone 16 - 93): 12px card padding and 8px between cards;
+    // desktop keeps p-6 / gap-5.
+    <div className="flex flex-col gap-2 md:gap-5 w-full">
       {view === "profile" && (
         <>
-          <div className="bg-surface-container rounded-lg p-6 border border-surface-container-border">
-            <p className="text-sm font-semibold text-gray-900 mb-0.5">Profile</p>
-            <p className="text-xs text-gray-500 mb-4">Manage your personal information</p>
-            <div className="-mx-6 border-b border-gray-100 mb-5" />
+          <div className="bg-surface-container rounded-lg p-3 md:p-6 border border-surface-container-border">
+            {/* Card heading is desktop-only: on the phone the breadcrumb
+                directly above already says "Profile". */}
+            <div className="hidden md:block">
+              <p className="text-sm font-semibold text-gray-900 mb-0.5">Profile</p>
+              <p className="text-xs text-gray-500 mb-4">Manage your personal information</p>
+              <div className="-mx-6 border-b border-gray-100 mb-5" />
+            </div>
 
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-14 h-14 rounded-full bg-brand-mist flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {/* Phone: avatar and upload button centred and stacked. */}
+            <div className="flex flex-col items-center gap-3 mb-4 md:flex-row md:mb-5">
+              <div className="w-16 h-16 md:w-14 md:h-14 rounded-full bg-brand-mist flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {photoSrc ? (
                   <img src={photoSrc} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-base text-brand">{initials}</span>
+                  <>
+                    {/* Phone frame writes the initials dotted ("A.A"). */}
+                    <span className="text-lg text-brand md:hidden">
+                      {initials.split("").join(".")}
+                    </span>
+                    <span className="text-base text-brand hidden md:inline">{initials}</span>
+                  </>
                 )}
               </div>
               <input
@@ -438,13 +486,20 @@ export default function Profile() {
                 onClick={() => photoInputRef.current?.click()}
                 disabled={uploadFile.isPending}
               >
-                {uploadFile.isPending ? "Uploading…" : "Upload Photo"}
+                {uploadFile.isPending ? (
+                  "Uploading…"
+                ) : (
+                  <>
+                    <span className="md:hidden">Upload Picture</span>
+                    <span className="hidden md:inline">Upload Photo</span>
+                  </>
+                )}
               </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="settings-first-name" className="text-xs text-gray-600">
+                <label htmlFor="settings-first-name" className={labelCls}>
                   First Name
                 </label>
                 <input
@@ -460,7 +515,7 @@ export default function Profile() {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="settings-last-name" className="text-xs text-gray-600">
+                <label htmlFor="settings-last-name" className={labelCls}>
                   Last Name
                 </label>
                 <input
@@ -477,13 +532,18 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 md:mb-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-600">Email Address</label>
+                <label className={labelCls}>Email Address</label>
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`${inputCls} bg-gray-50 text-gray-500 border-gray-300 flex items-center justify-between gap-2`}
-                  >
+                  <div className={`relative ${inputCls} ${readOnlyFieldCls}`}>
+                    <MobileFieldTap
+                      label="Change email address"
+                      onActivate={() => {
+                        setEmailFieldError("");
+                        setView("email");
+                      }}
+                    />
                     <span className="truncate">{user?.email ?? ""}</span>
                     {user?.emailVerified && (
                       <img
@@ -493,27 +553,37 @@ export default function Profile() {
                       />
                     )}
                   </div>
-                  <Button
-                    variant="tertiary"
-                    size="icon-sm"
-                    aria-label="Update email"
-                    onClick={() => {
-                      setEmailFieldError("");
-                      setView("email");
-                    }}
-                    title="Update email"
-                    className="flex-shrink-0"
-                  >
-                    <Pencil size={15} />
-                  </Button>
+                  {/* Pencil is desktop-only: the phone frame (iPhone 16 - 93) draws
+                      no edit control. Wrapped, not `hidden` on the Button, because
+                      Button's own inline-flex would collide with it. */}
+                  <span className="hidden md:inline-flex flex-shrink-0">
+                    <Button
+                      variant="tertiary"
+                      size="icon-sm"
+                      aria-label="Update email"
+                      onClick={() => {
+                        setEmailFieldError("");
+                        setView("email");
+                      }}
+                      title="Update email"
+                      className="flex-shrink-0"
+                    >
+                      <Pencil size={15} />
+                    </Button>
+                  </span>
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-gray-600">Phone Number</label>
+                <label className={labelCls}>Phone Number</label>
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`${inputCls} bg-gray-50 text-gray-500 border-gray-300 flex items-center justify-between gap-2`}
-                  >
+                  <div className={`relative ${inputCls} ${readOnlyFieldCls}`}>
+                    <MobileFieldTap
+                      label={isPhoneUpdate ? "Change phone number" : "Add your phone number"}
+                      onActivate={() => {
+                        setPhoneFieldError("");
+                        setView("phone");
+                      }}
+                    />
                     <span className="truncate">{user?.phoneNumber ?? ""}</span>
                     {user?.phoneVerified && (
                       <img
@@ -523,19 +593,22 @@ export default function Profile() {
                       />
                     )}
                   </div>
-                  <Button
-                    variant="tertiary"
-                    size="icon-sm"
-                    aria-label={isPhoneUpdate ? "Update phone number" : "Add phone number"}
-                    onClick={() => {
-                      setPhoneFieldError("");
-                      setView("phone");
-                    }}
-                    title={isPhoneUpdate ? "Update phone number" : "Add phone number"}
-                    className="flex-shrink-0"
-                  >
-                    <Pencil size={15} />
-                  </Button>
+                  {/* Desktop-only, as the email pencil above. */}
+                  <span className="hidden md:inline-flex flex-shrink-0">
+                    <Button
+                      variant="tertiary"
+                      size="icon-sm"
+                      aria-label={isPhoneUpdate ? "Update phone number" : "Add phone number"}
+                      onClick={() => {
+                        setPhoneFieldError("");
+                        setView("phone");
+                      }}
+                      title={isPhoneUpdate ? "Update phone number" : "Add phone number"}
+                      className="flex-shrink-0"
+                    >
+                      <Pencil size={15} />
+                    </Button>
+                  </span>
                 </div>
               </div>
             </div>
@@ -550,14 +623,19 @@ export default function Profile() {
                 `sm-tighter` (h40 / 8px) rather than `sm` (h40 / 14px): the
                 box is unchanged, only the label is dropped. This is below
                 the button scale's 12px floor and is a deliberate owner
-                exception, not a scale rung. */}
-            <div className="flex justify-end">
+                exception, not a scale rung.
+                Phone frame (iPhone 16 - 93): full width with the normal
+                `sm` 14px label. `sm` and `sm-tighter` share the same h40
+                box and padding, so md:text-[8px] restores the desktop
+                sm-tighter label exactly; md:w-auto restores the hug. */}
+            <div className="flex md:justify-end">
               <Button
                 onClick={handleSave}
                 disabled={updateProfile.isPending || !isDirty}
                 variant="primary"
-                size="sm-tighter"
+                size="sm"
                 fullWidth={false}
+                className="w-full md:w-auto md:text-[8px]"
               >
                 {saved ? "Saved!" : updateProfile.isPending ? "Saving…" : "Save Changes"}
               </Button>
@@ -720,20 +798,25 @@ export default function Profile() {
       )}
 
       {view === "profile" && (
-        <div className="bg-surface-container rounded-lg p-6 border border-surface-container-border">
+        // Phone frame: 12px padding, 14px copy, and a full-width h40 Delete.
+        // Desktop keeps p-6, 12px copy and the hugging xs (h32) button --
+        // size="sm" plus md: overrides of xs's height/padding/label.
+        <div className="bg-surface-container rounded-lg p-3 md:p-6 border border-surface-container-border">
           <p className="text-sm font-medium text-gray-900 mb-0.5">Delete Account</p>
-          <p className="text-xs text-gray-500 mb-4">Permanent actions that cannot be undone.</p>
-          <div className="-mx-6 border-b border-gray-100 mb-4" />
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <p className="text-xs text-gray-700">
+          <p className="text-sm md:text-xs text-gray-500 mb-3 md:mb-4">
+            Permanent actions that cannot be undone.
+          </p>
+          <div className="-mx-3 md:-mx-6 border-b border-gray-100 mb-3 md:mb-4" />
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 md:gap-3">
+            <p className="text-sm md:text-xs text-gray-700">
               Permanently remove your account and all associated data from Glass.
             </p>
             <Button
               variant="outline-caution"
-              size="xs"
+              size="sm"
               onClick={() => setDeleteModal(true)}
               fullWidth={false}
-              className="self-start sm:self-auto flex-shrink-0"
+              className="w-full md:w-auto md:h-8 md:px-3 md:text-[12px] flex-shrink-0"
             >
               Delete
             </Button>

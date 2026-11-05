@@ -132,10 +132,15 @@ export default function Role() {
     <div className="flex flex-col gap-5 w-full">
       {/* Heading now lives inside the card, matching every other Settings
           card -- was the one page still keeping it in its own row above,
-          with no divider. */}
-      <div className="bg-surface-container rounded-2xl p-6 border border-surface-container-border">
+          with no divider.
+          Phone frame (iPhone 16 - 97): r=4 (rounded-g-1), 12px padding,
+          16/400 title and 14px copy. Desktop keeps rounded-2xl / p-6 and
+          its 14/12 type. */}
+      <div className="bg-surface-container rounded-g-1 md:rounded-2xl p-3 md:p-6 border border-surface-container-border">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-900 mb-0.5">My role</p>
+          <p className="text-base font-normal md:text-sm md:font-semibold text-gray-900 mb-0.5">
+            My role
+          </p>
           {saving && (
             <span className="flex items-center gap-1.5 text-xs text-gray-400">
               <Loader2 size={13} className="animate-spin" /> Saving…
@@ -147,10 +152,10 @@ export default function Role() {
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-sm md:text-xs text-gray-500 mb-3 md:mb-4">
           Define Your Membership and Payment participation
         </p>
-        <div className="-mx-6 border-b border-gray-100 mb-4" />
+        <div className="-mx-3 md:-mx-6 border-b border-gray-100 mb-3 md:mb-4" />
 
         <div className="flex flex-col gap-3">
           {OPTIONS.map((opt) => {
@@ -160,8 +165,8 @@ export default function Role() {
                 key={opt.id}
                 onClick={() => handleSelect(opt.id)}
                 disabled={saving}
-                className={`flex items-start gap-3 px-4 py-4 rounded-xl text-left transition-all border-[1.5px]
-                  ${isSelected ? "bg-brand-mist border-transparent" : "bg-transparent hover:bg-gray-50 border-transparent"}
+                className={`flex items-start gap-3 px-3 py-3 md:px-4 md:py-4 rounded-g-1 md:rounded-xl text-left transition-all border-[1.5px]
+                  ${isSelected ? "bg-brand-100 md:bg-brand-mist border-transparent" : "bg-transparent hover:bg-gray-50 border-transparent"}
                   ${saving ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
               >
                 {isSelected ? (
@@ -187,7 +192,9 @@ export default function Role() {
                 )}
                 <div>
                   <p className="text-sm text-gray-900 mb-0.5">{opt.title}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed">{opt.description}</p>
+                  <p className="text-sm md:text-xs text-gray-500 leading-relaxed">
+                    {opt.description}
+                  </p>
                 </div>
               </button>
             );
@@ -198,10 +205,19 @@ export default function Role() {
       {/* Save error */}
       {saveError && <p className="text-xs text-danger">{saveError}</p>}
 
-      {/* Warning banner -- yellow, matching the Figma spec exactly (#FFFFE5). */}
-      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#FFFFE5]">
-        <AlertCircle size={16} className="text-amber-500 flex-shrink-0" />
-        <p className="text-xs text-amber-800">
+      {/* Warning banner -- yellow on desktop, matching the Figma spec exactly
+          (#FFFFE5). The phone frame (iPhone 16 - 97) draws it as the
+          design-system Banner/Feedback instead (docs/design-system.md §9.4:
+          #ccdaff fill, #002fa7 @20% stroke, r=4) with a filled brand "!". */}
+      <div className="flex items-center gap-3 md:gap-2.5 px-5 py-3 md:px-4 rounded-g-1 md:rounded-xl bg-brand-100 border border-brand/20 md:bg-[#FFFFE5] md:border-0">
+        <span
+          aria-hidden="true"
+          className="w-4 h-4 rounded-full bg-brand text-white text-[10px] font-bold leading-none flex items-center justify-center flex-shrink-0 md:hidden"
+        >
+          !
+        </span>
+        <AlertCircle size={16} className="text-amber-500 flex-shrink-0 hidden md:block" />
+        <p className="text-sm text-ink md:text-xs md:text-amber-800">
           Changes take effect from the next billing cycle. Past payment records are not affected.
         </p>
       </div>
