@@ -13,6 +13,7 @@ import {
 import AutoPayPrompt from "../components/common/AutoPayPrompt";
 import KeyboardShortcutsProvider from "../components/dashboard/KeyboardShortcutsProvider";
 import KeyboardShortcutsHelp from "../components/dashboard/KeyboardShortcutsHelp";
+import { isSettingsPath, rememberSettingsReturnPath } from "../utils/settingsReturnPath";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -28,6 +29,16 @@ export default function DashboardLayout() {
   const isAdminChrome =
     location.pathname.startsWith("/dashboard/admin-panel") ||
     location.pathname === "/dashboard/system-config";
+  // Settings draws its own phone header (back button + title, see
+  // Settings.jsx), so the shared Topbar is hidden below md there. Desktop
+  // keeps the Topbar.
+  const isSettings = isSettingsPath(location.pathname);
+
+  // Remember the last non-Settings page so Settings' mobile back button can
+  // return to whatever opened it (see utils/settingsReturnPath.js).
+  useEffect(() => {
+    rememberSettingsReturnPath(location);
+  }, [location]);
   // Sidebar is an off-canvas drawer below the md breakpoint (see
   // Sidebar.jsx) -- this state is lifted here since the hamburger that
   // opens it lives in the sibling Topbar, not Sidebar itself.
@@ -159,11 +170,15 @@ export default function DashboardLayout() {
               onOpenTour={() => setTourOpen(true)}
             />
           ) : (
-            <Topbar
-              isCommunitiesHome={isCommunitiesHome}
-              onMenuClick={() => setMobileNavOpen(true)}
-              onOpenTour={() => setTourOpen(true)}
-            />
+            // md:contents keeps the header a direct flex child on desktop,
+            // exactly as before; below md on Settings it is not rendered.
+            <div className={isSettings ? "hidden md:contents" : "contents"}>
+              <Topbar
+                isCommunitiesHome={isCommunitiesHome}
+                onMenuClick={() => setMobileNavOpen(true)}
+                onOpenTour={() => setTourOpen(true)}
+              />
+            </div>
           )}
 
           {/* Page content — background texture lives on the wrapper above so
