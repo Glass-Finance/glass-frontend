@@ -292,6 +292,24 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(main.getByText("Add Your Phone Number")).toBeVisible();
   });
 
+  test("account role follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/account/role?community=${C}`);
+    const main = page.getByRole("main").first();
+    await expect(main.getByRole("button", { name: /^I Pay Dues/ })).toBeVisible();
+    // Phone frame (iPhone 16 - 97): r=4 card and options, blue feedback banner.
+    const radius = (loc) => loc.evaluate((el) => getComputedStyle(el).borderTopLeftRadius);
+    expect(await radius(main.getByRole("button", { name: /^I Pay Dues/ }))).toBe("4px");
+    const banner = main.getByText(/Changes take effect from the next billing cycle/);
+    expect(await radius(banner.locator(".."))).toBe("4px");
+    expect(await banner.locator("..").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(204, 218, 255)",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-role.png"),
+      fullPage: true,
+    });
+  });
+
   test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
     await expect(page.locator("table")).toBeVisible();
