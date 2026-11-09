@@ -14,6 +14,7 @@ import PasswordChecklist from "../../../../components/auth/PasswordChecklist";
 import LoadingState from "../../../../components/common/LoadingState";
 import SuccessBadge from "../../../../components/common/SuccessBadge";
 import { Button } from "../../../../components/ui/Button";
+import Toggle from "../../../../components/common/Toggle";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCopyToClipboard } from "../../../../hooks/useCopyToClipboard";
 import { useEscapeToClose } from "../../../../hooks/useKeyboardShortcuts";
@@ -540,6 +541,7 @@ export default function Security() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [mfaModal, setMfaModal] = useState(null); // "setup" | "disable" | null
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
 
   const inputCls =
     "w-full h-12 min-h-8 px-4 py-1 rounded-lg border border-gray-300 text-black placeholder-black/60 text-placeholder outline-none transition-all pr-11 focus:border-brand";
@@ -668,7 +670,11 @@ export default function Security() {
                   type={show.new ? "text" : "password"}
                   value={passwords.new}
                   onChange={setPasswordField("new")}
-                  onBlur={handlePasswordBlur("new")}
+                  onFocus={() => setNewPasswordFocused(true)}
+                  onBlur={(e) => {
+                    setNewPasswordFocused(false);
+                    handlePasswordBlur("new")(e);
+                  }}
                   placeholder="Enter New Password"
                   className={inputCls}
                   style={fieldErrors.new ? { borderColor: "var(--color-danger)" } : undefined}
@@ -684,7 +690,13 @@ export default function Security() {
                   {show.new ? <EyeOff size={15} /> : <Eye size={15} />}
                 </Button>
               </div>
-              <PasswordChecklist password={passwords.new} />
+              {/* Phone (iPhone 16 - 99): the rules appear only while New
+                  Password is focused -- or after a failed check, since the
+                  list is the only place that error is explained. Desktop
+                  always shows them. */}
+              <div className={newPasswordFocused || fieldErrors.new ? "" : "hidden md:block"}>
+                <PasswordChecklist password={passwords.new} />
+              </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="confirm-password" className="text-xs font-medium text-gray-600">
@@ -735,15 +747,36 @@ export default function Security() {
 
       {/* MFA */}
       <div className="bg-surface-container rounded-2xl p-6 border border-surface-container-border">
+        {/* Phone frame (iPhone 16 - 99) copy; desktop keeps its own. */}
         <p className="text-sm font-semibold text-gray-900 mb-0.5">
-          Multi-Factor Authentication (MFA)
+          <span className="md:hidden">Two Factor Authentication</span>
+          <span className="hidden md:inline">Multi-Factor Authentication (MFA)</span>
         </p>
         <p className="text-xs text-gray-500 mb-4">
-          Add an extra layer of protection to your account.
+          <span className="md:hidden">Add an extra layer of protection to your account</span>
+          <span className="hidden md:inline">
+            Add an extra layer of protection to your account.
+          </span>
         </p>
         <div className="-mx-6 border-b border-gray-100 mb-1" />
 
-        <div className="flex items-center justify-between py-3 border-b border-gray-100">
+        {/* Phone frame: "Enable 2FA" with a switch in place of the
+            ON/OFF pill + Enable/Disable button. The switch mirrors the
+            server state and opens the same setup / disable modal, so it
+            only flips once that flow succeeds. */}
+        <div className="flex items-center justify-between gap-4 py-3 border-b border-gray-100 md:hidden">
+          <div className="min-w-0">
+            <p className="text-sm text-gray-900">Enable 2FA</p>
+            <p className="text-xs text-gray-500">Require a verification code on every login</p>
+          </div>
+          <Toggle
+            on={mfaEnabled}
+            onChange={() => setMfaModal(mfaEnabled ? "disable" : "setup")}
+            ariaLabel="Enable 2FA"
+          />
+        </div>
+
+        <div className="hidden md:flex items-center justify-between py-3 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div
               className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${mfaEnabled ? "bg-green-50" : "bg-gray-100"}`}
@@ -803,7 +836,8 @@ export default function Security() {
 
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
+            {/* Phone: no leading shield tile (owner, 2026-11-05). Desktop keeps it. */}
+            <div className="w-9 h-9 rounded-lg hidden md:flex items-center justify-center flex-shrink-0 bg-gray-100">
               <Shield size={16} className="text-gray-400" />
             </div>
             <div>

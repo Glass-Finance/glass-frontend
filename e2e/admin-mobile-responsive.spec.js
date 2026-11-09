@@ -310,6 +310,78 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     });
   });
 
+  test("account security follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/account/security?community=${C}`);
+    const main = page.getByRole("main").first();
+    // Password rules stay hidden until New Password is focused.
+    const rule = main.getByText("At least 8 characters");
+    await expect(rule).toBeHidden();
+    const newPassword = main.getByLabel("New Password", { exact: true });
+    await newPassword.focus();
+    await expect(rule).toBeVisible();
+    // Leaving with a valid password hides them again. (Leaving it invalid
+    // keeps them up -- they are the only explanation of that error.)
+    await newPassword.fill("Glass123!");
+    await main.getByLabel("Current Password", { exact: true }).focus();
+    await expect(rule).toBeHidden();
+
+    // Phone frame (iPhone 16 - 99) copy, and a switch in place of Enable.
+    await expect(main.getByText("Two Factor Authentication")).toBeVisible();
+    await expect(
+      main.getByText("Add an extra layer of protection to your account", { exact: true }),
+    ).toBeVisible();
+    const twoFa = main.getByRole("switch", { name: "Enable 2FA" });
+    await expect(twoFa).toHaveAttribute("aria-checked", "false");
+    await expect(main.getByRole("button", { name: "Enable", exact: true })).toBeHidden();
+    // SMS row keeps its "Coming soon" badge but drops the leading shield tile.
+    await expect(main.getByText("Coming soon")).toBeVisible();
+    const smsTitle = main.getByText("SMS Verification", { exact: true });
+    expect(
+      await smsTitle.evaluate((el) => {
+        const tile = el.parentElement.previousElementSibling;
+        return tile ? getComputedStyle(tile).display : "none";
+      }),
+    ).toBe("none");
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-security.png"),
+      fullPage: true,
+    });
+
+    // The switch opens the existing setup flow rather than flipping on its own.
+    // Fill Current Password first: leaving it empty shows its "required"
+    // message on blur, which shifts the switch down mid-tap.
+    await main.getByLabel("Current Password", { exact: true }).fill("OldPass123!");
+    await twoFa.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(twoFa).toHaveAttribute("aria-checked", "false");
+  });
+
+  test("community profile follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/community/profile?community=${C}`);
+    const main = page.getByRole("main").first();
+    // Phone frame (iPhone 16 - 105): dotted initials, "Upload Picture", no
+    // card heading, full-width Save Changes and Delete.
+    await expect(main.getByText("K.C", { exact: true })).toBeVisible();
+    await expect(main.getByRole("button", { name: "Upload Picture" })).toBeVisible();
+    await expect(main.getByText("Community Information")).toBeHidden();
+    const save = main.getByRole("button", { name: "Save Changes" });
+    const del = main.getByRole("button", { name: "Delete", exact: true });
+    for (const button of [save, del]) {
+      const width = await button.evaluate((el) => el.getBoundingClientRect().width);
+      const cardWidth = await button.evaluate(
+        (el) => el.closest(".border").getBoundingClientRect().width,
+      );
+      expect(width).toBeGreaterThan(cardWidth - 40);
+    }
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-community-profile.png"),
+      fullPage: true,
+    });
+  });
+
   test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
     await expect(page.locator("table")).toBeVisible();
