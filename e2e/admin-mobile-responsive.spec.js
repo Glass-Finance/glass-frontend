@@ -432,6 +432,40 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(open).toBeVisible();
   });
 
+  test("create payment review step follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/payments?community=${C}`);
+    await page.getByRole("button", { name: "Create Payment Plan" }).click();
+    const cont = page.getByRole("button", { name: "Continue" });
+    await cont.click(); // Recurring is preselected
+
+    await page.getByLabel("Plan Name").fill("Association Dues");
+    await page.getByLabel("URL slug").fill("association-dues");
+    await page.getByLabel(/^Amount/).fill("5000");
+    await page.locator("select").filter({ hasText: "Select frequency" }).selectOption("MONTHLY");
+    await cont.click();
+
+    // Phone frame (iPhone 16 - 77): no title block on the Review step.
+    await expect(page.getByText("Review", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Create Payment", exact: true })).toBeHidden();
+    await expect(page.getByText("You can edit or pause plan at any time.")).toBeHidden();
+    // Frequency as an amber pill (design-system Monthly badge).
+    const pill = page.getByText("Monthly", { exact: true }).first();
+    await expect(pill).toBeVisible();
+    expect(await pill.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(255, 255, 219)",
+    );
+    // Blue feedback banner with the fuller copy.
+    const note = page.getByText(/members assigned to this plan will receive a notification/);
+    await expect(note).toBeVisible();
+    expect(await note.locator("..").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(204, 218, 255)",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-plan-review.png"),
+      fullPage: true,
+    });
+  });
+
   test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
     await expect(page.locator("table")).toBeVisible();

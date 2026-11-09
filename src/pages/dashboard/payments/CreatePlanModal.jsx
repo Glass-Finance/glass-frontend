@@ -224,7 +224,11 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
           {/* "Go back", not "Back": the footer already has a "Back" button. */}
           <MobileBackButton aria-label="Go back" onClick={goBack} />
         </div>
-        <div className="flex items-start justify-between px-4 pt-9 md:px-6 md:pt-5">
+        {/* Phone frame (iPhone 16 - 77): the Review step drops the title
+            block; the step indicator follows the back button directly. */}
+        <div
+          className={`${step === 3 && !success ? "hidden md:flex" : "flex"} items-start justify-between px-4 pt-9 md:px-6 md:pt-5`}
+        >
           <div>
             {/* Two headings rather than two spans in one: a heading's name is
                 its full text, so spans would read "Create PaymentCreate
