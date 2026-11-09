@@ -228,6 +228,160 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(page.getByRole("button", { name: "Remove Termly Dues filter" })).toBeVisible();
   });
 
+  test("settings swaps the topbar for a back button that returns to the opening page", async ({
+    page,
+  }) => {
+    await page.goto(`/dashboard/admin?community=${C}`);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.getByRole("button", { name: "Settings" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/settings/);
+
+    // Phone frame (iPhone 16 - 91): no shared Topbar, a back button instead.
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Back" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
+
+    // All five Account rows stay, including the two the frame doesn't draw.
+    for (const row of ["Profile", "My Role", "Security", "Notifications", "Identity Verification"])
+      // Scoped to <main>: the drawer has its own "Notifications" row.
+      await expect(
+        page
+          .getByRole("main")
+          .first()
+          .getByRole("button", { name: new RegExp(`^${row}`) }),
+      ).toBeVisible();
+    await page.screenshot({ path: test.info().outputPath("admin-mobile-settings.png") });
+
+    // Moving between Settings tabs must not change where Back goes.
+    await page.getByRole("button", { name: "Finance" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/settings\/finance/);
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page).toHaveURL(`/dashboard/admin?community=${C}`);
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
+  });
+
+  test("account profile follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/account/profile?community=${C}`);
+    const main = page.getByRole("main").first();
+    // Phone frame (iPhone 16 - 93): dotted initials, "Upload Picture", and a
+    // full-width Save Changes and Delete.
+    await expect(main.getByText("A.A", { exact: true })).toBeVisible();
+    await expect(main.getByRole("button", { name: "Upload Picture" })).toBeVisible();
+    // No edit pencils on the phone (desktop keeps them).
+    await expect(main.getByRole("button", { name: "Update email" })).toBeHidden();
+    await expect(main.getByRole("button", { name: /^(Add|Update) phone number$/ })).toBeHidden();
+    const save = main.getByRole("button", { name: "Save Changes" });
+    const del = main.getByRole("button", { name: "Delete" });
+    for (const button of [save, del]) {
+      const width = await button.evaluate((el) => el.getBoundingClientRect().width);
+      const cardWidth = await button.evaluate(
+        (el) => el.closest(".border").getBoundingClientRect().width,
+      );
+      expect(width).toBeGreaterThan(cardWidth - 40);
+    }
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-profile.png"),
+      fullPage: true,
+    });
+
+    // With no pencil, tapping the phone field itself opens the add/verify flow.
+    await main.getByRole("button", { name: "Add your phone number" }).click();
+    await expect(main.getByText("Add Your Phone Number")).toBeVisible();
+  });
+
+  test("account role follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/account/role?community=${C}`);
+    const main = page.getByRole("main").first();
+    await expect(main.getByRole("button", { name: /^I Pay Dues/ })).toBeVisible();
+    // Phone frame (iPhone 16 - 97): r=4 card and options, blue feedback banner.
+    const radius = (loc) => loc.evaluate((el) => getComputedStyle(el).borderTopLeftRadius);
+    expect(await radius(main.getByRole("button", { name: /^I Pay Dues/ }))).toBe("4px");
+    const banner = main.getByText(/Changes take effect from the next billing cycle/);
+    expect(await radius(banner.locator(".."))).toBe("4px");
+    expect(await banner.locator("..").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(204, 218, 255)",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-role.png"),
+      fullPage: true,
+    });
+  });
+
+  test("account security follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/account/security?community=${C}`);
+    const main = page.getByRole("main").first();
+    // Password rules stay hidden until New Password is focused.
+    const rule = main.getByText("At least 8 characters");
+    await expect(rule).toBeHidden();
+    const newPassword = main.getByLabel("New Password", { exact: true });
+    await newPassword.focus();
+    await expect(rule).toBeVisible();
+    // Leaving with a valid password hides them again. (Leaving it invalid
+    // keeps them up -- they are the only explanation of that error.)
+    await newPassword.fill("Glass123!");
+    await main.getByLabel("Current Password", { exact: true }).focus();
+    await expect(rule).toBeHidden();
+
+    // Phone frame (iPhone 16 - 99) copy, and a switch in place of Enable.
+    await expect(main.getByText("Two Factor Authentication")).toBeVisible();
+    await expect(
+      main.getByText("Add an extra layer of protection to your account", { exact: true }),
+    ).toBeVisible();
+    const twoFa = main.getByRole("switch", { name: "Enable 2FA" });
+    await expect(twoFa).toHaveAttribute("aria-checked", "false");
+    await expect(main.getByRole("button", { name: "Enable", exact: true })).toBeHidden();
+    // SMS row keeps its "Coming soon" badge but drops the leading shield tile.
+    await expect(main.getByText("Coming soon")).toBeVisible();
+    const smsTitle = main.getByText("SMS Verification", { exact: true });
+    expect(
+      await smsTitle.evaluate((el) => {
+        const tile = el.parentElement.previousElementSibling;
+        return tile ? getComputedStyle(tile).display : "none";
+      }),
+    ).toBe("none");
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-security.png"),
+      fullPage: true,
+    });
+
+    // The switch opens the existing setup flow rather than flipping on its own.
+    // Fill Current Password first: leaving it empty shows its "required"
+    // message on blur, which shifts the switch down mid-tap.
+    await main.getByLabel("Current Password", { exact: true }).fill("OldPass123!");
+    await twoFa.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(twoFa).toHaveAttribute("aria-checked", "false");
+  });
+
+  test("community profile follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/settings/community/profile?community=${C}`);
+    const main = page.getByRole("main").first();
+    // Phone frame (iPhone 16 - 105): dotted initials, "Upload Picture", no
+    // card heading, full-width Save Changes and Delete.
+    await expect(main.getByText("K.C", { exact: true })).toBeVisible();
+    await expect(main.getByRole("button", { name: "Upload Picture" })).toBeVisible();
+    await expect(main.getByText("Community Information")).toBeHidden();
+    const save = main.getByRole("button", { name: "Save Changes" });
+    const del = main.getByRole("button", { name: "Delete", exact: true });
+    for (const button of [save, del]) {
+      const width = await button.evaluate((el) => el.getBoundingClientRect().width);
+      const cardWidth = await button.evaluate(
+        (el) => el.closest(".border").getBoundingClientRect().width,
+      );
+      expect(width).toBeGreaterThan(cardWidth - 40);
+    }
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-community-profile.png"),
+      fullPage: true,
+    });
+  });
+
   test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
     await expect(page.locator("table")).toBeVisible();

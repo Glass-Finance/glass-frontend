@@ -136,3 +136,32 @@ describe("RegisterStep submit", () => {
     expect(screen.getByRole("button", { name: "Create Your Account" })).toBeDefined();
   });
 });
+
+describe("RegisterStep password checklist visibility", () => {
+  const RULE = "At least 8 characters";
+
+  it("is hidden until the password field is focused", () => {
+    renderStep();
+    expect(screen.queryByText(RULE)).toBeNull();
+    fireEvent.focus(screen.getByPlaceholderText("Enter Your Password"));
+    expect(screen.getByText(RULE)).toBeDefined();
+  });
+
+  it("hides again on blur when the password is valid", () => {
+    renderStep();
+    const input = screen.getByPlaceholderText("Enter Your Password");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: VALID_PASSWORD } });
+    fireEvent.blur(input);
+    expect(screen.queryByText(RULE)).toBeNull();
+  });
+
+  it("stays visible after blur when the password fails, since it is the only error explanation", () => {
+    renderStep();
+    const input = screen.getByPlaceholderText("Enter Your Password");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "short" } });
+    fireEvent.blur(input);
+    expect(screen.getByText(RULE)).toBeDefined();
+  });
+});

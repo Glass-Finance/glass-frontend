@@ -1,13 +1,14 @@
 import { createElement } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import OverviewSection from "../../../../pages/dashboard/platform-admin/OverviewSection";
 import * as admin from "../../../../api/admin";
 
 vi.mock("../../../../api/admin", async (importOriginal) => ({
   ...(await importOriginal()),
+  getAdminMetrics: vi.fn(),
   getAdminAuditLogs: vi.fn(),
   getAdminBalances: vi.fn(),
   getAdminCommunities: vi.fn(),
@@ -107,7 +108,17 @@ function renderSection() {
   );
 }
 
+const METRICS = {
+  communities: 10,
+  users: 60,
+  paymentLinks: { total: 6, active: 2, expired: 4 },
+  transactions: 18,
+  obligations: { total: 16, due: 6, paid: 6, overdue: 2, waived: 2 },
+  kycInReview: 0,
+};
+
 beforeEach(() => {
+  admin.getAdminMetrics.mockResolvedValue({ data: { data: METRICS } });
   admin.getAdminCommunities.mockResolvedValue(totalEnvelope(10));
   admin.getAdminUsers.mockResolvedValue(totalEnvelope(60));
   admin.getAdminPaymentLinks.mockImplementation((params = {}) => {
@@ -183,6 +194,84 @@ afterEach(() => {
 });
 
 describe("OverviewSection", () => {
+  it("uses metrics counts even when list totals disagree", async () => {
+    admin.getAdminMetrics.mockResolvedValue({
+      data: {
+        data: {
+          communities: 101,
+          users: 202,
+          paymentLinks: { total: 303, active: 44, expired: 55 },
+          transactions: 404,
+          obligations: { total: 505, due: 100, paid: 200, overdue: 99, waived: 106 },
+          kycInReview: 66,
+        },
+      },
+    });
+    renderSection();
+    expect(await screen.findByText("44 active · 55 expired")).toBeTruthy();
+    for (const value of ["101", "202", "303", "404", "505", "66"]) {
+      expect(screen.getByText(value)).toBeTruthy();
+    }
+    expect(await screen.findByText("55 of 303 payment links have expired")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Wesley reading club and Microsoft Developer Group are among 99 communities with overdue obligations.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("0 findings · 66 in review")).toBeTruthy();
+    expect(admin.getAdminCommunities).not.toHaveBeenCalled();
+    expect(admin.getAdminUsers).not.toHaveBeenCalled();
+    expect(admin.getAdminKycAttempts).not.toHaveBeenCalled();
+    expect(admin.getAdminPaymentLinks.mock.calls).toEqual([
+      [{ pageNumber: 1, pageSize: 4, status: "EXPIRED" }],
+    ]);
+    expect(admin.getAdminObligations.mock.calls).toEqual([
+      [{ pageNumber: 1, pageSize: 3, status: "OVERDUE" }],
+    ]);
+  });
+
+  it("refreshes the metrics counts when Refresh is clicked", async () => {
+    renderSection();
+    await screen.findByText("2 active · 4 expired");
+    admin.getAdminMetrics.mockResolvedValue({ data: { data: { ...METRICS, users: 777 } } });
+    fireEvent.click(screen.getByRole("button", { name: /Refresh/ }));
+    expect(await screen.findByText("777")).toBeTruthy();
+    expect(admin.getAdminMetrics).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows a metrics error without falling back to list counts or a clear queue", async () => {
+    admin.getAdminMetrics.mockRejectedValue(new Error("Metrics unavailable"));
+    renderSection();
+    await waitFor(() =>
+      expect(screen.getAllByText("Metrics unavailable").length).toBeGreaterThan(0),
+    );
+    expect(screen.queryByText("Registered users")).toBeNull();
+    expect(screen.queryByText("0 findings · 0 in review")).toBeNull();
+    expect(admin.getAdminUsers).not.toHaveBeenCalled();
+  });
+
+  it("renders zero metrics without substituting nonzero list totals", async () => {
+    admin.getAdminMetrics.mockResolvedValue({
+      data: {
+        data: {
+          communities: 0,
+          users: 0,
+          paymentLinks: { total: 0, active: 0, expired: 0 },
+          transactions: 0,
+          obligations: { total: 0, due: 0, paid: 0, overdue: 0, waived: 0 },
+          kycInReview: 0,
+        },
+      },
+    });
+    renderSection();
+    expect(await screen.findByText("0 active · 0 expired")).toBeTruthy();
+    const cards = screen.getByText("Registered users").parentElement.parentElement;
+    expect(within(cards).getAllByText("0")).toHaveLength(6);
+    await screen.findByText(/1 abandoned, 1 failed/);
+    expect(screen.queryByText("Unpaid obligations past due")).toBeNull();
+    expect(screen.queryByText(/payment links have expired/)).toBeNull();
+  });
+
   it("renders the stat cards and the issue rows that actually exist", async () => {
     renderSection();
 

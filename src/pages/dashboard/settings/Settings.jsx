@@ -24,6 +24,8 @@ import {
   IconNavIdentity,
 } from "../../../components/ui/icons/AdminMenuIcons";
 import { kycDisabled } from "../../../lib/flags";
+import { MobileBackButton } from "../../../components/ui/MobileBackButton";
+import { getSettingsReturnPath } from "../../../utils/settingsReturnPath";
 
 // The communities overview owns the "pick one community" empty state -- the
 // guard redirects unresolved community-scoped routes back here.
@@ -207,10 +209,13 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
       {items.map((item, i) => {
         const RowIcon = item.icon;
         return (
+          // Phone frame (iPhone 16 - 91): the glyph sits 16px in from the card
+          // edge with 16px vertical padding. Desktop keeps its owner-set
+          // pl-9 pr-6 py-[23px] (docs/design-system.md §9.8).
           <button
             key={i}
             onClick={() => (item.kyc ? onOpenKyc() : navigate(scopedPath(item.path, community)))}
-            className="w-full flex items-center gap-4 pl-9 pr-6 py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
+            className="w-full flex items-center gap-4 px-4 py-4 md:pl-9 md:pr-6 md:py-[23px] bg-surface-container rounded-[4px] text-left hover:bg-gray-50 transition-all cursor-pointer border border-surface-container-border"
           >
             {/* Figma 'navMenuIcons/*' lead glyph. 24px, down from Figma's 32px
               and scaled with the row copy (18/16 -> 14/12). Every one of the
@@ -234,7 +239,9 @@ function MenuList({ items, community, kycSummary, onOpenKyc }) {
             {item.kyc && kycSummary?.status && (
               <KycStatusBadge status={kycSummary.status} className="flex-shrink-0" />
             )}
-            <ChevronRight size={16} className="text-ink flex-shrink-0" />
+            {/* The phone frame draws no chevron -- the whole card is the
+                target. */}
+            <ChevronRight size={16} className="text-ink flex-shrink-0 hidden md:block" />
           </button>
         );
       })}
@@ -353,9 +360,24 @@ export default function Settings() {
 
   return (
     <div className="flex flex-col h-full px-4 py-6 md:px-8 md:py-8 overflow-y-auto">
-      {/* Heading + Search */}
+      {/* Phone header (iPhone 16 - 91). DashboardLayout hides the shared
+          Topbar below md on Settings, so this replaces the hamburger: back
+          returns to the page that opened Settings, not the previous Settings
+          tab (see utils/settingsReturnPath.js). The trailing w-12 spacer
+          balances the 48px button so the title sits truly centred. */}
+      <div className="flex items-center mb-6 md:hidden">
+        <MobileBackButton onClick={() => navigate(getSettingsReturnPath())} />
+        <h1 className="flex-1 text-center text-lg font-medium text-ink">Settings</h1>
+        <span className="w-12 flex-shrink-0" aria-hidden="true" />
+      </div>
+
+      {/* Heading + Search. The heading block is desktop-only (the phone
+          header above carries the title); search stays at every width --
+          the phone frame omits it, but it is the only way to jump straight
+          to a setting, and docs/design-system.md §1.7 rules against hiding
+          a feature solely because a phone frame leaves it out. */}
       <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-lg font-bold text-gray-900 mb-1">Settings</h1>
           <p className="text-xs text-gray-500">
             A full picture of your community's financial activity.
@@ -363,7 +385,7 @@ export default function Settings() {
         </div>
 
         {/* Search with live results dropdown */}
-        <div className="relative" ref={searchRef}>
+        <div className="relative w-full md:w-auto" ref={searchRef}>
           <Search
             size={12}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
@@ -379,7 +401,7 @@ export default function Settings() {
             }}
             onFocus={() => setSearchOpen(true)}
             onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
-            className="pl-9 pr-4 py-2 rounded-md text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-brand transition-colors w-full max-w-[220px] border border-hairline-strong bg-white"
+            className="pl-9 pr-4 py-2 rounded-md text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-brand transition-colors w-full md:max-w-[220px] border border-hairline-strong bg-white"
           />
 
           {/* Dropdown results */}
@@ -414,7 +436,9 @@ export default function Settings() {
 
       {/* Tab bar — hidden for platform admins */}
       {!isPlatformAdmin && (
-        <div className="flex gap-1 mb-6 bg-stacked-container rounded-[4px] p-1 w-fit">
+        // Phone frame: the segmented control spans the full width with three
+        // equal tabs at 14px; desktop keeps its fit-to-content 16px tabs.
+        <div className="flex gap-1 mb-6 bg-stacked-container rounded-[4px] p-1 w-full md:w-fit">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.label;
             return (
@@ -422,7 +446,7 @@ export default function Settings() {
                 key={tab.label}
                 onClick={() => navigate(scopedPath(tab.defaultPath, scopedCommunity))}
                 aria-current={isActive ? "page" : undefined}
-                className={`px-6 py-2 text-base font-medium rounded transition-colors cursor-pointer border-none focus-visible:outline-none
+                className={`flex-1 md:flex-none px-2 md:px-6 py-2 text-sm md:text-base font-medium rounded transition-colors cursor-pointer border-none focus-visible:outline-none
                   ${
                     isActive
                       ? "bg-surface-container text-black"
@@ -438,10 +462,13 @@ export default function Settings() {
 
       {/* Breadcrumb — only shown on sub-pages, hidden for platform admins */}
       {breadcrumb && !isPlatformAdmin && (
-        <p className="text-sm text-gray-500 mb-5">
+        // Phone frame (iPhone 16 - 93): hairlines above and below, and a
+        // right-pointing chevron between crumbs. Desktop is unchanged.
+        <p className="flex items-center text-sm text-gray-500 mb-6 py-2 border-y border-hairline md:block md:py-0 md:border-0 md:mb-5">
           <BreadcrumbParent parent={breadcrumb.parent} community={scopedCommunity} />
-          <span className="mx-2 text-gray-400">‹</span>
-          <span className="font-semibold text-gray-900">{breadcrumb.child}</span>
+          <ChevronRight size={16} className="mx-1 text-gray-400 md:hidden" aria-hidden="true" />
+          <span className="mx-2 text-gray-400 hidden md:inline">‹</span>
+          <span className="font-medium md:font-semibold text-gray-900">{breadcrumb.child}</span>
         </p>
       )}
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import client from "../../api/client";
 import {
+  getAdminMetrics,
   getAdminTransactions,
   getAdminTransaction,
   exportAdminTransactions,
@@ -173,5 +174,14 @@ describe("pagination params are 1-based at the API boundary", () => {
     getAdminTransactions({ pageNumber: 1, pageSize: 20 });
 
     expect(client.get.mock.calls[0][1].params.pageNumber).toBe(1);
+  });
+});
+
+// The shared client supplies /api/v1 and the bearer token.
+describe("admin metrics route", () => {
+  it("gets the aggregate metrics with optional creation bounds as query parameters", () => {
+    const params = { createdFrom: "2026-10-01T00:00:00Z", createdTo: "2026-10-26T00:00:00Z" };
+    getAdminMetrics(params);
+    expect(client.get).toHaveBeenCalledWith("/admin/metrics", { params });
   });
 });
