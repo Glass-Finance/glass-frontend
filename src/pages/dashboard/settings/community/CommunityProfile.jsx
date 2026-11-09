@@ -71,8 +71,13 @@ const CATEGORIES = [
   "Other",
 ];
 
+// Phone frame (iPhone 16 - 105) draws the fields at r=4 (rounded-g-1);
+// desktop keeps rounded-lg.
 const inputCls =
-  "w-full h-12 min-h-8 border border-gray-300 px-4 py-1 rounded-lg text-placeholder text-black placeholder-black/60 outline-none focus:border-brand transition-all";
+  "w-full h-12 min-h-8 border border-gray-300 px-4 py-1 rounded-g-1 md:rounded-lg text-placeholder text-black placeholder-black/60 outline-none focus:border-brand transition-all";
+
+// Field labels: 14/500 black on the phone frame, the existing 12px on desktop.
+const labelCls = "block text-sm text-ink md:text-xs md:text-gray-700 font-medium mb-1.5";
 
 export default function CommunityProfile() {
   const navigate = useNavigate();
@@ -198,27 +203,38 @@ export default function CommunityProfile() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    // Phone frame: 8px between cards; desktop keeps gap-4.
+    <div className="flex flex-col gap-2 md:gap-4">
       {/* ── Community Information -- heading, logo, and fields all in one
           card, matching Figma (was two separate cards: a bare "Profile"
           heading + logo row, then a second card for the fields). ── */}
-      <div className="bg-surface-container rounded-lg px-5 pt-4 pb-5 border border-surface-container-border">
-        <p className="text-sm font-semibold text-gray-900 mb-0.5">Community Information</p>
-        <p className="text-xs text-gray-500 mb-4">
-          This is how your information will appear across glass
-        </p>
-        <div className="-mx-5 border-b border-gray-100 mb-4" />
+      <div className="bg-surface-container rounded-lg p-3 md:px-5 md:pt-4 md:pb-5 border border-surface-container-border">
+        {/* Card heading is desktop-only: the phone frame (iPhone 16 - 105)
+            goes straight to the logo, and the breadcrumb names the page. */}
+        <div className="hidden md:block">
+          <p className="text-sm font-semibold text-gray-900 mb-0.5">Community Information</p>
+          <p className="text-xs text-gray-500 mb-4">
+            This is how your information will appear across glass
+          </p>
+          <div className="-mx-5 border-b border-gray-100 mb-4" />
+        </div>
 
-        <div className="flex items-center justify-between mb-4">
+        {/* Phone: logo centred above its upload button; the name / invite
+            link beside it is desktop-only. */}
+        <div className="flex flex-col items-center gap-3 mb-4 md:flex-row md:justify-between md:gap-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs text-brand flex-shrink-0 overflow-hidden bg-brand-mist">
+            <div className="w-16 h-16 md:w-10 md:h-10 rounded-full flex items-center justify-center text-lg md:text-xs text-brand flex-shrink-0 overflow-hidden bg-brand-mist">
               {logoSrc ? (
                 <img src={logoSrc} alt="" className="w-full h-full object-cover" />
               ) : (
-                initials || "C"
+                <>
+                  {/* Phone frame writes the initials dotted ("A.A"). */}
+                  <span className="md:hidden">{(initials || "C").split("").join(".")}</span>
+                  <span className="hidden md:inline">{initials || "C"}</span>
+                </>
               )}
             </div>
-            <div>
+            <div className="hidden md:block">
               <p className="text-sm text-gray-900">{community?.name ?? "Community"}</p>
               <p className="text-xs text-gray-500">
                 {community?.slug ? `${INVITE_HOST}/member/join?community=${community.slug}` : ""}
@@ -240,16 +256,20 @@ export default function CommunityProfile() {
             onClick={() => logoInputRef.current?.click()}
             disabled={uploadFile.isPending}
           >
-            {uploadFile.isPending ? "Uploading…" : "Change Logo"}
+            {uploadFile.isPending ? (
+              "Uploading…"
+            ) : (
+              <>
+                <span className="md:hidden">Upload Picture</span>
+                <span className="hidden md:inline">Change Logo</span>
+              </>
+            )}
           </Button>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <label
-              htmlFor="community-name"
-              className="block text-xs font-medium text-gray-700 mb-1.5"
-            >
+            <label htmlFor="community-name" className={labelCls}>
               Community Name
             </label>
             <input
@@ -266,7 +286,7 @@ export default function CommunityProfile() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">Category</label>
+            <label className={labelCls}>Category</label>
             {/* Native select's own arrow sits flush against the box edge with
                 no controllable gap -- appearance-none drops it in favor of a
                 custom triangle with proper right-margin breathing room. */}
@@ -288,7 +308,7 @@ export default function CommunityProfile() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">Description</label>
+            <label className={labelCls}>Description</label>
             {/* inputCls's h-12 (sized for single-line inputs) was squashing
                 this field to one line's worth of height despite rows={3},
                 leaving the text pinned near the top with dead space below
@@ -298,7 +318,9 @@ export default function CommunityProfile() {
               value={form.description}
               onChange={handleChange}
               rows={3}
-              className={`${inputCls} resize-none !h-auto !min-h-[88px] !py-3`}
+              // Phone frame draws Description at single-field height (48px);
+              // desktop keeps the 3-row box.
+              className={`${inputCls} resize-none !h-12 !min-h-0 md:!h-auto md:!min-h-[88px] !py-3`}
             />
           </div>
         </div>
@@ -316,13 +338,17 @@ export default function CommunityProfile() {
             is unchanged, only the label is dropped, matching the account save
             row. This is below the button scale's 12px floor and is a
             deliberate owner exception, not a scale rung. */}
-        <div className="flex justify-end mt-4">
+        {/* Phone frame: full width with the normal `sm` 14px label.
+            md:text-[8px] + md:w-auto restore desktop's sm-tighter hug
+            exactly -- `sm` and `sm-tighter` share the same h40 box. */}
+        <div className="flex md:justify-end mt-4">
           <Button
             onClick={handleSave}
             disabled={updateCommunity.isPending}
             variant="primary"
-            size="sm-tighter"
+            size="sm"
             fullWidth={false}
+            className="w-full md:w-auto md:text-[8px]"
           >
             {saved ? "Saved!" : updateCommunity.isPending ? "Saving…" : "Save Changes"}
           </Button>
@@ -336,20 +362,28 @@ export default function CommunityProfile() {
       {/* ── Delete Community — owners only. Promoted admins manage the
           community but don't get its destructive controls. ── */}
       {community?.owned && (
-        <div className="bg-surface-container rounded-lg p-6 border border-surface-container-border">
-          <p className="text-sm font-medium text-gray-900 mb-0.5">Delete Community</p>
-          <p className="text-xs text-gray-500 mb-4">Permanent actions that cannot be undone.</p>
-          <div className="-mx-6 border-b border-gray-100 mb-4" />
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <p className="text-xs text-gray-700">
+        // Phone frame: 12px padding, 16/400 title, 14px copy and a
+        // full-width h40 Delete. Desktop keeps p-6, 12px copy and the hugging
+        // xs (h32) button -- size="sm" plus md: overrides of xs's
+        // height/padding/label.
+        <div className="bg-surface-container rounded-lg p-3 md:p-6 border border-surface-container-border">
+          <p className="text-base font-normal md:text-sm md:font-medium text-gray-900 mb-0.5">
+            Delete Community
+          </p>
+          <p className="text-sm md:text-xs text-gray-500 mb-3 md:mb-4">
+            Permanent actions that cannot be undone.
+          </p>
+          <div className="-mx-3 md:-mx-6 border-b border-gray-100 mb-3 md:mb-4" />
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 md:gap-3">
+            <p className="text-sm md:text-xs text-gray-700">
               Permanently remove this community and all associated data from Glass.
             </p>
             <Button
               variant="outline-caution"
-              size="xs"
+              size="sm"
               onClick={() => setDeleteModal(true)}
               fullWidth={false}
-              className="self-start sm:self-auto flex-shrink-0"
+              className="w-full md:w-auto md:h-8 md:px-3 md:text-[12px] flex-shrink-0"
             >
               Delete
             </Button>
