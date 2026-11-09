@@ -296,15 +296,22 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
           )}
         </div>
         {!success && (
+          // Phone (owner, 2026-11-09): no footer Back/Cancel -- the round
+          // button at the top does the same job -- and Continue spans the
+          // full width. Desktop keeps both, right-aligned.
           <div className="flex items-center justify-end gap-4 px-4 md:px-6 py-4 border-t border-gray-100">
-            <Button
-              variant="tertiary"
-              size="xs"
-              fullWidth={false}
-              onClick={() => (step > 1 ? setStep((s) => s - 1) : onClose())}
-            >
-              <ArrowLeft size={15} /> {step > 1 ? "Back" : "Cancel"}
-            </Button>
+            {/* Wrapped, not `hidden` on the Button: Button's own inline-flex
+                would collide with it. */}
+            <span className="hidden md:inline-flex">
+              <Button
+                variant="tertiary"
+                size="xs"
+                fullWidth={false}
+                onClick={() => (step > 1 ? setStep((s) => s - 1) : onClose())}
+              >
+                <ArrowLeft size={15} /> {step > 1 ? "Back" : "Cancel"}
+              </Button>
+            </span>
             <Button
               onClick={() => {
                 if (step === 2) {
@@ -319,7 +326,7 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
               loading={creating}
               fullWidth={false}
               size="sm"
-              className="px-14"
+              className="w-full md:w-auto px-14"
             >
               {creating ? "Creating…" : step === 3 ? "Create Plan" : "Continue"}
             </Button>

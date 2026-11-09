@@ -101,7 +101,9 @@ function fillRecurringDetails({
 // it reads "Back" — and the primary action sits next to it in the same row.
 function footerButton(label) {
   const anchor = screen.getByRole("button", { name: /^(Cancel|Back)$/ });
-  return [...anchor.parentElement.querySelectorAll("button")].find(
+  // closest("div"), not parentElement: Back sits in a phone-hiding wrapper
+  // span inside the footer row.
+  return [...anchor.closest("div").querySelectorAll("button")].find(
     (b) => b.textContent.trim() === label,
   );
 }

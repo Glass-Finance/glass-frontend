@@ -407,7 +407,24 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     expect(sheet.height).toBe(viewport.height);
     expect(sheet.radius).toBe("0px");
     await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
+    // No footer Cancel/Back on the phone; Continue spans the sheet.
+    await expect(page.getByRole("button", { name: /^(Cancel|Back)$/ })).toBeHidden();
+    const cont = page.getByRole("button", { name: "Continue" });
+    const contWidth = await cont.evaluate((el) => el.getBoundingClientRect().width);
+    expect(contWidth).toBeGreaterThan(viewport.width - 40);
     await page.screenshot({ path: test.info().outputPath("admin-mobile-create-payment.png") });
+
+    // Plan Details (step 2) carries the same footer: still no Back button.
+    await cont.click();
+    await expect(page.getByText("Plan Details", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^(Cancel|Back)$/ })).toBeHidden();
+    expect(await cont.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(
+      viewport.width - 40,
+    );
+    await page.screenshot({ path: test.info().outputPath("admin-mobile-plan-details.png") });
+    // The top button steps back to step 1 first.
+    await back.click();
+    await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
 
     // On step 1 the back button leaves the flow.
     await back.click();
