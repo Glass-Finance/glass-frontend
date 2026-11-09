@@ -286,3 +286,24 @@ describe("Security — MFA disable", () => {
     expect(toastSuccess).not.toHaveBeenCalled();
   });
 });
+
+// Phone frame (iPhone 16 - 99) swaps the Enable/Disable button for a switch.
+// It must open the same modal and never flip on its own.
+describe("2FA switch (phone layout)", () => {
+  it("opens the setup modal without flipping while MFA is off", () => {
+    renderSecurity({ mfaEnabled: false });
+    const toggle = screen.getByRole("switch", { name: "Enable 2FA" });
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: "Begin Setup" })).toBeTruthy();
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("opens the disable modal while MFA is on", () => {
+    renderSecurity({ mfaEnabled: true });
+    const toggle = screen.getByRole("switch", { name: "Enable 2FA" });
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(toggle);
+    expect(screen.getByRole("heading", { name: "Disable MFA" })).toBeTruthy();
+  });
+});
