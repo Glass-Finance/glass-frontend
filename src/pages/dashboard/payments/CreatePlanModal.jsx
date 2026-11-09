@@ -15,6 +15,7 @@ import PlanStepIndicator from "./PlanStepIndicator";
 import { Step1, Step2, Step3 } from "./PlanFormSteps";
 import SuccessBadge from "../../../components/common/SuccessBadge";
 import { Button } from "../../../components/ui/Button";
+import { MobileBackButton } from "../../../components/ui/MobileBackButton";
 import { useEscapeToClose } from "../../../hooks/useKeyboardShortcuts";
 
 // ── Create plan modal ─────────────────────────────────────────────────────────
@@ -205,30 +206,51 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
     if (ok) setSuccess(true);
   }
 
+  // Same rule as the footer's Back/Cancel: step back, or leave on step 1 (and
+  // once the plan is created).
+  const goBack = () => (step > 1 && !success ? setStep((s) => s - 1) : onClose());
+
   return (
+    // Phone frame (iPhone 16 - 74): a full page, not a pop-up -- page
+    // background edge to edge with no backdrop, card or radius, and a round
+    // back button in place of the X. z-70 already sits above the dashboard
+    // Topbar (z-50), so the page covers it. md+ is the original modal.
     <div
-      className="fixed inset-0 z-70 flex items-center justify-center p-6 bg-black/20"
+      className="fixed inset-0 z-70 flex items-center justify-center p-0 md:p-6 bg-surface-bg md:bg-black/20"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-surface-bg rounded-2xl w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-start justify-between px-6 pt-5">
+      <div className="bg-surface-bg w-full h-full md:h-auto md:rounded-2xl md:max-w-xl md:shadow-2xl md:max-h-[90vh] flex flex-col">
+        <div className="px-4 pt-6 md:hidden">
+          {/* "Go back", not "Back": the footer already has a "Back" button. */}
+          <MobileBackButton aria-label="Go back" onClick={goBack} />
+        </div>
+        <div className="flex items-start justify-between px-4 pt-9 md:px-6 md:pt-5">
           <div>
-            <h2 className="text-base font-semibold text-black">Create Payment Plan</h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              You can edit or pause any plan at any time.
+            {/* Two headings rather than two spans in one: a heading's name is
+                its full text, so spans would read "Create PaymentCreate
+                Payment Plan" wherever display:none isn't applied. */}
+            <h2 className="text-base font-normal text-black md:hidden">Create Payment</h2>
+            <h2 className="hidden md:block text-base font-semibold text-black">
+              Create Payment Plan
+            </h2>
+            <p className="text-sm text-gray-500 md:text-xs md:text-gray-400 mt-0.5">
+              <span className="md:hidden">You can edit or pause plan at any time.</span>
+              <span className="hidden md:inline">You can edit or pause any plan at any time.</span>
             </p>
           </div>
-          <Button
-            variant="tertiary"
-            size="icon-sm"
-            aria-label="Close"
-            onClick={onClose}
-            className=""
-          >
-            <X size={14} />
-          </Button>
+          <span className="hidden md:block">
+            <Button
+              variant="tertiary"
+              size="icon-sm"
+              aria-label="Close"
+              onClick={onClose}
+              className=""
+            >
+              <X size={14} />
+            </Button>
+          </span>
         </div>
-        <div className="px-6 py-4 flex-1 overflow-hidden flex flex-col">
+        <div className="px-4 md:px-6 py-4 flex-1 overflow-hidden flex flex-col">
           {success ? (
             <div className="text-center py-10">
               <SuccessBadge
@@ -274,7 +296,7 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
           )}
         </div>
         {!success && (
-          <div className="flex items-center justify-end gap-4 px-6 py-4 border-t border-gray-100">
+          <div className="flex items-center justify-end gap-4 px-4 md:px-6 py-4 border-t border-gray-100">
             <Button
               variant="tertiary"
               size="xs"

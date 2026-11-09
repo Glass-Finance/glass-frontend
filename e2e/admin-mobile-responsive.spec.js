@@ -382,6 +382,39 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     });
   });
 
+  test("create payment opens as a full page on the phone", async ({ page }) => {
+    await page.goto(`/dashboard/payments?community=${C}`);
+    // The seeded community has a plan, so the header action opens the flow
+    // (the empty state's "Create Collection" opens the same component).
+    const open = page.getByRole("button", { name: "Create Payment Plan" });
+    await open.click();
+
+    // Phone frame (iPhone 16 - 74): a full page, not a pop-up.
+    const heading = page.getByRole("heading", { name: "Create Payment", exact: true });
+    await expect(heading).toBeVisible();
+    await expect(page.getByText("You can edit or pause plan at any time.")).toBeVisible();
+    const back = page.getByRole("button", { name: "Go back" });
+    await expect(back).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close", exact: true })).toBeHidden();
+    const sheet = await heading.evaluate((el) => {
+      let node = el;
+      while (node && !node.className.includes("h-full")) node = node.parentElement;
+      const r = node.getBoundingClientRect();
+      return { width: r.width, height: r.height, radius: getComputedStyle(node).borderRadius };
+    });
+    const viewport = page.viewportSize();
+    expect(sheet.width).toBe(viewport.width);
+    expect(sheet.height).toBe(viewport.height);
+    expect(sheet.radius).toBe("0px");
+    await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
+    await page.screenshot({ path: test.info().outputPath("admin-mobile-create-payment.png") });
+
+    // On step 1 the back button leaves the flow.
+    await back.click();
+    await expect(heading).toBeHidden();
+    await expect(open).toBeVisible();
+  });
+
   test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
     await expect(page.locator("table")).toBeVisible();
