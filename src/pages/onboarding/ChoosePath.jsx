@@ -9,6 +9,7 @@ import CloudImage from "../../components/common/CloudImage";
 import StepIndicator from "../../components/onboarding/StepIndicator";
 import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
 import { useKycGate } from "../../hooks/useKycGate";
 
 export default function ChoosePath() {
@@ -82,7 +83,7 @@ export default function ChoosePath() {
           screen (auth pages, Communities Home) shows. */}
       <div className="fixed inset-0 lg:hidden -z-10 bg-cover bg-center bg-no-repeat bg-mobile-auth-default" />
 
-      <header className="relative flex items-center px-6 lg:px-8 py-5 flex-shrink-0">
+      <header className="relative hidden lg:flex items-center px-6 lg:px-8 py-5 flex-shrink-0">
         <div className="flex items-center gap-2">
           <CloudImage
             publicId="glass/Glass"
@@ -95,10 +96,20 @@ export default function ChoosePath() {
         </div>
       </header>
 
-      <main className="relative flex-1 flex flex-col items-center justify-center px-6 lg:px-8 pb-10">
-        <StepIndicator stepId="choose-path" />
-        <div className="text-center mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+      {/* Phones (Figma "iPhone 16 - 118"): no logo bar -- a round back
+          button instead, which exits to the dashboard like Skip does (this
+          is the first onboarding screen, so there is no earlier step). */}
+      <div className="lg:hidden px-4 pt-12">
+        <MobileBackButton aria-label="Go back" onClick={() => navigate("/dashboard/home")} />
+      </div>
+
+      <main className="relative flex-1 flex flex-col items-center justify-start lg:justify-center px-4 lg:px-8 pt-6 lg:pt-0 pb-10">
+        {/* The phone frame drops the "Step X of Y" label; desktop keeps it. */}
+        <div className="hidden lg:contents">
+          <StepIndicator stepId="choose-path" />
+        </div>
+        <div className="text-center mb-14 lg:mb-8">
+          <h1 className="text-base font-medium text-ink mb-1 lg:text-3xl lg:font-bold lg:text-gray-900 lg:mb-2">
             What would you like to do?
           </h1>
           <p className="text-sm text-gray-500">
@@ -106,31 +117,33 @@ export default function ChoosePath() {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:justify-center gap-3 lg:gap-5 mb-8 w-full max-w-[500px] lg:max-w-none items-stretch">
+        <div className="flex flex-col lg:flex-row lg:justify-center gap-4 lg:gap-5 mb-4 lg:mb-8 w-full max-w-[500px] lg:max-w-none items-stretch">
           {options.map((option) => {
             const isSelected = selected === option.id;
             return (
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
-                className={`relative flex flex-row lg:flex-col items-center text-left lg:text-center gap-4 lg:gap-0 px-5 lg:px-10 py-5 lg:py-8 rounded-2xl transition-all duration-200 cursor-pointer w-full lg:w-[380px] border bg-white ${isSelected ? "border-2 border-brand" : "border-white"}`}
+                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:px-10 lg:py-8 rounded-g-1 lg:rounded-2xl transition-all duration-200 cursor-pointer w-full lg:w-[380px] border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-white"}`}
               >
-                <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-[10px] bg-brand-wash lg:bg-transparent lg:rounded-none lg:w-14 lg:h-14 lg:mt-6 lg:mb-5">
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 mb-4 lg:w-14 lg:h-14 lg:mt-6 lg:mb-5">
                   <CloudImage
                     publicId={option.icon}
                     alt={option.title}
                     width={112}
                     objectFit="contain"
-                    className="w-6 h-6 lg:w-14 lg:h-14"
+                    className="w-7 h-7 lg:w-14 lg:h-14"
                   />
                 </div>
-                <div className="flex-1 min-w-0 lg:flex-none">
-                  <h3 className="font-semibold text-gray-900 text-base mb-1 lg:mb-2">
+                <div className="flex-none min-w-0">
+                  <h3 className="font-medium text-ink text-lg mb-1 lg:font-semibold lg:text-gray-900 lg:text-base lg:mb-2">
                     {option.title}
                   </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{option.description}</p>
+                  <p className="text-base lg:text-sm text-gray-500 leading-relaxed">
+                    {option.description}
+                  </p>
                 </div>
-                <div className="flex-shrink-0 lg:absolute lg:top-4 lg:left-4">
+                <div className="flex-shrink-0 absolute top-6 left-6 lg:top-4 lg:left-4">
                   {isSelected ? (
                     <div className="w-6 h-6 rounded-full flex items-center justify-center bg-brand">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -152,7 +165,8 @@ export default function ChoosePath() {
           })}
         </div>
 
-        <div className="flex items-start gap-1.5 mb-6 w-full max-w-[500px]">
+        {/* Not in the phone frame. */}
+        <div className="hidden lg:flex items-start gap-1.5 mb-6 w-full max-w-[500px]">
           <Info size={13} className="text-gray-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-gray-500 leading-snug text-left">
             This choice isn't final — whichever option you pick now, you can still create or join
@@ -160,12 +174,18 @@ export default function ChoosePath() {
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-4 w-full max-w-[500px]">
+        {/* Phones: Skip and Continue share one row, Skip on the left (row-
+            reverse keeps Continue first in tab order, as on desktop). */}
+        <div className="flex flex-row-reverse lg:flex-col items-center gap-4 w-full max-w-[500px]">
           {/* Create is gated: while the KYC summary resolves the button
               holds (never "still loading ⇒ let them through") and Continue
               then routes to the verify step or straight past it (see
               handleContinue). Join has no gate and stays immediate. */}
-          <Button onClick={handleContinue} loading={selected === "create" && kycGate.isLoading}>
+          <Button
+            onClick={handleContinue}
+            loading={selected === "create" && kycGate.isLoading}
+            className="max-lg:flex-[2] max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px]"
+          >
             Continue
           </Button>
           <Button
@@ -173,6 +193,7 @@ export default function ChoosePath() {
             size="sm"
             fullWidth={false}
             onClick={() => navigate("/dashboard/home")}
+            className="max-lg:flex-1 max-lg:text-brand"
           >
             Skip
           </Button>

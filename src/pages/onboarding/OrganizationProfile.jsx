@@ -25,9 +25,11 @@ import { resizeImageFile } from "../../utils/resizeImage";
 import { safeImageUrl } from "../../utils/safeImageUrl";
 import { saveOnboardingProgress, readOnboardingProgress } from "../../utils/onboardingProgress";
 import { APP_ORIGIN, isMobileDevice } from "../../utils/deviceRedirect";
-import StepIndicator from "../../components/onboarding/StepIndicator";
 import OnboardingStepsSidebar from "../../components/onboarding/OnboardingStepsSidebar";
 import { Button } from "../../components/ui/Button";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import OnboardingMobileStepper from "../../components/onboarding/OnboardingMobileStepper";
+import uploadCloudIcon from "../../assets/icons/upload-cloud.webp";
 
 const INVITE_HOST = APP_ORIGIN.replace(/^https?:\/\//, "");
 
@@ -56,7 +58,7 @@ const CATEGORIES = [
 const COMPLETED_STEP_IDS = ["choose-path", "paying-member"];
 
 const inputCls =
-  "w-full h-12 min-h-8 border bg-stacked-container px-4 py-1 rounded-lg text-placeholder text-gray-800 placeholder-gray-400 outline-none focus:border-brand transition-all";
+  "w-full h-12 min-h-8 border bg-stacked-container px-4 py-1 rounded-lg max-lg:rounded-g-1 max-lg:bg-transparent text-placeholder text-gray-800 placeholder-gray-400 outline-none focus:border-brand transition-all";
 
 export default function OrganizationProfile() {
   const navigate = useNavigate();
@@ -315,8 +317,9 @@ export default function OrganizationProfile() {
     <div className="relative flex flex-col min-h-screen lg:overflow-hidden lg:h-screen bg-contain bg-center lg:bg-page-default">
       <div className="fixed inset-0 lg:hidden -z-10 bg-cover bg-center bg-no-repeat bg-mobile-auth-default" />
 
-      {/* Navbar */}
-      <header className="relative flex items-center justify-between px-4 lg:px-8 py-4 bg-surface-container border-b border-outline-on-surface flex-shrink-0">
+      {/* Navbar -- desktop only; the phone frame (Figma "iPhone 16 - 108")
+          has no top bar, just the stepper. */}
+      <header className="relative hidden lg:flex items-center justify-between px-4 lg:px-8 py-4 bg-surface-container border-b border-outline-on-surface flex-shrink-0">
         <div className="flex items-center gap-2">
           <CloudImage
             publicId="glass/Glass"
@@ -338,9 +341,11 @@ export default function OrganizationProfile() {
       </header>
 
       <div className="relative flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
-        {/* Mobile step pill — replaces the sidebar stepper below lg */}
-        <div className="lg:hidden px-4 pt-5">
-          <StepIndicator stepId="organization" />
+        {/* Phones: round back button + the three-step stepper, in place of
+            the sidebar and the in-form text back link. */}
+        <div className="lg:hidden px-4 pt-6 flex flex-col gap-6">
+          <MobileBackButton aria-label="Go back" onClick={handleBack} />
+          <OnboardingMobileStepper activeStepId="organization" />
         </div>
 
         {/* Sidebar */}
@@ -349,212 +354,228 @@ export default function OrganizationProfile() {
         {/* Main */}
         <main className="flex-1 lg:overflow-y-auto py-6 px-4 lg:py-10 lg:px-12 flex flex-col items-center">
           <form onSubmit={handleSubmit} className="w-full max-w-4xl">
-            <div className="mb-8">
-              <Button
-                variant="tertiary"
-                size="sm"
-                fullWidth={false}
-                type="button"
-                onClick={handleBack}
-                className="mb-4 -ml-1"
-              >
-                <ArrowLeft size={15} />
-                {isAuthenticated ? "Back to dashboard" : "Back"}
-              </Button>
-              <h2 className="text-xl font-medium text-gray-900 mb-1">
-                Tell us about your community
-              </h2>
-              <p className="text-sm text-gray-500">
-                This is how your community will appear to members on Glass.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="community-community-name"
-                  className="text-sm font-medium text-gray-700"
+            {/* Phones: the heading and fields sit in one bordered card with a
+                divider under the heading; Next stays outside it. Every class
+                here is reset at lg, so desktop's unboxed form is unchanged. */}
+            <div className="max-lg:mb-8 max-lg:bg-white max-lg:border max-lg:border-hairline-neutral max-lg:rounded-lg">
+              <div className="mb-8 max-lg:mb-0 max-lg:p-4 max-lg:border-b max-lg:border-hairline-neutral">
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  fullWidth={false}
+                  type="button"
+                  onClick={handleBack}
+                  className="mb-4 -ml-1 max-lg:hidden"
                 >
-                  Community Name *
-                </label>
-                <input
-                  id="community-community-name"
-                  type="text"
-                  name="communityName"
-                  value={form.communityName}
-                  onChange={handleChange}
-                  onBlur={(e) => {
-                    if (!slug) suggestFrom(form.communityName);
-                    handleFieldBlur("communityName")(e);
-                  }}
-                  placeholder="e.g. Babcock University Alumni Association"
-                  className={`${inputCls} ${fieldErrors.communityName ? "border-danger" : "border-gray-300"}`}
-                />
-                {fieldErrors.communityName && (
-                  <span className="text-xs text-danger">{fieldErrors.communityName}</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="community-description"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Description *
-                </label>
-                <input
-                  id="community-description"
-                  type="text"
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  onBlur={handleFieldBlur("description")}
-                  placeholder="Briefly describe what your community is about"
-                  className={`${inputCls} ${fieldErrors.description ? "border-danger" : "border-gray-300"}`}
-                />
-                {fieldErrors.description && (
-                  <span className="text-xs text-danger">{fieldErrors.description}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Category *</label>
-                <div className="relative">
-                  <select
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    onBlur={handleFieldBlur("category")}
-                    className={`${inputCls} appearance-none !pr-9 ${fieldErrors.category ? "border-danger" : "border-gray-300"}`}
-                  >
-                    <option value="" disabled>
-                      Select a category
-                    </option>
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l-4 border-r-4 border-t-[6px] border-l-transparent border-r-transparent border-t-black" />
-                </div>
-                {fieldErrors.category && (
-                  <span className="text-xs text-danger">{fieldErrors.category}</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="community-slug" className="text-sm font-medium text-gray-700">
-                  Community URL slug *
-                </label>
-                <div className="relative">
-                  <input
-                    id="community-slug"
-                    type="text"
-                    value={slug}
-                    onChange={(e) => {
-                      const v = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
-                      setSlug(v);
-                      setFieldErrors((fe) =>
-                        fe.slug ? { ...fe, slug: validateField("slug", v) } : fe,
-                      );
-                    }}
-                    onBlur={(e) =>
-                      setFieldErrors((fe) => ({
-                        ...fe,
-                        slug: validateField("slug", e.target.value),
-                      }))
-                    }
-                    placeholder="e.g. babcock-alumni"
-                    className={`${inputCls} pr-8 ${fieldErrors.slug ? "border-danger" : "border-gray-300"}`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {(checking || suggesting) && (
-                      <Loader2 size={14} className="animate-spin text-gray-400" />
-                    )}
-                    {!checking && !suggesting && available === true && (
-                      <Check size={14} className="text-success" />
-                    )}
-                    {!checking && !suggesting && available === false && (
-                      <XIcon size={14} className="text-danger" />
-                    )}
-                  </span>
-                </div>
-                {fieldErrors.slug && (
-                  <span className="text-xs text-danger">{fieldErrors.slug}</span>
-                )}
-                {!fieldErrors.slug && available === false && !checking && (
-                  <span className="text-xs text-danger">That URL is taken — try another.</span>
-                )}
-                {!fieldErrors.slug && available === true && !checking && (
-                  <span className="text-xs text-success">
-                    {INVITE_HOST}/member/join?community={slug}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="community-contact-email"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Contact Email *
-                </label>
-                <input
-                  id="community-contact-email"
-                  type="email"
-                  name="contactEmail"
-                  value={form.contactEmail}
-                  onChange={handleChange}
-                  onBlur={handleFieldBlur("contactEmail")}
-                  placeholder="e.g. contact@babcockalumni.org"
-                  className={`${inputCls} ${fieldErrors.contactEmail ? "border-danger" : "border-gray-300"}`}
-                />
-                {fieldErrors.contactEmail ? (
-                  <p className="text-xs text-danger">{fieldErrors.contactEmail}</p>
-                ) : (
-                  <p className="text-xs text-gray-400">
-                    Where Glass and members can reach your community.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Logo upload */}
-            <div className="flex flex-col gap-1.5 mb-8">
-              <label htmlFor="community-logo" className="text-sm font-medium text-gray-700">
-                Community Logo
-              </label>
-              <div
-                onClick={() => fileRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className={`w-full rounded-xl flex flex-col items-center justify-center py-12 px-6 cursor-pointer transition-all min-h-[200px] border-[1.5px] border-dashed ${dragOver ? "bg-brand-wash border-brand" : "bg-stacked-container border-hairline-neutral"}`}
-              >
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  id="community-logo"
-                  className="hidden"
-                  onChange={(e) => handleFile(e.target.files[0])}
-                />
-                {logoSrc ? (
-                  <img src={logoSrc} alt="preview" className="h-16 object-contain mb-2" />
-                ) : (
-                  <Upload size={28} className="text-gray-400 mb-3" />
-                )}
-                <p className="text-sm text-gray-500 text-center">
-                  <span className="font-medium underline text-brand">Upload</span> or Drag and Drop
-                  Logo Here
+                  <ArrowLeft size={15} />
+                  {isAuthenticated ? "Back to dashboard" : "Back"}
+                </Button>
+                <h2 className="text-xl max-lg:text-base font-medium text-gray-900 mb-1">
+                  Tell us about your community
+                </h2>
+                <p className="text-sm text-gray-500">
+                  This is how your community will appear to members on Glass.
                 </p>
-                <p className="text-xs text-gray-400 mt-1">(PNG or JPG, max 2MB.)</p>
+              </div>
+              <div className="max-lg:p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5 max-lg:gap-8 max-lg:mb-8">
+                  <div className="flex flex-col gap-1.5">
+                    <label
+                      htmlFor="community-community-name"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Community Name *
+                    </label>
+                    <input
+                      id="community-community-name"
+                      type="text"
+                      name="communityName"
+                      value={form.communityName}
+                      onChange={handleChange}
+                      onBlur={(e) => {
+                        if (!slug) suggestFrom(form.communityName);
+                        handleFieldBlur("communityName")(e);
+                      }}
+                      placeholder="e.g. Babcock University Alumni Association"
+                      className={`${inputCls} ${fieldErrors.communityName ? "border-danger" : "border-gray-300"}`}
+                    />
+                    {fieldErrors.communityName && (
+                      <span className="text-xs text-danger">{fieldErrors.communityName}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label
+                      htmlFor="community-description"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Description *
+                    </label>
+                    <input
+                      id="community-description"
+                      type="text"
+                      name="description"
+                      value={form.description}
+                      onChange={handleChange}
+                      onBlur={handleFieldBlur("description")}
+                      placeholder="Briefly describe what your community is about"
+                      className={`${inputCls} ${fieldErrors.description ? "border-danger" : "border-gray-300"}`}
+                    />
+                    {fieldErrors.description && (
+                      <span className="text-xs text-danger">{fieldErrors.description}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5 max-lg:gap-8 max-lg:mb-8">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-700">Category *</label>
+                    <div className="relative">
+                      <select
+                        name="category"
+                        value={form.category}
+                        onChange={handleChange}
+                        onBlur={handleFieldBlur("category")}
+                        className={`${inputCls} appearance-none !pr-9 ${fieldErrors.category ? "border-danger" : "border-gray-300"}`}
+                      >
+                        <option value="" disabled>
+                          Select a category
+                        </option>
+                        {CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l-4 border-r-4 border-t-[6px] border-l-transparent border-r-transparent border-t-black" />
+                    </div>
+                    {fieldErrors.category && (
+                      <span className="text-xs text-danger">{fieldErrors.category}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="community-slug" className="text-sm font-medium text-gray-700">
+                      Community URL slug *
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="community-slug"
+                        type="text"
+                        value={slug}
+                        onChange={(e) => {
+                          const v = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                          setSlug(v);
+                          setFieldErrors((fe) =>
+                            fe.slug ? { ...fe, slug: validateField("slug", v) } : fe,
+                          );
+                        }}
+                        onBlur={(e) =>
+                          setFieldErrors((fe) => ({
+                            ...fe,
+                            slug: validateField("slug", e.target.value),
+                          }))
+                        }
+                        placeholder="e.g. babcock-alumni"
+                        className={`${inputCls} pr-8 ${fieldErrors.slug ? "border-danger" : "border-gray-300"}`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {(checking || suggesting) && (
+                          <Loader2 size={14} className="animate-spin text-gray-400" />
+                        )}
+                        {!checking && !suggesting && available === true && (
+                          <Check size={14} className="text-success" />
+                        )}
+                        {!checking && !suggesting && available === false && (
+                          <XIcon size={14} className="text-danger" />
+                        )}
+                      </span>
+                    </div>
+                    {fieldErrors.slug && (
+                      <span className="text-xs text-danger">{fieldErrors.slug}</span>
+                    )}
+                    {!fieldErrors.slug && available === false && !checking && (
+                      <span className="text-xs text-danger">That URL is taken — try another.</span>
+                    )}
+                    {!fieldErrors.slug && available === true && !checking && (
+                      <span className="text-xs text-success">
+                        {INVITE_HOST}/member/join?community={slug}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5 max-lg:gap-8 max-lg:mb-8">
+                  <div className="flex flex-col gap-1.5">
+                    <label
+                      htmlFor="community-contact-email"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Contact Email *
+                    </label>
+                    <input
+                      id="community-contact-email"
+                      type="email"
+                      name="contactEmail"
+                      value={form.contactEmail}
+                      onChange={handleChange}
+                      onBlur={handleFieldBlur("contactEmail")}
+                      placeholder="e.g. contact@babcockalumni.org"
+                      className={`${inputCls} ${fieldErrors.contactEmail ? "border-danger" : "border-gray-300"}`}
+                    />
+                    {fieldErrors.contactEmail ? (
+                      <p className="text-xs text-danger">{fieldErrors.contactEmail}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400">
+                        Where Glass and members can reach your community.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Logo upload */}
+                <div className="flex flex-col gap-1.5 mb-8 max-lg:mb-0">
+                  <label htmlFor="community-logo" className="text-sm font-medium text-gray-700">
+                    Community Logo
+                  </label>
+                  <div
+                    onClick={() => fileRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOver(true);
+                    }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    className={`w-full rounded-xl max-lg:rounded-lg flex flex-col items-center justify-center py-12 px-6 cursor-pointer transition-all min-h-[200px] max-lg:min-h-[160px] border-[1.5px] border-dashed ${dragOver ? "bg-brand-wash border-brand" : "bg-stacked-container border-hairline-neutral max-lg:bg-transparent"}`}
+                  >
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      id="community-logo"
+                      className="hidden"
+                      onChange={(e) => handleFile(e.target.files[0])}
+                    />
+                    {logoSrc ? (
+                      <img src={logoSrc} alt="preview" className="h-16 object-contain mb-2" />
+                    ) : (
+                      <>
+                        <Upload size={28} className="text-gray-400 mb-3 max-lg:hidden" />
+                        <img
+                          src={uploadCloudIcon}
+                          alt=""
+                          className="w-6 h-6 mb-2 lg:hidden"
+                          loading="lazy"
+                        />
+                      </>
+                    )}
+                    {/* No drag and drop on a phone, so the phone copy drops it. */}
+                    <p className="text-sm text-gray-500 text-center">
+                      <span className="font-medium underline text-brand">Upload</span>{" "}
+                      <span className="lg:hidden">Logo here</span>
+                      <span className="max-lg:hidden">or Drag and Drop Logo Here</span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">(PNG or JPG, max 2MB.)</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -565,7 +586,7 @@ export default function OrganizationProfile() {
                 type="submit"
                 disabled={checking || available === false}
                 loading={loading}
-                className="lg:w-1/2"
+                className="lg:w-1/2 max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px]"
               >
                 {loading ? "Creating community..." : "Next"}
               </Button>
