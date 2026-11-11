@@ -11,7 +11,7 @@ import { ONBOARDING_STEPS } from "../../utils/onboardingSteps";
 // had independently reinvented a local StepIcon with slightly different
 // prop shapes. Consolidated here as the single correct version so a future
 // change (a new step, a color tweak) only has to happen once.
-function StepIcon({ id }) {
+export function StepIcon({ id }) {
   switch (id) {
     case "organization":
       return (
