@@ -269,7 +269,7 @@ export default function UseCases() {
     <section
       ref={sectionRef}
       id="use-cases"
-      className="py-20 md:py-28 relative isolate overflow-hidden"
+      className="pt-20 pb-0 md:pt-28 relative isolate overflow-hidden"
       onFocus={handleFocus}
       onBlur={handleBlur}
     >
