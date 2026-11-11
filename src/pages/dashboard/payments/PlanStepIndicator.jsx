@@ -11,7 +11,7 @@ export default function PlanStepIndicator({ current }) {
     { n: 3, label: "Review" },
   ];
   return (
-    <div className="flex items-center mb-6">
+    <div className="flex items-center mb-[32px] md:mb-6">
       {steps.map((s, i) => {
         const done = s.n < current,
           active = s.n === current;

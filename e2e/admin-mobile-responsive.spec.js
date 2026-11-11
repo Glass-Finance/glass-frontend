@@ -395,6 +395,12 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     await expect(page.getByText("You can edit or pause plan at any time.")).toBeVisible();
     const back = page.getByRole("button", { name: "Go back" });
     await expect(back).toBeVisible();
+    // Figma places the 48px round button at y=48, in true px even under the
+    // dashboard's compact (15px) root font.
+    const backBox = await back.boundingBox();
+    expect(backBox.y).toBe(48);
+    expect(backBox.width).toBe(48);
+    expect(backBox.height).toBe(48);
     await expect(page.getByRole("button", { name: "Close", exact: true })).toBeHidden();
     const sheet = await heading.evaluate((el) => {
       let node = el;

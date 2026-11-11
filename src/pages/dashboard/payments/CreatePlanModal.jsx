@@ -220,14 +220,21 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-surface-bg w-full h-full md:h-auto md:rounded-2xl md:max-w-xl md:shadow-2xl md:max-h-[90vh] flex flex-col">
-        <div className="px-4 pt-6 md:hidden">
+        {/* Figma (iPhone 16 - 74 / 77) places the 48px button at y=48. In
+            px, not rem: the dashboard runs html.dashboard-compact (root font
+            15px, index.css), which would otherwise render 3rem as 45px. */}
+        <div className="px-4 pt-[48px] md:hidden">
           {/* "Go back", not "Back": the footer already has a "Back" button. */}
-          <MobileBackButton aria-label="Go back" onClick={goBack} />
+          <MobileBackButton
+            aria-label="Go back"
+            onClick={goBack}
+            className="max-md:h-[48px] max-md:w-[48px]"
+          />
         </div>
         {/* Phone frame (iPhone 16 - 77): the Review step drops the title
             block; the step indicator follows the back button directly. */}
         <div
-          className={`${step === 3 && !success ? "hidden md:flex" : "flex"} items-start justify-between px-4 pt-9 md:px-6 md:pt-5`}
+          className={`${step === 3 && !success ? "hidden md:flex" : "flex"} items-start justify-between px-4 pt-7 pb-1 md:px-6 md:pt-5 md:pb-0`}
         >
           <div>
             {/* Two headings rather than two spans in one: a heading's name is
@@ -254,7 +261,7 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
             </Button>
           </span>
         </div>
-        <div className="px-4 md:px-6 py-4 flex-1 overflow-hidden flex flex-col">
+        <div className="px-4 md:px-6 pt-6 pb-4 md:py-4 flex-1 overflow-hidden flex flex-col">
           {success ? (
             <div className="text-center py-10">
               <SuccessBadge
