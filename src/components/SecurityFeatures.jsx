@@ -59,7 +59,7 @@ export default function SecurityFeatures() {
 
   return (
     <section className="relative isolate overflow-hidden py-20 md:py-28" id="security">
-      <div className="relative z-10 max-w-[1140px] mx-auto px-6">
+      <div className="relative z-10 mx-auto max-w-[1140px] px-6 lg:max-w-[1280px] lg:px-8">
         {/* ── Header ── */}
         <div className="mb-8 md:mb-16 text-center">
           {/* Badge */}
@@ -105,7 +105,7 @@ export default function SecurityFeatures() {
         </div>
 
         {/* ── Cards ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-14 xl:gap-20 mb-14 justify-items-center items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-14 xl:gap-20 mb-[70px] justify-items-center items-start">
           {cards.map(({ publicId, title, desc }, i) => {
             const { rotate, y } = TILTS[i];
 
@@ -113,7 +113,7 @@ export default function SecurityFeatures() {
               <div
                 key={title}
                 ref={(el) => (cardRefs.current[i] = el)}
-                className="w-full max-w-[320px] [transform-origin:top_center] rounded-3xl bg-[#EFEFF1E5] py-8 px-6 flex flex-col items-center text-center"
+                className={`w-full max-w-[320px] lg:max-w-[360px] min-h-[363px] [transform-origin:top_center] rounded-3xl border border-black/10 bg-[rgba(255,255,255,0.6)] pt-20 pb-6 px-6 flex flex-col items-center text-center ${i === 0 ? "justify-between" : "gap-10"}`}
                 style={{
                   transform:
                     window.innerWidth >= 1024
@@ -124,12 +124,12 @@ export default function SecurityFeatures() {
                   transition: `transform 0.7s cubic-bezier(0.22,1,0.36,1) ${200 + i * 100}ms`,
                 }}
               >
-                <div className="relative w-[170px] h-[170px] mb-7 flex items-center justify-center">
+                <div className="relative w-[110px] h-[110px] shrink-0 flex items-center justify-center">
                   {/* Glow */}
-                  <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.35)_0%,rgba(168,85,247,0.18)_45%,transparent_75%)] blur-[20px]" />
+                  <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(107,47,181,0.35)_0%,rgba(107,47,181,0.18)_45%,transparent_75%)] blur-[20px]" />
 
                   {/* White circle */}
-                  <div className="w-[78px] h-[78px] rounded-full bg-white shadow-[0_0_0_6px_rgba(255,255,255,0.35),0_4px_20px_rgba(28,43,138,0.1)] flex items-center justify-center relative z-[1]">
+                  <div className="w-[100px] h-[100px] rounded-full bg-white shadow-[0_12px_60px_40px_rgba(187,154,229,0.25)] flex items-center justify-center relative z-[1]">
                     <CloudImage
                       publicId={publicId}
                       alt={title}
@@ -141,10 +141,14 @@ export default function SecurityFeatures() {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-brand-deep mb-3 leading-[1.25]">{title}</h3>
+                <h3 className="text-[24px] font-medium text-brand-deep mb-2 leading-[normal]">
+                  {title}
+                </h3>
 
                 {/* Description */}
-                <p className="text-sm text-black/50 leading-[1.65] m-0 max-w-[260px]">{desc}</p>
+                <p className="text-[18px] text-black/60 leading-[normal] tracking-[0.5px] m-0 max-w-[300px]">
+                  {desc}
+                </p>
               </div>
             );
           })}
@@ -157,12 +161,12 @@ export default function SecurityFeatures() {
           viewport={{ once: true }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="bg-[#CCDBFF66] rounded-2xl px-8 py-6 flex items-center justify-between gap-6 flex-wrap">
+          <div className="bg-[#ccdaff] rounded-g-1 border border-[#002fa7]/20 px-6 py-4 flex items-center justify-between gap-6 flex-wrap">
             <div>
-              <h4 className="text-[15px] font-bold text-brand-ink mb-1">
+              <h4 className="text-[18px] font-normal leading-7 text-black mb-1">
                 Why the Nigerian Tribune Is Talking About Glass
               </h4>
-              <p className="text-[14px] text-ink-cool">
+              <p className="text-[16px] leading-6 text-black/60">
                 See how Team Glass took the ₦1,000,000 grand prize at the 5th Babcock Innovation
                 Challenge.
               </p>
@@ -171,7 +175,7 @@ export default function SecurityFeatures() {
               href="https://tribuneonlineng.com/team-glass-shines-as-winner-of-5th-babcock-innovation-challenge/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 border border-brand-ink text-brand-ink font-semibold text-[14px] px-6 py-3 rounded-full no-underline transition-all hover:bg-brand-ink hover:text-white"
+              className="inline-flex h-[50px] flex-shrink-0 items-center justify-center rounded-g-1 border border-black px-6 py-3 text-[16px] font-medium leading-6 text-brand no-underline transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               Check It Out
             </a>
