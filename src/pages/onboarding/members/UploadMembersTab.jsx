@@ -28,11 +28,23 @@ export default function UploadMembersTab({
 }) {
   return (
     <>
-      <p className="text-sm font-semibold text-gray-900 mb-4">Upload a CSV</p>
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 mb-4">
-        <p className="text-sm text-gray-500">Upload a CSV file with following sample information</p>
-        <Button variant="tertiary" size="xs" fullWidth={false} onClick={downloadTemplate}>
-          <Download size={12} />
+      <p className="text-sm font-semibold text-gray-900 mb-4 max-lg:font-medium max-lg:mb-1">
+        Upload a CSV
+      </p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 mb-4 max-lg:gap-4 max-lg:mb-5">
+        <p className="text-sm max-lg:text-xs text-gray-500">
+          Upload a CSV file with following sample information
+        </p>
+        {/* Phones: a brand link flush with the copy above (Figma "iPhone 16 -
+            111"); desktop keeps the subtle tertiary link. */}
+        <Button
+          variant="tertiary"
+          size="xs"
+          fullWidth={false}
+          onClick={downloadTemplate}
+          className="max-lg:self-start max-lg:-ml-3 max-lg:text-brand max-lg:text-[14px]"
+        >
+          <Download size={12} className="max-lg:w-4 max-lg:h-4" />
           Download Template
         </Button>
       </div>
@@ -43,9 +55,12 @@ export default function UploadMembersTab({
       <div className="rounded-md overflow-x-auto mb-4 border border-hairline-neutral">
         <table className="w-full text-xs min-w-[560px]">
           <thead>
-            <tr className="bg-gray-50">
+            <tr className="bg-gray-50 max-lg:bg-gray-100">
               {HEADERS.map((h) => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                <th
+                  key={h}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 max-lg:text-sm max-lg:font-normal max-lg:border-r max-lg:border-hairline-neutral max-lg:last:border-r-0"
+                >
                   {h}
                 </th>
               ))}
@@ -56,7 +71,7 @@ export default function UploadMembersTab({
               {SAMPLE_ROW.map((cell, i) => (
                 <td
                   key={i}
-                  className={`px-4 py-3 ${i === 2 ? "text-brand underline" : "text-gray-900"}`}
+                  className={`px-4 py-3 max-lg:text-sm max-lg:border-r max-lg:border-hairline-neutral max-lg:last:border-r-0 ${i === 2 ? "text-brand underline max-lg:text-gray-900 max-lg:no-underline" : "text-gray-900"}`}
                 >
                   {cell}
                 </td>
@@ -75,7 +90,7 @@ export default function UploadMembersTab({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`w-full rounded-lg flex flex-col items-center justify-center py-8 cursor-pointer transition-all mb-5 min-h-[100px] border-dashed ${dragOver ? "border-2 bg-brand-wash border-brand" : "border bg-surface-page border-gray-200"}`}
+        className={`w-full rounded-lg flex flex-col items-center justify-center py-8 cursor-pointer transition-all mb-5 min-h-[100px] max-lg:min-h-[160px] max-lg:mb-8 border-dashed ${dragOver ? "border-2 bg-brand-wash border-brand" : "border bg-surface-page border-gray-200"}`}
       >
         <input
           ref={fileRef}
@@ -89,17 +104,27 @@ export default function UploadMembersTab({
         {uploadedFile ? (
           <p className="text-xs text-brand font-medium">{uploadedFile.name}</p>
         ) : (
-          <p className="text-xs text-gray-500">
-            Drag and Drop CSV here or{" "}
-            <span className="text-brand font-medium underline">Browse</span>
-          </p>
+          <>
+            <p className="text-xs text-gray-500 max-lg:hidden">
+              Drag and Drop CSV here or{" "}
+              <span className="text-brand font-medium underline">Browse</span>
+            </p>
+            {/* No drag and drop on a phone, so the phone copy drops it. */}
+            <p className="text-sm text-gray-500 lg:hidden">
+              <span className="text-brand underline">upload</span> a CSV file
+            </p>
+          </>
         )}
       </div>
 
       {/* URL upload */}
       <div>
-        <p className="text-xs font-medium text-gray-700 mb-2">Or Upload from URL</p>
-        <div className="flex gap-2">
+        <p className="text-xs font-medium text-gray-700 mb-2 max-lg:text-sm max-lg:text-ink">
+          Or Upload from URL
+        </p>
+        {/* Phones: one bordered field with a filled Upload button inside it
+            (Figma "iPhone 16 - 111"); desktop keeps input + outline button. */}
+        <div className="flex gap-2 max-lg:items-center max-lg:pr-2 max-lg:border max-lg:border-black/20 max-lg:rounded-lg max-lg:focus-within:border-brand">
           <input
             type="url"
             aria-label="CSV file URL"
@@ -109,7 +134,7 @@ export default function UploadMembersTab({
               if (urlStage !== "idle") clearUrlUpload();
             }}
             placeholder="Add File URL"
-            className={inputCls}
+            className={`${inputCls} max-lg:border-0 max-lg:bg-transparent`}
             disabled={urlStage === "fetching"}
           />
           <Button
@@ -118,7 +143,7 @@ export default function UploadMembersTab({
             fullWidth={false}
             onClick={handleUrlUpload}
             disabled={!fileUrl.trim() || urlStage === "fetching" || loading}
-            className="flex-shrink-0"
+            className="flex-shrink-0 max-lg:h-8 max-lg:px-3 max-lg:bg-brand max-lg:text-white max-lg:border-transparent max-lg:hover:bg-brand-hover max-lg:active:bg-brand-pressed max-lg:disabled:opacity-40"
           >
             Upload
           </Button>

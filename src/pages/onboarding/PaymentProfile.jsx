@@ -21,20 +21,35 @@ import { notifyError, getErrorMessage } from "../../utils/errorHandler";
 import { useCommunityAccount } from "../../hooks/useCommunityAccount";
 import { saveOnboardingProgress, readOnboardingProgress } from "../../utils/onboardingProgress";
 import BankSelect from "../../components/common/BankSelect";
-import StepIndicator from "../../components/onboarding/StepIndicator";
 import OnboardingStepsSidebar from "../../components/onboarding/OnboardingStepsSidebar";
 import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import OnboardingMobileStepper from "../../components/onboarding/OnboardingMobileStepper";
 
 const COMPLETED_STEP_IDS = ["choose-path", "paying-member", "organization"];
 
 const inputCls =
-  "w-full h-12 min-h-8 border-[1.5px] border-gray-200 px-4 py-1 rounded-lg text-placeholder text-gray-800 placeholder-gray-400 outline-none focus:border-brand transition-all";
+  "w-full h-12 min-h-8 border-[1.5px] border-gray-200 px-4 py-1 rounded-lg max-lg:rounded-g-1 text-placeholder text-gray-800 placeholder-gray-400 outline-none focus:border-brand transition-all";
 
+// How long the "payment account set" confirmation holds before moving on to
+// Members. Phones hold it for 2s (Figma "iPhone 16 - 110"); desktop keeps its
+// original 1.6s.
+const SUCCESS_HOLD_MS_PHONE = 2000;
+const SUCCESS_HOLD_MS_DESKTOP = 1600;
+function successHoldMs() {
+  return window.matchMedia?.("(min-width: 64rem)").matches
+    ? SUCCESS_HOLD_MS_DESKTOP
+    : SUCCESS_HOLD_MS_PHONE;
+}
+
+// Desktop: a dialog over a dimmed backdrop. Phones: a full page on the
+// onboarding background with nothing but the badge (Figma "iPhone 16 - 110").
 function SuccessModal() {
   return (
-    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-[rgba(20,20,30,0.45)]">
-      <div className="w-full lg:w-auto lg:min-w-[480px] bg-white rounded-t-[24px] lg:rounded-2xl px-8 py-10 lg:px-12 lg:py-16 flex flex-col items-center shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-[rgba(20,20,30,0.45)] max-lg:items-center max-lg:bg-surface-bg">
+      <div className="absolute inset-0 lg:hidden bg-cover bg-center bg-no-repeat bg-mobile-auth-default" />
+      <div className="max-lg:relative w-full lg:w-auto lg:min-w-[480px] bg-white rounded-t-[24px] lg:rounded-2xl px-8 py-10 lg:px-12 lg:py-16 flex flex-col items-center shadow-2xl max-lg:bg-transparent max-lg:rounded-none max-lg:shadow-none">
         <SuccessBadge message="Your Payment Account Is Now Set!" />
         <div className="h-[env(safe-area-inset-bottom,0px)] lg:hidden" />
       </div>
@@ -222,7 +237,7 @@ export default function PaymentProfile() {
         navigate("/onboarding/members", {
           state: { email, communityId, communitySlug, communityName },
         });
-      }, 1600);
+      }, successHoldMs());
     } catch (err) {
       // Not notifyError here -- the global mutationCache onError (main.jsx)
       // already toasts this since these mutations are shared with
@@ -240,7 +255,9 @@ export default function PaymentProfile() {
 
       {showSuccess && <SuccessModal />}
 
-      <header className="relative flex items-center justify-between px-4 lg:px-8 py-4 bg-surface-container border-b border-outline-on-surface flex-shrink-0">
+      {/* Desktop only -- the phone frame (Figma "iPhone 16 - 109") has no
+          top bar, just the stepper. */}
+      <header className="relative hidden lg:flex items-center justify-between px-4 lg:px-8 py-4 bg-surface-container border-b border-outline-on-surface flex-shrink-0">
         <div className="flex items-center gap-2">
           <CloudImage
             publicId="glass/Glass"
@@ -258,9 +275,11 @@ export default function PaymentProfile() {
       </header>
 
       <div className="relative flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
-        {/* Mobile step pill — replaces the sidebar stepper below lg */}
-        <div className="lg:hidden px-4 pt-5">
-          <StepIndicator stepId="payment" />
+        {/* Phones: round back button + the three-step stepper, in place of
+            the sidebar and the in-card text back link. */}
+        <div className="lg:hidden px-4 pt-6 flex flex-col gap-6">
+          <MobileBackButton aria-label="Go back" onClick={handleBack} />
+          <OnboardingMobileStepper activeStepId="payment" completedStepIds={["organization"]} />
         </div>
 
         {/* Sidebar */}
@@ -269,20 +288,22 @@ export default function PaymentProfile() {
         {/* Main */}
         <main className="flex-1 lg:overflow-y-auto py-6 px-4 lg:py-10 lg:px-12">
           <div className="w-full max-w-3xl">
-            <div className="bg-white rounded-lg px-5 py-6 lg:px-8 lg:py-7 border border-hairline-neutral">
-              <div className="mb-6 pb-5 border-b border-hairline-neutral">
+            {/* Phones: the heading's divider runs edge to edge, so the
+                padding moves from the card onto its two sections. */}
+            <div className="bg-white rounded-lg px-5 py-6 lg:px-8 lg:py-7 border border-hairline-neutral max-lg:p-0">
+              <div className="mb-6 pb-5 border-b border-hairline-neutral max-lg:p-4 max-lg:mb-0">
                 <Button
                   type="button"
                   variant="tertiary"
                   size="sm"
                   fullWidth={false}
                   onClick={handleBack}
-                  className="mb-4 -ml-1"
+                  className="mb-4 -ml-1 max-lg:hidden"
                 >
                   <ArrowLeft size={15} />
                   {isAuthenticated ? "Back to dashboard" : "Back"}
                 </Button>
-                <h2 className="text-lg font-medium text-gray-900 mb-1">
+                <h2 className="text-lg max-lg:text-base font-medium text-gray-900 mb-1">
                   Set up your payment Account
                 </h2>
                 <p className="text-sm text-gray-500">
@@ -290,88 +311,94 @@ export default function PaymentProfile() {
                 </p>
               </div>
 
-              {/* Account number + bank */}
-              <div className="mb-5">
-                <label
-                  htmlFor="onboarding-account-number"
-                  className="text-sm text-gray-700 block mb-1.5"
-                >
-                  Community Bank Account Number
-                </label>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  <input
-                    id="onboarding-account-number"
-                    type="text"
-                    maxLength={10}
-                    value={accNumber}
-                    onChange={(e) => {
-                      setAccNumber(e.target.value.replace(/\D/g, ""));
-                      setAccName("");
-                    }}
-                    onFocus={() => setAccNumberTouched(false)}
-                    onBlur={() => setAccNumberTouched(true)}
-                    placeholder="Enter Account Number"
-                    className={inputCls}
-                    style={accNumberIncomplete ? { borderColor: "var(--color-danger)" } : undefined}
-                  />
-                  <BankSelect
-                    banks={banks}
-                    value={bankCode}
-                    onChange={(bank) => {
-                      setBankCode(bank.code);
-                      setBankName(bank.name);
-                      setBankSlug(bank.slug ?? "");
-                      setAccName("");
-                      setManualMode(false);
-                      setError("");
-                    }}
-                    placeholder="Choose Bank"
-                    triggerClassName={inputCls}
-                  />
-                </div>
-                {accNumberIncomplete && (
-                  <p className="text-xs text-danger mt-1.5">Account number must be 10 digits.</p>
-                )}
-              </div>
-
-              {/* Resolved account name */}
-              <div className="mb-2">
-                <label
-                  htmlFor="onboarding-account-name"
-                  className="text-sm text-gray-700 block mb-1.5"
-                >
-                  Account Name
-                </label>
-                <div className="relative">
-                  <input
-                    id="onboarding-account-name"
-                    type="text"
-                    value={resolving ? "Verifying…" : accName}
-                    readOnly={!manualMode}
-                    onChange={(e) => manualMode && setAccName(e.target.value)}
-                    placeholder={manualMode ? "Type account name" : "Account name will appear here"}
-                    className={
-                      inputCls +
-                      (!manualMode ? " bg-gray-50 cursor-default select-none" : "") +
-                      (resolving ? " text-ink-faint" : "")
-                    }
-                  />
-                  {accName && !resolving && !manualMode && (
-                    <Check
-                      size={14}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-success"
+              <div className="max-lg:p-4">
+                {/* Account number + bank */}
+                <div className="mb-5">
+                  <label
+                    htmlFor="onboarding-account-number"
+                    className="text-sm text-gray-700 block mb-1.5"
+                  >
+                    Community Bank Account Number
+                  </label>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <input
+                      id="onboarding-account-number"
+                      type="text"
+                      maxLength={10}
+                      value={accNumber}
+                      onChange={(e) => {
+                        setAccNumber(e.target.value.replace(/\D/g, ""));
+                        setAccName("");
+                      }}
+                      onFocus={() => setAccNumberTouched(false)}
+                      onBlur={() => setAccNumberTouched(true)}
+                      placeholder="Enter Account Number"
+                      className={inputCls}
+                      style={
+                        accNumberIncomplete ? { borderColor: "var(--color-danger)" } : undefined
+                      }
                     />
+                    <BankSelect
+                      banks={banks}
+                      value={bankCode}
+                      onChange={(bank) => {
+                        setBankCode(bank.code);
+                        setBankName(bank.name);
+                        setBankSlug(bank.slug ?? "");
+                        setAccName("");
+                        setManualMode(false);
+                        setError("");
+                      }}
+                      placeholder="Choose Bank"
+                      triggerClassName={inputCls}
+                    />
+                  </div>
+                  {accNumberIncomplete && (
+                    <p className="text-xs text-danger mt-1.5">Account number must be 10 digits.</p>
                   )}
                 </div>
-              </div>
 
-              {error && (
-                <p
-                  className={`text-sm mt-3 ${manualMode ? "text-warning" : "text-danger-bright-2"}`}
-                >
-                  {error}
-                </p>
-              )}
+                {/* Resolved account name */}
+                <div className="mb-2">
+                  <label
+                    htmlFor="onboarding-account-name"
+                    className="text-sm text-gray-700 block mb-1.5"
+                  >
+                    Account Name
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="onboarding-account-name"
+                      type="text"
+                      value={resolving ? "Verifying…" : accName}
+                      readOnly={!manualMode}
+                      onChange={(e) => manualMode && setAccName(e.target.value)}
+                      placeholder={
+                        manualMode ? "Type account name" : "Account name will appear here"
+                      }
+                      className={
+                        inputCls +
+                        (!manualMode ? " bg-gray-50 cursor-default select-none" : "") +
+                        (resolving ? " text-ink-faint" : "")
+                      }
+                    />
+                    {accName && !resolving && !manualMode && (
+                      <Check
+                        size={14}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-success"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {error && (
+                  <p
+                    className={`text-sm mt-3 ${manualMode ? "text-warning" : "text-danger-bright-2"}`}
+                  >
+                    {error}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col items-center">
@@ -379,7 +406,7 @@ export default function PaymentProfile() {
                 onClick={handleSave}
                 disabled={resolving || !accName.trim()}
                 loading={saving}
-                className="lg:w-1/2 mt-6"
+                className="lg:w-1/2 mt-6 max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px]"
               >
                 {saving ? "Setting up…" : "Set-Up Account"}
               </Button>

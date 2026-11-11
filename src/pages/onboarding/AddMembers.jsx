@@ -21,10 +21,11 @@ import { toastProgress, toastSuccess } from "../../utils/toast";
 import { useRoles } from "../../hooks/useCommunityMembers";
 import { bulkCreateCommunityInvites } from "../../api/invites";
 import { readOnboardingProgress, clearOnboardingProgress } from "../../utils/onboardingProgress";
-import StepIndicator from "../../components/onboarding/StepIndicator";
 import OnboardingStepsSidebar from "../../components/onboarding/OnboardingStepsSidebar";
 import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
+import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import OnboardingMobileStepper from "../../components/onboarding/OnboardingMobileStepper";
 import {
   ALLOWED_ROLE_NAMES,
   FALLBACK_ROLES,
@@ -338,7 +339,9 @@ export default function AddMembers() {
     <div className="relative flex flex-col min-h-screen lg:overflow-hidden lg:h-screen bg-contain bg-center lg:bg-page-default">
       <div className="fixed inset-0 lg:hidden -z-10 bg-cover bg-center bg-no-repeat bg-mobile-auth-default" />
 
-      <header className="relative flex items-center justify-between px-4 lg:px-8 py-4 bg-surface-container border-b border-outline-on-surface flex-shrink-0">
+      {/* Desktop only -- the phone frame (Figma "iPhone 16 - 111") has no
+          top bar, just the stepper. */}
+      <header className="relative hidden lg:flex items-center justify-between px-4 lg:px-8 py-4 bg-surface-container border-b border-outline-on-surface flex-shrink-0">
         <div className="flex items-center gap-2">
           <CloudImage
             publicId="glass/Glass"
@@ -356,9 +359,14 @@ export default function AddMembers() {
       </header>
 
       <div className="relative flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
-        {/* Mobile step pill — replaces the sidebar stepper below lg */}
-        <div className="lg:hidden px-4 pt-5">
-          <StepIndicator stepId="members" />
+        {/* Phones: round back button + the three-step stepper, in place of
+            the sidebar and the text back link. */}
+        <div className="lg:hidden px-4 pt-6 flex flex-col gap-6">
+          <MobileBackButton aria-label="Go back" onClick={handleBack} />
+          <OnboardingMobileStepper
+            activeStepId="members"
+            completedStepIds={["organization", "payment"]}
+          />
         </div>
 
         {/* Sidebar */}
@@ -374,23 +382,29 @@ export default function AddMembers() {
                 fullWidth={false}
                 type="button"
                 onClick={handleBack}
-                className="mb-4 -ml-1"
+                className="mb-4 -ml-1 max-lg:hidden"
               >
                 <ArrowLeft size={15} />
                 {isAuthenticated ? "Back to dashboard" : "Back"}
               </Button>
-              <h2 className="text-base font-medium text-gray-900 mb-1">Add your members</h2>
+              <h2 className="text-base max-lg:text-lg font-medium text-gray-900 mb-1">
+                Add your members
+              </h2>
               <p className="text-sm text-gray-500">
                 Add members now or invite them to join. You can always add more from your dashboard
                 later.
               </p>
             </div>
 
-            {/* Invite banner */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-5 py-4 rounded-xl mb-6 bg-brand-mist border border-[#0E628C33]">
+            {/* Invite banner. Phones use the design-system Banner
+                (docs/design-system.md §9.4: #ccdaff fill, brand @20% stroke,
+                r=4) with larger copy, per Figma "iPhone 16 - 111". */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-5 py-4 rounded-xl mb-6 bg-brand-mist border border-[#0E628C33] max-lg:p-3 max-lg:rounded-g-1 max-lg:bg-brand-100 max-lg:border-brand/20">
               <div>
-                <p className="text-xs text-gray-900 mb-0.5">Your community is ready to grow.</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs max-lg:text-base text-gray-900 mb-0.5">
+                  Your community is ready to grow.
+                </p>
+                <p className="text-xs max-lg:text-sm text-gray-500">
                   Copy this link and share it with your members to get them on Glass.
                 </p>
               </div>
@@ -399,16 +413,18 @@ export default function AddMembers() {
                 size="xs"
                 fullWidth={false}
                 onClick={copyLink}
-                className="flex-shrink-0 lg:ml-6"
+                className="flex-shrink-0 lg:ml-6 max-lg:self-start max-lg:text-[14px]"
               >
-                <Copy size={12} />
+                <Copy size={12} className="max-lg:hidden" />
                 {copied ? "Copied!" : "Copy Link"}
               </Button>
             </div>
 
             {/* Direct add card */}
-            <div className="bg-white rounded-lg p-4 lg:p-6 border border-hairline-neutral">
-              <h3 className="text-base font-semibold text-gray-900 mb-4">
+            {/* Phones: no card and no heading -- the tabs sit straight on
+                the page. */}
+            <div className="bg-white rounded-lg p-4 lg:p-6 border border-hairline-neutral max-lg:bg-transparent max-lg:p-0 max-lg:border-0">
+              <h3 className="text-base font-semibold text-gray-900 mb-4 max-lg:hidden">
                 Prefer To Add Members Directly?
               </h3>
 
@@ -418,7 +434,7 @@ export default function AddMembers() {
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`pb-2.5 text-sm font-medium capitalize bg-transparent cursor-pointer transition-all border-x-0 border-t-0 border-b-2 ${tab === t ? "text-brand border-b-brand" : "text-ink-faint border-b-transparent"}`}
+                    className={`pb-2.5 max-lg:px-2 text-sm font-medium capitalize bg-transparent cursor-pointer transition-all border-x-0 border-t-0 border-b-2 ${tab === t ? "text-brand border-b-brand" : "text-ink-faint border-b-transparent"}`}
                   >
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </button>
@@ -478,7 +494,7 @@ export default function AddMembers() {
                   onClick={handleSubmit}
                   disabled={urlStage === "fetching"}
                   loading={loading}
-                  className="lg:w-1/2 mt-6"
+                  className="lg:w-1/2 mt-6 max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px]"
                 >
                   {loading ? "Adding members…" : "Create Your Community"}
                 </Button>
