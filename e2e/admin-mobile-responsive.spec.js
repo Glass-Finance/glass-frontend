@@ -382,6 +382,96 @@ test.describe("admin dashboard — phone layout (365px)", () => {
     });
   });
 
+  test("create payment opens as a full page on the phone", async ({ page }) => {
+    await page.goto(`/dashboard/payments?community=${C}`);
+    // The seeded community has a plan, so the header action opens the flow
+    // (the empty state's "Create Collection" opens the same component).
+    const open = page.getByRole("button", { name: "Create Payment Plan" });
+    await open.click();
+
+    // Phone frame (iPhone 16 - 74): a full page, not a pop-up.
+    const heading = page.getByRole("heading", { name: "Create Payment", exact: true });
+    await expect(heading).toBeVisible();
+    await expect(page.getByText("You can edit or pause plan at any time.")).toBeVisible();
+    const back = page.getByRole("button", { name: "Go back" });
+    await expect(back).toBeVisible();
+    // Figma places the 48px round button at y=48, in true px even under the
+    // dashboard's compact (15px) root font.
+    const backBox = await back.boundingBox();
+    expect(backBox.y).toBe(48);
+    expect(backBox.width).toBe(48);
+    expect(backBox.height).toBe(48);
+    await expect(page.getByRole("button", { name: "Close", exact: true })).toBeHidden();
+    const sheet = await heading.evaluate((el) => {
+      let node = el;
+      while (node && !node.className.includes("h-full")) node = node.parentElement;
+      const r = node.getBoundingClientRect();
+      return { width: r.width, height: r.height, radius: getComputedStyle(node).borderRadius };
+    });
+    const viewport = page.viewportSize();
+    expect(sheet.width).toBe(viewport.width);
+    expect(sheet.height).toBe(viewport.height);
+    expect(sheet.radius).toBe("0px");
+    await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
+    // No footer Cancel/Back on the phone; Continue spans the sheet.
+    await expect(page.getByRole("button", { name: /^(Cancel|Back)$/ })).toBeHidden();
+    const cont = page.getByRole("button", { name: "Continue" });
+    const contWidth = await cont.evaluate((el) => el.getBoundingClientRect().width);
+    expect(contWidth).toBeGreaterThan(viewport.width - 40);
+    await page.screenshot({ path: test.info().outputPath("admin-mobile-create-payment.png") });
+
+    // Plan Details (step 2) carries the same footer: still no Back button.
+    await cont.click();
+    await expect(page.getByText("Plan Details", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^(Cancel|Back)$/ })).toBeHidden();
+    expect(await cont.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(
+      viewport.width - 40,
+    );
+    await page.screenshot({ path: test.info().outputPath("admin-mobile-plan-details.png") });
+    // The top button steps back to step 1 first.
+    await back.click();
+    await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
+
+    // On step 1 the back button leaves the flow.
+    await back.click();
+    await expect(heading).toBeHidden();
+    await expect(open).toBeVisible();
+  });
+
+  test("create payment review step follows the phone frame", async ({ page }) => {
+    await page.goto(`/dashboard/payments?community=${C}`);
+    await page.getByRole("button", { name: "Create Payment Plan" }).click();
+    const cont = page.getByRole("button", { name: "Continue" });
+    await cont.click(); // Recurring is preselected
+
+    await page.getByLabel("Plan Name").fill("Association Dues");
+    await page.getByLabel("URL slug").fill("association-dues");
+    await page.getByLabel(/^Amount/).fill("5000");
+    await page.locator("select").filter({ hasText: "Select frequency" }).selectOption("MONTHLY");
+    await cont.click();
+
+    // Phone frame (iPhone 16 - 77): no title block on the Review step.
+    await expect(page.getByText("Review", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Create Payment", exact: true })).toBeHidden();
+    await expect(page.getByText("You can edit or pause plan at any time.")).toBeHidden();
+    // Frequency as an amber pill (design-system Monthly badge).
+    const pill = page.getByText("Monthly", { exact: true }).first();
+    await expect(pill).toBeVisible();
+    expect(await pill.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(255, 255, 219)",
+    );
+    // Blue feedback banner with the fuller copy.
+    const note = page.getByText(/members assigned to this plan will receive a notification/);
+    await expect(note).toBeVisible();
+    expect(await note.locator("..").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(204, 218, 255)",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("admin-mobile-plan-review.png"),
+      fullPage: true,
+    });
+  });
+
   test("members table remains available on the phone", async ({ page }) => {
     await page.goto(`/dashboard/members?community=${C}`);
     await expect(page.locator("table")).toBeVisible();

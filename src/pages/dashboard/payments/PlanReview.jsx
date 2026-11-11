@@ -13,6 +13,17 @@ import { billingDayLabel, intervalUnitLabel, payoutAccountLabel } from "./helper
 const optionLabel = (options, value, fallback = "—") =>
   options.find((option) => option.value === value)?.label ?? fallback;
 
+// Phone frame (iPhone 16 - 77) draws Frequency as a coloured pill. Colours are
+// the design-system frequency badges (docs/design-system.md §9.1): Weekly
+// blue, Monthly amber. §9.1 has no Daily/Quarterly/Annually entry, so those
+// take its remaining badge pair (purple); the One-time purple it is named for
+// never appears here -- Frequency only renders for recurring plans.
+const FREQUENCY_BADGE = {
+  WEEKLY: "bg-brand-100 text-brand",
+  MONTHLY: "bg-warning-wash text-warning",
+};
+const FREQUENCY_BADGE_FALLBACK = "bg-accent-purple-tint text-accent-purple";
+
 export default function PlanReview({
   planType,
   form,
@@ -69,6 +80,9 @@ export default function PlanReview({
               (FREQUENCIES.find((frequency) => frequency.value === form.frequency)?.label ??
                 form.frequency) ||
               "—",
+            badge: form.frequency
+              ? (FREQUENCY_BADGE[form.frequency] ?? FREQUENCY_BADGE_FALLBACK)
+              : null,
           },
           {
             label: "Repeats Every",
@@ -120,11 +134,38 @@ export default function PlanReview({
             className={`flex justify-between px-4 py-2.5 text-xs ${index < rows.length - 1 ? "border-b border-gray-100" : ""} ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
           >
             <span className="text-gray-500 w-36">{row.label}</span>
-            <span className="font-semibold text-gray-900">{row.value}</span>
+            {row.badge ? (
+              <>
+                {/* Phone: coloured pill. Desktop: the plain value, unchanged. */}
+                <span
+                  className={`md:hidden rounded-full px-2 py-0.5 text-xs font-medium ${row.badge}`}
+                >
+                  {row.value}
+                </span>
+                <span className="hidden md:inline font-semibold text-gray-900">{row.value}</span>
+              </>
+            ) : (
+              <span className="font-semibold text-gray-900">{row.value}</span>
+            )}
           </div>
         ))}
       </div>
-      <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 text-xs text-gray-500">
+      {/* Phone frame: the design-system Banner/Feedback (§9.4: #ccdaff fill,
+          #002fa7 @20% stroke, r=4) with a filled brand "!" and fuller copy.
+          Desktop keeps its original note. */}
+      <div className="md:hidden flex items-center gap-3 px-4 py-3 rounded-g-1 bg-brand-100 border border-brand/20">
+        <span
+          aria-hidden="true"
+          className="w-4 h-4 rounded-full bg-brand text-white text-[10px] font-bold leading-none flex items-center justify-center flex-shrink-0"
+        >
+          !
+        </span>
+        <p className="text-sm text-ink">
+          Once created, members assigned to this plan will receive a notification. You can edit or
+          pause the plan at any time from the Payments page.
+        </p>
+      </div>
+      <div className="hidden md:block px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 text-xs text-gray-500">
         Once created, assigned members will receive a notification.
       </div>
     </div>

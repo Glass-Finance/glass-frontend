@@ -107,8 +107,10 @@ function statValue(label) {
 }
 
 function footerButton(label) {
+  // closest("div"), not parentElement: Back sits in a phone-hiding wrapper
+  // span inside the footer row.
   const anchor = screen.getByRole("button", { name: "Back" });
-  return [...anchor.parentElement.querySelectorAll("button")].find(
+  return [...anchor.closest("div").querySelectorAll("button")].find(
     (b) => b.textContent.trim() === label,
   );
 }

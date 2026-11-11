@@ -15,6 +15,7 @@ import PlanStepIndicator from "./PlanStepIndicator";
 import { Step1, Step2, Step3 } from "./PlanFormSteps";
 import SuccessBadge from "../../../components/common/SuccessBadge";
 import { Button } from "../../../components/ui/Button";
+import { MobileBackButton } from "../../../components/ui/MobileBackButton";
 import { useEscapeToClose } from "../../../hooks/useKeyboardShortcuts";
 
 // ── Create plan modal ─────────────────────────────────────────────────────────
@@ -205,30 +206,62 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
     if (ok) setSuccess(true);
   }
 
+  // Same rule as the footer's Back/Cancel: step back, or leave on step 1 (and
+  // once the plan is created).
+  const goBack = () => (step > 1 && !success ? setStep((s) => s - 1) : onClose());
+
   return (
+    // Phone frame (iPhone 16 - 74): a full page, not a pop-up -- page
+    // background edge to edge with no backdrop, card or radius, and a round
+    // back button in place of the X. z-70 already sits above the dashboard
+    // Topbar (z-50), so the page covers it. md+ is the original modal.
     <div
-      className="fixed inset-0 z-70 flex items-center justify-center p-6 bg-black/20"
+      className="fixed inset-0 z-70 flex items-center justify-center p-0 md:p-6 bg-surface-bg md:bg-black/20"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-surface-bg rounded-2xl w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-start justify-between px-6 pt-5">
+      <div className="bg-surface-bg w-full h-full md:h-auto md:rounded-2xl md:max-w-xl md:shadow-2xl md:max-h-[90vh] flex flex-col">
+        {/* Figma (iPhone 16 - 74 / 77) places the 48px button at y=48. In
+            px, not rem: the dashboard runs html.dashboard-compact (root font
+            15px, index.css), which would otherwise render 3rem as 45px. */}
+        <div className="px-4 pt-[48px] md:hidden">
+          {/* "Go back", not "Back": the footer already has a "Back" button. */}
+          <MobileBackButton
+            aria-label="Go back"
+            onClick={goBack}
+            className="max-md:h-[48px] max-md:w-[48px]"
+          />
+        </div>
+        {/* Phone frame (iPhone 16 - 77): the Review step drops the title
+            block; the step indicator follows the back button directly. */}
+        <div
+          className={`${step === 3 && !success ? "hidden md:flex" : "flex"} items-start justify-between px-4 pt-7 pb-1 md:px-6 md:pt-5 md:pb-0`}
+        >
           <div>
-            <h2 className="text-base font-semibold text-black">Create Payment Plan</h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              You can edit or pause any plan at any time.
+            {/* Two headings rather than two spans in one: a heading's name is
+                its full text, so spans would read "Create PaymentCreate
+                Payment Plan" wherever display:none isn't applied. */}
+            <h2 className="text-base font-normal text-black md:hidden">Create Payment</h2>
+            <h2 className="hidden md:block text-base font-semibold text-black">
+              Create Payment Plan
+            </h2>
+            <p className="text-sm text-gray-500 md:text-xs md:text-gray-400 mt-0.5">
+              <span className="md:hidden">You can edit or pause plan at any time.</span>
+              <span className="hidden md:inline">You can edit or pause any plan at any time.</span>
             </p>
           </div>
-          <Button
-            variant="tertiary"
-            size="icon-sm"
-            aria-label="Close"
-            onClick={onClose}
-            className=""
-          >
-            <X size={14} />
-          </Button>
+          <span className="hidden md:block">
+            <Button
+              variant="tertiary"
+              size="icon-sm"
+              aria-label="Close"
+              onClick={onClose}
+              className=""
+            >
+              <X size={14} />
+            </Button>
+          </span>
         </div>
-        <div className="px-6 py-4 flex-1 overflow-hidden flex flex-col">
+        <div className="px-4 md:px-6 pt-6 pb-4 md:py-4 flex-1 overflow-hidden flex flex-col">
           {success ? (
             <div className="text-center py-10">
               <SuccessBadge
@@ -274,15 +307,22 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
           )}
         </div>
         {!success && (
-          <div className="flex items-center justify-end gap-4 px-6 py-4 border-t border-gray-100">
-            <Button
-              variant="tertiary"
-              size="xs"
-              fullWidth={false}
-              onClick={() => (step > 1 ? setStep((s) => s - 1) : onClose())}
-            >
-              <ArrowLeft size={15} /> {step > 1 ? "Back" : "Cancel"}
-            </Button>
+          // Phone (owner, 2026-11-09): no footer Back/Cancel -- the round
+          // button at the top does the same job -- and Continue spans the
+          // full width. Desktop keeps both, right-aligned.
+          <div className="flex items-center justify-end gap-4 px-4 md:px-6 py-4 border-t border-gray-100">
+            {/* Wrapped, not `hidden` on the Button: Button's own inline-flex
+                would collide with it. */}
+            <span className="hidden md:inline-flex">
+              <Button
+                variant="tertiary"
+                size="xs"
+                fullWidth={false}
+                onClick={() => (step > 1 ? setStep((s) => s - 1) : onClose())}
+              >
+                <ArrowLeft size={15} /> {step > 1 ? "Back" : "Cancel"}
+              </Button>
+            </span>
             <Button
               onClick={() => {
                 if (step === 2) {
@@ -297,7 +337,7 @@ export default function CreatePlanModal({ communityId, onClose, onCreate, creati
               loading={creating}
               fullWidth={false}
               size="sm"
-              className="px-14"
+              className="w-full md:w-auto px-14"
             >
               {creating ? "Creating…" : step === 3 ? "Create Plan" : "Continue"}
             </Button>

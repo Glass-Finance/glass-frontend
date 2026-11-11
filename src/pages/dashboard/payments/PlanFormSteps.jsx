@@ -61,7 +61,11 @@ function Select({ value, onChange, options, testId }) {
 export function Step1({ value, onChange }) {
   return (
     <div>
-      <p className="text-xs text-gray-500 mb-5">Choose the type of plan you want to create</p>
+      {/* Phone frame (iPhone 16 - 74): 14px black prompt, r=4 cards with
+          14px descriptions. Desktop keeps 12px grey / rounded-2xl. */}
+      <p className="text-sm text-ink md:text-xs md:text-gray-500 mb-3 md:mb-5">
+        Choose the type of plan you want to create
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
           {
@@ -86,7 +90,7 @@ export function Step1({ value, onChange }) {
               // feedback the icon/title/description block should be
               // centered in the card, with only the selection badge
               // staying pinned top-left as an overlay.
-              className={`relative flex flex-col items-center text-center p-5 min-h-[140px] rounded-2xl bg-white transition-all duration-200 border ${sel ? "border-2 border-brand" : "border-gray-200"}`}
+              className={`relative flex flex-col items-center text-center p-5 min-h-[180px] md:min-h-[140px] rounded-g-1 md:rounded-2xl bg-white transition-all duration-200 border ${sel ? "border-2 border-brand" : "border-gray-200"}`}
             >
               <div className="absolute top-4 left-4">
                 {sel ? (
@@ -110,10 +114,12 @@ export function Step1({ value, onChange }) {
                 className="w-8 h-8 object-contain mt-5 mb-3"
                 loading="lazy"
               />
-              <p className="font-semibold text-gray-900 text-base mb-1">{opt.title}</p>
+              <p className="font-medium md:font-semibold text-gray-900 text-base mb-1">
+                {opt.title}
+              </p>
               {/* text-xs, not text-sm -- per direct feedback the
                   description read too large next to the title. */}
-              <p className="text-xs text-gray-500 leading-relaxed">{opt.desc}</p>
+              <p className="text-sm md:text-xs text-gray-500 leading-relaxed">{opt.desc}</p>
             </button>
           );
         })}
