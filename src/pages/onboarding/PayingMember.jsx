@@ -76,7 +76,7 @@ export default function PayingMember() {
         <div className="hidden lg:contents">
           <StepIndicator stepId="paying-member" />
         </div>
-        <div className="text-center mb-14 lg:mb-8">
+        <div className="text-center mb-16 lg:mb-8">
           <h1 className="text-base font-medium text-ink mb-1 lg:text-2xl lg:font-bold lg:text-gray-900 lg:mb-2">
             Are you a paying member of this community?
           </h1>
@@ -86,6 +86,11 @@ export default function PayingMember() {
           </p>
         </div>
 
+        {/* Phone frame only (Figma "iPhone 16 - 117"); desktop has no such
+            line above its cards. */}
+        <p className="lg:hidden w-full text-left text-sm text-ink mb-4">
+          Choose the type of plan you want to create
+        </p>
         <div className="flex flex-col lg:flex-row gap-4 mb-12 lg:mb-8 w-full">
           {options.map((opt) => {
             const isSelected = selected === opt.id;

@@ -34,11 +34,15 @@ test.describe("onboarding on a phone", () => {
     );
   });
 
-  test("the first two steps drop the step label and pair Skip with Continue", async ({ page }) => {
+  test("the first two steps drop the step label, add the instruction and pair Skip with Continue", async ({
+    page,
+  }) => {
     for (const path of ["choose-path", "paying-member"]) {
       await page.goto(`/onboarding/${path}`);
       await expect(page.getByRole("button", { name: "Go back" })).toBeVisible();
       await expect(page.getByText(/^Step \d of \d$/)).toBeHidden();
+      // The frames' instruction line above the cards (phone only).
+      await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
 
       const skip = await page.getByRole("button", { name: "Skip" }).boundingBox();
       const cont = await page.getByRole("button", { name: "Continue" }).boundingBox();

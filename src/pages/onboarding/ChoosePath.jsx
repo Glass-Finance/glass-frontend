@@ -108,7 +108,7 @@ export default function ChoosePath() {
         <div className="hidden lg:contents">
           <StepIndicator stepId="choose-path" />
         </div>
-        <div className="text-center mb-14 lg:mb-8">
+        <div className="text-center mb-20 lg:mb-8">
           <h1 className="text-base font-medium text-ink mb-1 lg:text-3xl lg:font-bold lg:text-gray-900 lg:mb-2">
             What would you like to do?
           </h1>
@@ -117,6 +117,11 @@ export default function ChoosePath() {
           </p>
         </div>
 
+        {/* Phone frame only (Figma "iPhone 16 - 118"); desktop has no such
+            line above its cards. */}
+        <p className="lg:hidden w-full max-w-[500px] text-left text-sm text-ink mb-4">
+          Choose the type of plan you want to create
+        </p>
         <div className="flex flex-col lg:flex-row lg:justify-center gap-4 lg:gap-5 mb-4 lg:mb-8 w-full max-w-[500px] lg:max-w-none items-stretch">
           {options.map((option) => {
             const isSelected = selected === option.id;
