@@ -1,7 +1,7 @@
 import { ONBOARDING_STEPS } from "../../utils/onboardingSteps";
 
-// The desktop sidebar equivalent of StepIndicator.jsx's mobile progress
-// bar — used by the three onboarding screens detailed enough to warrant a
+// The desktop step list (phones use OnboardingMobileStepper) — used by the
+// three onboarding screens detailed enough to warrant a
 // full step list (OrganizationProfile, PaymentProfile, AddMembers).
 //
 // This used to be copy-pasted independently into all three of those files,
