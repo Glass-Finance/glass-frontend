@@ -127,7 +127,11 @@ describe("SignUp full flow", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    const marker = await screen.findByTestId("choose-path");
+    // The "Your Email Has Been Verified!" page shows first, then onboarding
+    // follows on its own (SignUp.jsx's VERIFIED_HOLD_MS, 2.5s).
+    expect(await screen.findByText("Your Email Has Been Verified!")).toBeDefined();
+    expect(screen.queryByTestId("choose-path")).toBeNull();
+    const marker = await screen.findByTestId("choose-path", {}, { timeout: 4000 });
     expect(marker.textContent).toContain(EMAIL);
     expect(verifyEmail).toHaveBeenCalledWith({ email: EMAIL, token: "123456" });
     expect(auth.storeSessionIfPresent).toHaveBeenCalledTimes(2);
