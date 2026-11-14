@@ -89,7 +89,7 @@ function AuditEventDrawer({ auditLogId, onClose }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-audit-log", auditLogId],
     queryFn: () => getAdminAuditLog(auditLogId).then((r) => r.data?.data),
-    staleTime: 30_000,
+    staleTime: 0,
   });
 
   useEffect(() => {
@@ -195,8 +195,9 @@ export default function AuditLogsSection() {
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["admin-audit-logs", params],
     queryFn: () => getAdminAuditLogs(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];

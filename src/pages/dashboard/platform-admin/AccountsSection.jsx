@@ -44,7 +44,8 @@ function CreateCommunityAccountModal({ onClose }) {
         ...(debouncedSearch ? { search: debouncedSearch } : {}),
       }).then((res) => withSafeCommunityLogos(unwrap(res))),
     enabled: !selectedCommunity,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const create = useMutation({
@@ -316,8 +317,9 @@ export default function AccountsSection() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-community-accounts", params],
     queryFn: () => getAdminCommunityAccounts(params).then(unwrap),
-    staleTime: 60_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const review = useMutation({
