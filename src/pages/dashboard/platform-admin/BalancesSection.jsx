@@ -10,7 +10,8 @@ export default function BalancesSection() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-balances"],
     queryFn: () => getAdminBalances({}).then((r) => r.data?.data),
-    staleTime: 60_000,
+    staleTime: 0, // Admin operations need immediate consistency
+    refetchOnMount: "always",
   });
 
   const balances = data?.balances ?? [];

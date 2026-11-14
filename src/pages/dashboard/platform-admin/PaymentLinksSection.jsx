@@ -35,8 +35,9 @@ export default function PaymentLinksSection() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-payment-links", params],
     queryFn: () => getAdminPaymentLinks(params).then(unwrap),
-    staleTime: 60_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];
