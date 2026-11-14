@@ -178,6 +178,7 @@ export default function SolutionSection({
   subtext,
   subtextMaxWidth = "640px",
   features,
+  wide = false,
 }) {
   return (
     <>
@@ -193,7 +194,11 @@ export default function SolutionSection({
     `}</style>
 
       <section className="py-20 md:py-28 relative isolate" id="solution">
-        <div className="max-w-[1140px] mx-auto px-6 relative z-30">
+        <div
+          className={`relative z-30 mx-auto ${
+            wide ? "max-w-[1140px] px-6 lg:max-w-[1280px] lg:px-8" : "max-w-[1140px] px-6"
+          }`}
+        >
           {/* ── Header — BlurText on all three elements ── */}
           <div className="text-center mb-12">
             <div className="mb-5 flex justify-center">

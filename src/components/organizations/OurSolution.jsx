@@ -34,6 +34,7 @@ export default function OurSolution() {
       subtext="Centralize payments, records, and visibility in one shared system, so your team stops chasing and starts leading."
       subtextMaxWidth="640px"
       features={features}
+      wide
     />
   );
 }

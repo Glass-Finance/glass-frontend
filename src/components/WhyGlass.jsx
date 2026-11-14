@@ -79,7 +79,7 @@ export default function WhyGlass() {
 
   return (
     <section className="relative isolate py-20 md:py-28 overflow-hidden">
-      <div className="max-w-[1140px] mx-auto px-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-[1140px] px-6 lg:max-w-[1280px] lg:px-8">
         {/* ── Header ── */}
         <div className="text-center mb-14">
           {/* Badge */}
@@ -108,7 +108,7 @@ export default function WhyGlass() {
         </div>
 
         {/* ── Accordion ── */}
-        <div className="max-w-[860px] mx-auto mb-14">
+        <div className="max-w-[1114px] mx-auto mb-14">
           {faqs.map((faq, i) => (
             <div
               key={faq.q}
