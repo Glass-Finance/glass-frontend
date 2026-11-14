@@ -16,14 +16,9 @@ const ICON_POP_CSS = `
 .step-icon-pop { animation: iconPop 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
 `;
 
-export default function StepRow({ step, index, innerRef, badgeRef }) {
+export default function StepRow({ step, index, innerRef, badgeRef, desktopLayout = "flow" }) {
   const iconRef = useRef(null);
-  // Per the Figma reference, the label is always to the left of the image
-  // — it never flips. What alternates is the whole card's position: step 1
-  // hugs the far right of the section, step 2 the far left, step 3 the far
-  // right again. That only works if the row has a fixed width narrower
-  // than its (much wider) wrapping container, pushed to one edge via
-  // margin — not by reversing flex-row internally.
+  // The legacy flow layout alternates each fixed-width row's position.
   const hugRight = index % 2 === 0;
   const { scrollYProgress } = useScroll({
     target: innerRef,
@@ -33,10 +28,13 @@ export default function StepRow({ step, index, innerRef, badgeRef }) {
   // the DOM on every scroll tick — scroll-linked opacity/y is a desktop
   // effect only. useScroll still runs so the icon-pop scroll threshold
   // fires correctly when the row enters the viewport on both breakpoints.
+  const gridLayout = desktopLayout === "grid";
+  const isGridDesktop =
+    gridLayout && typeof window !== "undefined" && window.matchMedia("(min-width: 1041px)").matches;
   const rowOpacity = useTransform(
     scrollYProgress,
-    isMobileScreen ? [0, 1] : [0, 0.18, 0.75, 1],
-    isMobileScreen ? [1, 1] : [0, 1, 1, 0],
+    isMobileScreen ? [0, 1] : isGridDesktop ? [0, 0.18] : [0, 0.18, 0.75, 1],
+    isMobileScreen ? [1, 1] : isGridDesktop ? [0, 1] : [0, 1, 1, 0],
   );
   const rowY = useTransform(
     scrollYProgress,
@@ -66,9 +64,15 @@ export default function StepRow({ step, index, innerRef, badgeRef }) {
   return (
     <>
       <style>{ICON_POP_CSS}</style>
-      <motion.div ref={innerRef} style={{ opacity: rowOpacity, y: rowY }}>
+      <motion.div
+        ref={innerRef}
+        className={gridLayout ? "min-[1041px]:h-full" : undefined}
+        style={{ opacity: rowOpacity, y: rowY }}
+      >
         {/* ── Mobile — label overlaps top-left of image ── */}
-        <div className="flex flex-col md:hidden relative">
+        <div
+          className={`flex flex-col relative ${gridLayout ? "min-[1041px]:hidden" : "md:hidden"}`}
+        >
           <div className="relative w-full rounded-lg overflow-hidden shadow-2xl shadow-brand-deep/15">
             <CloudAspectImage
               publicId={step.img.publicId}
@@ -101,44 +105,81 @@ export default function StepRow({ step, index, innerRef, badgeRef }) {
           </div>
         </div>
 
-        {/* ── Desktop — fixed-width row, pushed to alternating edges ── */}
-        <div
-          className={`hidden md:flex relative items-center w-[min(720px,100%)] ${hugRight ? "ml-auto" : "mr-auto"}`}
-        >
-          <div
-            className={`flex-shrink-0 w-[190px] rounded-2xl p-5 z-20 flex flex-col items-center text-center mr-[-30px] ${glassCardCls}`}
-          >
-            <CloudImage
-              publicId={step.stepIcon.publicId}
-              alt=""
-              width={step.stepIcon.width}
-              objectFit="contain"
-              imgRef={iconRef}
-              className="w-10 h-10 mb-2.5"
-            />
-            <p className="text-[13px] font-bold text-brand-ink leading-snug">{step.label}</p>
-          </div>
-          <div className="relative flex-1 rounded-3xl overflow-hidden shadow-2xl shadow-brand-deep/15">
-            <CloudAspectImage
-              publicId={step.img.publicId}
-              width={step.img.width}
-              aspectRatio={step.img.aspect}
-              sizes="(min-width: 768px) 720px, 100vw"
-              alt={step.label}
-              draggable={false}
-              loading="lazy"
-            />
-            <div
-              ref={badgeRef}
-              className={`absolute bottom-4 right-4 flex items-center gap-2 rounded-full py-2.5 px-[18px] border border-white/90 shadow-[0_4px_20px_rgba(15,29,110,0.14)] ${glassSurfaceCls}`}
-            >
-              <span className="w-2 h-2 rounded-full bg-brand flex-shrink-0 inline-block" />
-              <span className="text-xs font-bold text-brand-ink">{step.badge}</span>
+        {gridLayout ? (
+          <div className="hidden min-[1041px]:flex h-full min-h-[360px] flex-col overflow-hidden rounded-g-2 border border-[#e2e4ee] bg-white/80">
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[#e2e4ee] bg-white">
+                <CloudImage
+                  publicId={step.stepIcon.publicId}
+                  alt=""
+                  width={step.stepIcon.width}
+                  objectFit="contain"
+                  imgRef={iconRef}
+                  className="h-5 w-5"
+                />
+              </div>
+              <p className="m-0 text-[16px] font-semibold leading-snug text-brand-ink">
+                {step.label}
+              </p>
+            </div>
+            <div className="relative flex-1 overflow-hidden bg-[#f9f9fb]">
+              <CloudAspectImage
+                publicId={step.img.publicId}
+                width={step.img.width}
+                aspectRatio={step.img.aspect}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                alt={step.label}
+                draggable={false}
+                loading="lazy"
+              />
+              <div
+                ref={badgeRef}
+                className={`absolute right-4 bottom-4 flex items-center gap-2 rounded-full border border-white/90 px-[18px] py-2.5 shadow-[0_4px_20px_rgba(15,29,110,0.14)] ${glassSurfaceCls}`}
+              >
+                <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-brand" />
+                <span className="text-xs font-bold text-brand-ink">{step.badge}</span>
+              </div>
             </div>
           </div>
-          <div className="absolute top-3 right-[-8px] w-[calc(100%-160px)] h-full rounded-3xl border border-brand-deep/8 bg-[#EEF1FB]/45 -z-10" />
-          <div className="absolute top-6 right-[-15px] w-[calc(100%-160px)] h-full rounded-3xl border border-brand-deep/4 bg-[#E8ECF8]/28 -z-20" />
-        </div>
+        ) : (
+          <div
+            className={`hidden md:flex relative items-center w-[min(720px,100%)] ${hugRight ? "ml-auto" : "mr-auto"}`}
+          >
+            <div
+              className={`flex-shrink-0 w-[190px] rounded-2xl p-5 z-20 flex flex-col items-center text-center mr-[-30px] ${glassCardCls}`}
+            >
+              <CloudImage
+                publicId={step.stepIcon.publicId}
+                alt=""
+                width={step.stepIcon.width}
+                objectFit="contain"
+                imgRef={iconRef}
+                className="w-10 h-10 mb-2.5"
+              />
+              <p className="text-[13px] font-bold text-brand-ink leading-snug">{step.label}</p>
+            </div>
+            <div className="relative flex-1 rounded-3xl overflow-hidden shadow-2xl shadow-brand-deep/15">
+              <CloudAspectImage
+                publicId={step.img.publicId}
+                width={step.img.width}
+                aspectRatio={step.img.aspect}
+                sizes="(min-width: 768px) 720px, 100vw"
+                alt={step.label}
+                draggable={false}
+                loading="lazy"
+              />
+              <div
+                ref={badgeRef}
+                className={`absolute bottom-4 right-4 flex items-center gap-2 rounded-full py-2.5 px-[18px] border border-white/90 shadow-[0_4px_20px_rgba(15,29,110,0.14)] ${glassSurfaceCls}`}
+              >
+                <span className="w-2 h-2 rounded-full bg-brand flex-shrink-0 inline-block" />
+                <span className="text-xs font-bold text-brand-ink">{step.badge}</span>
+              </div>
+            </div>
+            <div className="absolute top-3 right-[-8px] w-[calc(100%-160px)] h-full rounded-3xl border border-brand-deep/8 bg-[#EEF1FB]/45 -z-10" />
+            <div className="absolute top-6 right-[-15px] w-[calc(100%-160px)] h-full rounded-3xl border border-brand-deep/4 bg-[#E8ECF8]/28 -z-20" />
+          </div>
+        )}
       </motion.div>
     </>
   );

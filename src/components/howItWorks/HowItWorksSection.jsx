@@ -6,7 +6,12 @@ import MobileDivider from "./MobileDivider";
 
 // Shared by both the organizations and members landing pages — same
 // structure, steps/CTA differ per caller.
-export default function HowItWorksSection({ steps, onCtaClick, ctaLabel = "Join Glass" }) {
+export default function HowItWorksSection({
+  steps,
+  onCtaClick,
+  ctaLabel = "Join Glass",
+  desktopLayout = "flow",
+}) {
   // createRef() (a plain function) instead of useRef() inside .map() —
   // calling useRef() in a loop violates the Rules of Hooks. Wrapping the
   // whole array in one useRef() keeps the ref objects stable across
@@ -17,17 +22,8 @@ export default function HowItWorksSection({ steps, onCtaClick, ctaLabel = "Join 
   const [badgePoints, setBadgePoints] = useState([]);
   const [bendYs, setBendYs] = useState([]);
 
-  // Connector lines anchor to the actual rendered badge elements (per the
-  // Figma reference, the lines run badge-to-badge) rather than a guessed
-  // fixed offset — so they stay correct regardless of image aspect ratio
-  // or how much text wraps in a badge. The horizontal bend of each curve
-  // is kept separate from the badge midpoint: badge 2 sits near the
-  // *bottom* of its own card, so averaging the two badge Y positions would
-  // push the bend deep inside card 2 — invisible, since rows render above
-  // the connector SVG. Using the midpoint of the actual gap between row i
-  // and row i+1 instead keeps the visible curve in the space that's
-  // actually empty. Re-measures on resize and on the stack's own size
-  // changing (e.g. images finishing load shifts row heights).
+  // The legacy flow layout anchors connectors to the actual badge positions,
+  // so they stay correct when card text or image sizes change.
   useLayoutEffect(() => {
     function measure() {
       if (!stackRef.current) return;
@@ -97,51 +93,68 @@ export default function HowItWorksSection({ steps, onCtaClick, ctaLabel = "Join 
         </div>
       </div>
 
-      {/* Wider than the heading on purpose — each row is a fixed-width
-          card pushed to alternating edges (far right, far left, far
-          right...), per the Figma reference. Constraining this to the
-          heading's 880px column leaves no room for that swing. */}
-      <div className="relative z-10 max-w-[1180px] mx-auto px-6 md:px-10">
-        <div ref={stackRef} className="relative flex flex-col">
+      <div
+        className={`relative z-10 mx-auto ${
+          desktopLayout === "grid" ? "max-w-[1248px] px-4" : "max-w-[1180px] px-6 md:px-10"
+        }`}
+      >
+        <div
+          ref={stackRef}
+          className={`relative ${
+            desktopLayout === "grid"
+              ? "grid grid-cols-1 md:gap-y-4 min-[1041px]:grid-cols-2 min-[1041px]:gap-4"
+              : "flex flex-col"
+          }`}
+        >
           {/* z-index below the rows (which get an explicit z-10 below) so
               the part of each line that would otherwise cross a card's
               face is hidden behind it — only the segments in the gaps
               between rows end up visible, matching the Figma reference. */}
-          <svg
-            className="hidden md:block pointer-events-none absolute inset-0 w-full h-full overflow-visible z-0"
-            fill="none"
-          >
-            {/* stepRefs/badgeRefs hold ref OBJECTS built once via
+          {desktopLayout === "flow" && (
+            <svg
+              className="hidden md:block pointer-events-none absolute inset-0 w-full h-full overflow-visible z-0"
+              fill="none"
+            >
+              {/* stepRefs/badgeRefs hold ref OBJECTS built once via
                 useRef(...).current at the top (the standard workaround for
                 an array of refs, since useRef can't be called in a loop) --
                 only the objects themselves are read here and passed down as
                 props, never their .current value. The compiler's ref-safety
                 check doesn't recognize this array-of-refs idiom and treats
                 every read from stepRefs/badgeRefs as an unsafe ref access. */}
-            {/* eslint-disable-next-line react-hooks/refs */}
-            {steps.slice(0, -1).map((step, i) => {
-              const p1 = badgePoints[i];
-              const p2 = badgePoints[i + 1];
-              if (!p1 || !p2) return null;
-              return (
-                <StepConnector
-                  key={step.num}
-                  p1={p1}
-                  p2={p2}
-                  bendY={bendYs[i]}
-                  stepRef={stepRefs[i]}
-                />
-              );
-            })}
-          </svg>
+              {/* eslint-disable-next-line react-hooks/refs */}
+              {steps.slice(0, -1).map((step, i) => {
+                const p1 = badgePoints[i];
+                const p2 = badgePoints[i + 1];
+                if (!p1 || !p2) return null;
+                return (
+                  <StepConnector
+                    key={step.num}
+                    p1={p1}
+                    p2={p2}
+                    bendY={bendYs[i]}
+                    stepRef={stepRefs[i]}
+                  />
+                );
+              })}
+            </svg>
+          )}
 
           {/* Same ref-objects-only situation as above. */}
           {/* eslint-disable-next-line react-hooks/refs */}
           {steps.map((step, i) => (
             <div key={step.num} className="relative z-10">
-              <StepRow step={step} index={i} innerRef={stepRefs[i]} badgeRef={badgeRefs[i]} />
+              <StepRow
+                step={step}
+                index={i}
+                innerRef={stepRefs[i]}
+                badgeRef={badgeRefs[i]}
+                desktopLayout={desktopLayout}
+              />
               {i < steps.length - 1 && <MobileDivider />}
-              {i < steps.length - 1 && <div className="hidden md:block h-[90px]" />}
+              {desktopLayout === "flow" && i < steps.length - 1 && (
+                <div className="hidden md:block h-[90px]" />
+              )}
             </div>
           ))}
         </div>

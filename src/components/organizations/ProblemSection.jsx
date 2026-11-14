@@ -445,16 +445,16 @@ export default function ProblemSection() {
     >
       <div className="mx-auto max-w-[1200px]">
         {/* ── Header ── */}
-        <header className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] items-end gap-x-16 gap-y-6 max-[1040px]:grid-cols-1 max-[1040px]:items-start">
-          <div>
+        <header className="grid grid-cols-1 items-start gap-y-6 min-[1041px]:flex min-[1041px]:flex-col min-[1041px]:items-center min-[1041px]:gap-y-0 min-[1041px]:text-center">
+          <div className="min-[1041px]:flex min-[1041px]:flex-col min-[1041px]:items-center">
             <div className="inline-flex items-center rounded-full border border-brand-deep/25 px-5 py-2 text-[13px] font-medium text-brand-deep">
               The Problem
             </div>
-            <h2 className="mt-[18px] max-w-[20ch] text-[clamp(26px,5vw,58px)] font-bold leading-[1.15] tracking-[-0.02em] text-balance text-brand-ink">
+            <h2 className="mt-[18px] max-w-[20ch] text-[clamp(26px,5vw,58px)] font-bold leading-[1.15] tracking-[-0.02em] text-balance text-brand-ink min-[1041px]:text-center">
               Still spending weekends chasing payments?
             </h2>
           </div>
-          <p className="m-0 max-w-[34ch] text-[clamp(15px,2vw,17px)] leading-[1.45]">
+          <p className="m-0 max-w-[34ch] text-[clamp(15px,2vw,17px)] leading-[1.45] min-[1041px]:mx-auto min-[1041px]:mt-4 min-[1041px]:max-w-[640px] min-[1041px]:text-center">
             Without centralized visibility, time is wasted and trust begins to weaken.
           </p>
         </header>
@@ -479,23 +479,23 @@ export default function ProblemSection() {
         {/* ── Player ── */}
         <div
           data-role="player"
-          className="mt-5 grid grid-cols-[340px_minmax(0,1fr)] items-stretch gap-8 max-[1040px]:grid-cols-1"
+          className="mt-5 grid grid-cols-1 items-stretch gap-8 min-[1041px]:gap-6"
         >
-          <ol className="relative m-0 list-none gap-2 overflow-x-auto p-0 max-[1040px]:flex">
+          <ol className="relative m-0 list-none gap-2 overflow-x-auto p-0 max-[1040px]:flex min-[1041px]:grid min-[1041px]:grid-cols-5 min-[1041px]:gap-3">
             {STEPS.map(([when, where, why], i) => (
               <li
                 key={when}
                 data-role="step"
                 onClick={() => restartRef.current(i)}
-                className="group relative cursor-pointer pb-[22px] pl-[52px] max-[1040px]:flex max-[1040px]:flex-none max-[1040px]:items-center max-[1040px]:p-0 [&::before]:absolute [&::before]:bottom-[2px] [&::before]:left-[15px] [&::before]:top-[34px] [&::before]:border-l-2 [&::before]:border-dashed [&::before]:border-[#cdd0e2] [&::before]:content-[''] max-[1040px]:[&::before]:hidden [&:last-child::before]:hidden [.done_&]:[&::before]:border-solid"
+                className="group relative cursor-pointer pb-[22px] pl-[52px] max-[1040px]:flex max-[1040px]:flex-none max-[1040px]:items-center max-[1040px]:p-0 min-[1041px]:min-h-[160px] min-[1041px]:rounded-g-3 min-[1041px]:border min-[1041px]:border-[#e2e4ee] min-[1041px]:bg-white/80 min-[1041px]:px-3 min-[1041px]:pt-12 min-[1041px]:pb-3 [&::before]:absolute [&::before]:bottom-[2px] [&::before]:left-[15px] [&::before]:top-[34px] [&::before]:border-l-2 [&::before]:border-dashed [&::before]:border-[#cdd0e2] [&::before]:content-[''] max-[1040px]:[&::before]:hidden min-[1041px]:[&::before]:hidden [&:last-child::before]:hidden [.done_&]:[&::before]:border-solid"
               >
-                <span className="absolute top-0 left-0 grid size-8 place-items-center rounded-full border-2 border-[#cdd0e2] bg-white text-[13px] font-semibold text-[#6b7280] transition duration-400 group-[.active]:border-[#002fa7] group-[.active]:bg-[#002fa7] group-[.active]:text-white group-[.active]:shadow-[0_0_0_6px_rgba(59,43,184,0.14)] [.done_&]:border-[#002fa7] [.done_&]:text-[#002fa7] max-[1040px]:static max-[1040px]:size-7 [&.done_&>b]:hidden max-[1040px]:[&.done_&>b]:block max-[1040px]:[&.done_&>b]:text-[15px]">
+                <span className="absolute top-0 left-0 grid size-8 place-items-center rounded-full border-2 border-[#cdd0e2] bg-white text-[13px] font-semibold text-[#6b7280] transition duration-400 group-[.active]:border-[#002fa7] group-[.active]:bg-[#002fa7] group-[.active]:text-white group-[.active]:shadow-[0_0_0_6px_rgba(59,43,184,0.14)] [.done_&]:border-[#002fa7] [.done_&]:text-[#002fa7] max-[1040px]:static max-[1040px]:size-7 min-[1041px]:top-3 min-[1041px]:left-3 [&.done_&>b]:hidden max-[1040px]:[&.done_&>b]:block max-[1040px]:[&.done_&>b]:text-[15px]">
                   <b>{i + 1}</b>
                 </span>
-                <div className="text-[11.5px] font-semibold tracking-[0.05em] text-[#6b7280] uppercase max-[1040px]:hidden">
+                <div className="text-[11.5px] font-semibold tracking-[0.05em] text-[#6b7280] uppercase max-[1040px]:hidden min-[1041px]:absolute min-[1041px]:top-4 min-[1041px]:left-14">
                   {when}
                 </div>
-                <h4 className="mt-0.5 text-[18px] tracking-[-0.01em] text-[#9a9db3] transition duration-300 group-[.active]:text-brand-navy group-[.done]:text-brand-navy max-[1040px]:hidden max-[1040px]:group-[.active]:block max-[1040px]:group-[.active]:mt-0 max-[1040px]:group-[.active]:ml-2">
+                <h4 className="mt-0.5 text-[18px] tracking-[-0.01em] text-[#9a9db3] transition duration-300 group-[.active]:text-brand-navy group-[.done]:text-brand-navy max-[1040px]:hidden max-[1040px]:group-[.active]:block max-[1040px]:group-[.active]:mt-0 max-[1040px]:group-[.active]:ml-2 min-[1041px]:mt-0 min-[1041px]:text-[16px]">
                   {where}
                 </h4>
                 <p className="mt-0 max-h-0 translate-y-[-8px] overflow-hidden text-[15px] leading-[1.45] transition duration-500 group-[.active]:mt-1 group-[.active]:max-h-20 group-[.active]:translate-y-0 max-[1040px]:hidden">

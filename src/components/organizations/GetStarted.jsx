@@ -44,6 +44,7 @@ export default function GetStarted() {
       steps={steps}
       onCtaClick={() => goToApp("/sign-up", navigate)}
       ctaLabel="Get Started Free"
+      desktopLayout="grid"
     />
   );
 }
