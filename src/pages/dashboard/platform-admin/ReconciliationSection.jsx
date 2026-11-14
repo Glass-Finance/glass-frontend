@@ -21,9 +21,10 @@ function ReconciliationRunsTable() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-reconciliation-runs", page],
     queryFn: () => getAdminReconciliationRuns(pageParams(page)).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
     refetchInterval: 10_000, // runs are async -- keep the list current without a manual refresh while one is in flight
+    refetchOnMount: "always",
   });
 
   const runPassOne = useMutation({
@@ -279,8 +280,9 @@ function ReconciliationFindingsTable() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-reconciliation-findings", params],
     queryFn: () => getAdminReconciliationFindings(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];

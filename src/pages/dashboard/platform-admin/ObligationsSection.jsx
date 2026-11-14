@@ -63,7 +63,7 @@ function ObligationDetailModal({ obligationId, onClose }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-obligation", obligationId],
     queryFn: () => getAdminObligation(obligationId).then((r) => r.data?.data),
-    staleTime: 30_000,
+    staleTime: 0,
   });
 
   const amount = data?.amount;
@@ -176,8 +176,9 @@ export default function ObligationsSection() {
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["admin-obligations", params],
     queryFn: () => getAdminObligations(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];

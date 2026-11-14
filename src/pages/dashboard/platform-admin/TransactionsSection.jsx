@@ -62,7 +62,7 @@ function TransactionDetailModal({ transactionId, onClose }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-transaction", transactionId],
     queryFn: () => getAdminTransaction(transactionId).then((r) => r.data?.data),
-    staleTime: 30_000,
+    staleTime: 0,
   });
 
   const currency = data?.currency ?? "NGN";
@@ -164,10 +164,11 @@ export default function TransactionsSection() {
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["admin-transactions", params],
     queryFn: () => getAdminTransactions(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     // Keeps the previous page on screen while the next loads, so paging
     // doesn't flash the empty/loading state between every click.
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];

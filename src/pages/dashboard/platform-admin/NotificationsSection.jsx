@@ -281,8 +281,9 @@ export default function NotificationsSection() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-notification-jobs", params],
     queryFn: () => getAdminNotificationJobs(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];

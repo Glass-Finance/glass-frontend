@@ -28,8 +28,9 @@ export function useAdminUsers(params) {
   return useQuery({
     queryKey: ["admin-users", params],
     queryFn: () => getAdminUsers(params).then(unwrap),
-    staleTime: 60_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (previous) => previous,
+    refetchOnMount: "always", // Always fetch fresh data when mounting
   });
 }
 
@@ -37,8 +38,9 @@ export function useAdminKycAttempts(params) {
   return useQuery({
     queryKey: ["admin-kyc-attempts", params],
     queryFn: () => getAdminKycAttempts(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (previous) => previous,
+    refetchOnMount: "always",
   });
 }
 

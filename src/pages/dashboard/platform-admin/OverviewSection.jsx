@@ -201,25 +201,29 @@ export default function OverviewSection() {
       ]);
       return { overdue, abandoned, failed, expiredLinks, openFindings };
     },
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
+    refetchOnMount: "always",
   });
 
   const balances = useQuery({
     queryKey: ["admin-overview", "balances"],
     queryFn: () => getAdminBalances({}).then((r) => r.data?.data),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
+    refetchOnMount: "always",
   });
 
   const runs = useQuery({
     queryKey: ["admin-overview", "runs"],
     queryFn: () => pageOf(getAdminReconciliationRuns, { pageSize: 5 }),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
+    refetchOnMount: "always",
   });
 
   const activity = useQuery({
     queryKey: ["admin-overview", "activity"],
     queryFn: () => pageOf(getAdminAuditLogs, { pageSize: 12 }),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
+    refetchOnMount: "always",
   });
 
   const anyFetching =

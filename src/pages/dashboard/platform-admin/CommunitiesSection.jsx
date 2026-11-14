@@ -259,8 +259,9 @@ export default function CommunitiesSection() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-communities", params],
     queryFn: () => getAdminCommunities(params).then((res) => withSafeCommunityLogos(unwrap(res))),
-    staleTime: 60_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const items = data?.content ?? [];
