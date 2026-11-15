@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import CloudImage from "../components/common/CloudImage";
 import { cldUrl } from "../lib/cloudinary";
 
-export default function AuthLayout({ heroTitle, heroSubtitle, children }) {
+export default function AuthLayout({ heroTitle, heroSubtitle, heroHeadline, children }) {
   const navigate = useNavigate();
 
   return (
@@ -77,7 +77,18 @@ export default function AuthLayout({ heroTitle, heroSubtitle, children }) {
             onClick={() => navigate("/")}
           />
 
-          {(heroTitle || heroSubtitle) && (
+          {/* heroHeadline: one headline in Figma's "Headline/Large" style
+              (Inter Semi Bold 32/40) wrapped at the frame's 602px text box,
+              nudged to where the Sign Up frame (MacBook Pro 14" - 125) sets
+              it. Pages still passing heroTitle/heroSubtitle are unchanged. */}
+          {heroHeadline && (
+            <div className="flex absolute inset-0 items-center justify-center z-10 px-8">
+              <h1 className="max-w-[602px] translate-y-[13px] text-center text-white font-semibold text-[32px] leading-[40px]">
+                {heroHeadline}
+              </h1>
+            </div>
+          )}
+          {!heroHeadline && (heroTitle || heroSubtitle) && (
             <div className="flex absolute inset-0 items-center justify-center z-10 px-8">
               <div className="text-center">
                 {heroTitle && (

@@ -137,8 +137,9 @@ export default function SettlementsSection() {
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin-settlements", params],
     queryFn: () => getAdminSettlements(params).then(unwrap),
-    staleTime: 30_000,
+    staleTime: 0, // Admin operations need immediate consistency
     placeholderData: (p) => p,
+    refetchOnMount: "always",
   });
 
   const sync = useMutation({
