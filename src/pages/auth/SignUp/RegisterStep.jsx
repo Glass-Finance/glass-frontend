@@ -25,7 +25,7 @@ function validateField(field, value, otherValue) {
   return "";
 }
 
-export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }) {
+export default function RegisterStep({ email, phone, phoneConfirmToken, onNext, onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -113,15 +113,31 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
   };
 
   return (
-    <div className="w-full max-w-md flex flex-col md:mt-14 mb-auto">
-      <div className="mb-3">
-        <h1 className="text-headline text-gray-900 mb-1.5">Complete Your Profile</h1>
+    // Desktop (md+) follows Figma "MacBook Pro 14" - 31" (Complete Your
+    // Profile, right panel 252:16550): a 652px column centred in the form
+    // sheet (nudged 11px right, as on the email step), Title/Large heading,
+    // Label/Large labels, 56px inputs, 24px between rows, 64px button and the
+    // "Already Have An Account?" footer. Every desktop value is md:, so the
+    // phone layout is untouched. On laptop screens under 800px tall the
+    // vertical gaps tighten (max-height variants) so the form -- with the
+    // password checklist open -- still fits without scrolling.
+    <div className="w-full max-w-md flex flex-col mb-auto md:max-w-[652px] md:mb-0 md:ml-[22px] md:w-[calc(100%-22px)]">
+      <div className="mb-3 md:mb-10 md:[@media(max-height:800px)]:mb-5!">
+        <h1 className="text-headline text-gray-900 mb-1.5 md:mb-0 md:text-[22px] md:leading-[28px] md:font-medium md:tracking-normal md:text-ink">
+          Complete Your Profile
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-12">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="signup-first-name" className="text-label font-medium text-gray-700">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-12 md:gap-6 md:[@media(max-height:800px)]:gap-4!"
+      >
+        <div className="grid grid-cols-2 gap-3 md:gap-6">
+          <div className="flex flex-col gap-1.5 md:gap-3 md:[@media(max-height:800px)]:gap-2!">
+            <label
+              htmlFor="signup-first-name"
+              className="text-label font-medium text-gray-700 md:text-base md:leading-6 md:text-ink"
+            >
               First Name
             </label>
             <SignUpTextInput
@@ -134,11 +150,15 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
               placeholder="Enter Your Name"
               required
               error={fieldErrors.firstName}
+              className="md:py-[15px] md:[@media(max-height:800px)]:py-3! md:placeholder:text-black/60"
             />
             <SignUpFieldError message={fieldErrors.firstName} />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="signup-last-name" className="text-label font-medium text-gray-700">
+          <div className="flex flex-col gap-1.5 md:gap-3 md:[@media(max-height:800px)]:gap-2!">
+            <label
+              htmlFor="signup-last-name"
+              className="text-label font-medium text-gray-700 md:text-base md:leading-6 md:text-ink"
+            >
               Last Name
             </label>
             <SignUpTextInput
@@ -151,13 +171,17 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
               placeholder="Enter Your Name"
               required
               error={fieldErrors.lastName}
+              className="md:py-[15px] md:[@media(max-height:800px)]:py-3! md:placeholder:text-black/60"
             />
             <SignUpFieldError message={fieldErrors.lastName} />
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="signup-password" className="text-label font-medium text-gray-700">
+        <div className="flex flex-col gap-1.5 md:gap-3 md:[@media(max-height:800px)]:gap-2!">
+          <label
+            htmlFor="signup-password"
+            className="text-label font-medium text-gray-700 md:text-base md:leading-6 md:text-ink"
+          >
             Create Password
           </label>
           <div className="relative">
@@ -177,7 +201,7 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
               placeholder="Enter Your Password"
               required
               error={fieldErrors.password}
-              className="pr-11"
+              className="pr-11 md:py-[15px] md:[@media(max-height:800px)]:py-3! md:placeholder:text-black/60"
             />
             <Button
               variant="tertiary"
@@ -198,8 +222,11 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
           )}
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="signup-confirm-password" className="text-label font-medium text-gray-700">
+        <div className="flex flex-col gap-1.5 md:gap-3 md:[@media(max-height:800px)]:gap-2!">
+          <label
+            htmlFor="signup-confirm-password"
+            className="text-label font-medium text-gray-700 md:text-base md:leading-6 md:text-ink"
+          >
             Confirm Password
           </label>
           <div className="relative">
@@ -213,7 +240,7 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
               placeholder="re-enter Password"
               required
               error={fieldErrors.confirmPassword}
-              className="pr-11"
+              className="pr-11 md:py-[15px] md:[@media(max-height:800px)]:py-3! md:placeholder:text-black/60"
             />
             <Button
               variant="tertiary"
@@ -231,10 +258,31 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext }
 
         {error && <p className="text-sm text-danger -mt-1">{error}</p>}
 
-        <PrimaryBtn type="submit" className="mt-2" loading={loading}>
+        <PrimaryBtn
+          type="submit"
+          className="mt-2 md:mt-4 md:h-16 md:py-5 md:px-10 md:[@media(max-height:800px)]:mt-2!"
+          loading={loading}
+        >
           {loading ? "Creating Account..." : "Create Your Account"}
         </PrimaryBtn>
       </form>
+
+      {/* Desktop frame only: the same way back to Sign In the email step
+          offers. Phones keep today's screen. */}
+      {onSwitch && (
+        <p className="hidden md:block mt-6 md:[@media(max-height:800px)]:mt-4 text-center text-[18px] tracking-[0.5px] text-black/60">
+          Already Have An Account?{" "}
+          <Button
+            variant="tertiary"
+            size="sm"
+            fullWidth={false}
+            onClick={onSwitch}
+            className="text-brand! h-auto! px-0! py-0! text-[16px]! leading-6 hover:bg-transparent!"
+          >
+            Sign In
+          </Button>
+        </p>
+      )}
     </div>
   );
 }

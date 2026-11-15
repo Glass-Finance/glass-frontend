@@ -92,7 +92,21 @@ function decodeJwtPayload(token) {
 // below via position:absolute + opacity:0, so the click a user sees land
 // on our design is actually landing on Google's real button underneath --
 // same ID-token `credential` callback, same backend contract, no gating.
-export default function GoogleAuthButton({ onAuthenticated, label = "continue_with" }) {
+// size="lg" is the desktop Figma "Social Button" (Sign Up, MacBook Pro 14"
+// - 125): 56px tall, white fill, black @20% stroke, 24px glyph. md: only, so
+// phones and every caller that leaves the default keep today's button.
+// `desktopText` swaps the label copy from md up only (Figma title-cases
+// "Sign Up With Google"); phones keep the default label.
+const LG_FACE = "md:py-[15px] md:px-8 md:gap-2 md:bg-white md:border-black/20";
+
+export default function GoogleAuthButton({
+  onAuthenticated,
+  label = "continue_with",
+  size = "md",
+  desktopText,
+}) {
+  const lgFace = size === "lg" ? LG_FACE : "";
+  const glyphClass = size === "lg" ? "md:w-6 md:h-6" : "";
   const { setSession } = useAuth();
   const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
   const wrapRef = useRef(null);
@@ -234,7 +248,7 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
       {identity ? (
         <div
           aria-hidden="true"
-          className="w-full flex items-center gap-3 rounded-g-2 px-4 py-3 border border-black/10 bg-white/60 transition-colors duration-150 group-hover:bg-gray-50"
+          className={`w-full flex items-center gap-3 rounded-g-2 px-4 py-3 border border-black/10 bg-white/60 transition-colors duration-150 group-hover:bg-gray-50 ${lgFace}`}
         >
           {identity.picture && !avatarFailed ? (
             <img
@@ -254,15 +268,20 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
             </span>
             <span className="text-xs text-gray-500 truncate">{identity.email}</span>
           </span>
-          <GoogleGlyph />
+          <GoogleGlyph className={glyphClass} />
         </div>
       ) : (
         <div
           aria-hidden="true"
-          className="w-full flex items-center justify-center gap-2.5 rounded-g-2 px-4 py-3.5 border border-black/10 bg-white/60 text-base font-medium text-black transition-colors duration-150 group-hover:bg-gray-50"
+          className={`w-full flex items-center justify-center gap-2.5 rounded-g-2 px-4 py-3.5 border border-black/10 bg-white/60 text-base font-medium text-black transition-colors duration-150 group-hover:bg-gray-50 ${lgFace}`}
         >
-          <GoogleGlyph />
-          <span className="truncate min-w-0">{LABELS[label] ?? LABELS.continue_with}</span>
+          <GoogleGlyph className={glyphClass} />
+          {/* The face is aria-hidden (GIS's own button below is what screen
+              readers and clicks reach), so two spans are safe here. */}
+          <span className={`truncate min-w-0 ${desktopText ? "md:hidden" : ""}`}>
+            {LABELS[label] ?? LABELS.continue_with}
+          </span>
+          {desktopText && <span className="hidden md:inline truncate min-w-0">{desktopText}</span>}
         </div>
       )}
       {/* Google's real button -- invisible, stacked exactly over the div
@@ -272,9 +291,15 @@ export default function GoogleAuthButton({ onAuthenticated, label = "continue_wi
   );
 }
 
-function GoogleGlyph() {
+function GoogleGlyph({ className = "" }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true" className="flex-shrink-0">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 18 18"
+      aria-hidden="true"
+      className={`flex-shrink-0 ${className}`}
+    >
       <path
         d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"
         fill="#4285F4"
