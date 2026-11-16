@@ -426,7 +426,7 @@ export default function SignIn() {
   }
 
   return (
-    <AuthLayout heroTitle="Manage Your Community" heroSubtitle="Finance Effortlessly">
+    <AuthLayout heroHeadline="Manage Your Community Finance Effortlessly">
       {/* mt-* + mb-auto (not my-auto) -- the Password tab has noticeably
           more content than One-Time Code (an extra field, a Forgot-password
           link), so pure vertical centering gave the two tabs different top
