@@ -393,7 +393,9 @@ describe("UsersSection — unsuspend / delete / anonymize", () => {
     fireEvent.click(openMenu(row, "Delete user…"));
 
     expect(screen.getByText("Delete User")).toBeTruthy();
-    const textarea = screen.getByPlaceholderText("Why is this account being permanently deleted now?");
+    const textarea = screen.getByPlaceholderText(
+      "Why is this account being permanently deleted now?",
+    );
     const form = textarea.closest("form");
     expect(within(form).getByRole("button", { name: "Delete user" }).disabled).toBe(true);
 
