@@ -9,12 +9,14 @@ import CloudImage from "../../components/common/CloudImage";
 import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { MobileBackButton } from "../../components/ui/MobileBackButton";
+import { readOnboardingProgress } from "../../utils/onboardingProgress";
 
 export default function PayingMember() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const email = location.state?.email;
+  const storedProgress = readOnboardingProgress();
+  const email = location.state?.email || storedProgress?.email || "";
   const [selected, setSelected] = useState("yes");
 
   const options = [

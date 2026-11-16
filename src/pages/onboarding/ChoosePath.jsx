@@ -54,6 +54,8 @@ export default function ChoosePath() {
       //   - known not-approved → /onboarding/verify-identity
       if (kycGate.isLoading) return;
       const skip = kycGate.exempt || kycGate.isError || kycGate.isApproved || !kycGate.status;
+      // Persist the email so it survives a new tab opened from this route:
+      saveOnboardingProgress({ email });
       navigate(skip ? "/onboarding/paying-member" : "/onboarding/verify-identity", {
         state: { email },
       });
