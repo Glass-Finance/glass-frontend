@@ -38,17 +38,24 @@ export function identifierPayload({ email, phoneNumber, phoneRegion } = {}) {
  * absent: the backend RegisterRequest has neither field. phoneConfirmToken
  * is included exactly when a verified phone number is present (backend
  * requires it in that case, rejects nothing otherwise).
+ *
+ * emailConfirmToken is REQUIRED, not optional: the backend verifies the
+ * address before it creates the account and answers 400 "Email must be
+ * verified" without it (AuthServiceImpl.register). It comes from
+ * POST /auth/email/verify-otp, which returns the single-use confirmToken
+ * once the person has proved they can read the code sent to that address.
  */
 export function buildRegisterPayload({
   email,
   firstName,
   lastName,
   password,
+  emailConfirmToken,
   phoneNumber,
   phoneConfirmToken,
   phoneRegion,
 } = {}) {
-  const payload = { email, firstName, lastName, password };
+  const payload = { email, firstName, lastName, password, emailConfirmToken };
   if (phoneNumber) {
     payload.phoneNumber = phoneNumber;
     payload.phoneConfirmToken = phoneConfirmToken;

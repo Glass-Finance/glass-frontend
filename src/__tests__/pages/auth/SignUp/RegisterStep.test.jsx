@@ -13,10 +13,20 @@ vi.mock("../../../../services/authService", () => ({
 
 const VALID_PASSWORD = "Glass123!";
 const EMAIL = "sulaimon@example.com";
+const CONFIRM_TOKEN = "confirm-abc";
 
 function renderStep(props = {}) {
   const onNext = vi.fn();
-  render(<RegisterStep email={EMAIL} phone="" phoneConfirmToken="" onNext={onNext} {...props} />);
+  render(
+    <RegisterStep
+      email={EMAIL}
+      emailConfirmToken={CONFIRM_TOKEN}
+      phone=""
+      phoneConfirmToken=""
+      onNext={onNext}
+      {...props}
+    />,
+  );
   return onNext;
 }
 
@@ -118,6 +128,7 @@ describe("RegisterStep submit", () => {
       firstName: "Sulaimon",
       lastName: "Balogun",
       password: VALID_PASSWORD,
+      emailConfirmToken: CONFIRM_TOKEN,
     });
     expect(Object.keys(register.mock.calls[0][0])).not.toContain("confirmPassword");
   });

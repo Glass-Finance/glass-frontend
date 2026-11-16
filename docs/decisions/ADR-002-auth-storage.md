@@ -60,3 +60,37 @@ The trade-off is deliberate: if the backend ever stops issuing a refresh token
 on some auth route, the user is asked to sign in again when the access token
 expires — loud and safe — rather than inheriting another account's session,
 which is silent and wrong.
+
+## Addendum: the backend's cookie mode has shipped; the client cannot adopt it yet
+
+Added 2026-11-15.
+
+The API now supports cookie authentication: `cookieAuth: true` on the request
+that completes authentication (register, password/Google/OTP login, MFA
+completion) returns `HttpOnly` cookies instead of JSON tokens, and protected
+writes take an `X-XSRF-TOKEN` header read from the `XSRF-TOKEN` cookie. Bearer
+tokens and body-token refresh still work, but the backend's own integration
+guide calls the cookie migration **required**, not optional.
+
+The frontend has **not** adopted it, and should not yet. Two facts decide that:
+
+1. **The cookie is host-only.** No `Domain` is set, so it belongs to the API
+   host alone.
+2. **The app and the API are different hosts.** The app is served from
+   `app.glasspay.app` and calls `https://api.glasspay.app/api/v1`. A
+   host-only cookie on `api.glasspay.app` is not readable by JavaScript on
+   `app.glasspay.app`, so the CSRF header cannot be produced at all.
+
+`SameSite=Lax` does not rescue this: it makes the cookie _sendable_, but it
+does not make an API-host cookie _readable_ by a different origin. The
+backend's guide says the same thing and points at a same-origin proxy as the
+supported arrangement.
+
+Adopting `cookieAuth: true` before that arrangement exists would be worse than
+not migrating: the auth response would carry no `accessToken`, the client
+would have no bearer token and no readable CSRF cookie, and every protected
+request would 401. So the migration stays blocked on a deployment decision
+(proxy `/api` on the app's origin, or a `Domain`-scoped cookie agreed with the
+API team — and the shared web+mobile backend decision that `team-conventions`
+records), not on client code. This ADR's storage decision therefore stands
+unchanged for now.

@@ -135,7 +135,7 @@ export default function ResetPassword() {
   const isReady = form.newPassword && form.confirmPassword;
 
   return (
-    <AuthLayout heroTitle="Manage Your Community" heroSubtitle="Finance Effortlessly">
+    <AuthLayout heroHeadline="Manage Your Community Finance Effortlessly">
       <div className="w-full max-w-md flex flex-col md:mt-14 mb-auto gap-6">
         <div>
           <h1 className="text-headline text-gray-900 mb-1">Reset Password</h1>

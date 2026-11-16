@@ -14,6 +14,15 @@ export const getMe = () => client.get("/user/me");
 // stored).
 export const updateProfile = (payload) => client.patch("/user/profile", payload);
 
+// PATCH /api/v1/user/onboarding — { status: "COMPLETED" } marks the
+// create/join-community decision screen as presented and answered. Only ever
+// completes (the backend rejects "PENDING"); repeats are idempotent, so
+// callers don't need to check userData.onboardingStatus first. Staff/admin
+// accounts have no onboarding field and get 400 — callers gate on the user
+// object instead of pre-checking (see AuthContext.completeOnboarding).
+// Contract: glass-backend docs/frontend-integration/releases/2026-11-13-user-onboarding.md
+export const completeOnboarding = () => client.patch("/user/onboarding", { status: "COMPLETED" });
+
 // PATCH /api/v1/user/password — { oldPassword, newPassword, confirmPassword }
 export const updatePassword = (payload) => client.patch("/user/password", payload);
 

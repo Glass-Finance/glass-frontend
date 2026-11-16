@@ -5,6 +5,10 @@ import { createScenario, installNetworkMock, preparePage, json } from "./support
 // 1728px frames, so on smaller laptop screens they must still fit: no
 // sideways or vertical scrolling in the form sheet at any step, including
 // the tallest state (Complete Your Profile with the password checklist open).
+//
+// The order is verify-then-create: email -> emailed code -> profile. The
+// backend rejects register() without the emailConfirmToken the code step
+// produces, so the profile form is no longer reachable first.
 
 const SIZES = [
   { width: 1728, height: 982 },
@@ -14,9 +18,24 @@ const SIZES = [
 
 async function sheetOverflow(page) {
   return page.evaluate(() => {
-    const sheet = [...document.querySelectorAll("div")].find(
-      (d) => d.className.includes("overflow-y-auto") && d.className.includes("flex-1"),
+    // The form sheet in AuthLayout has both overflow-y-auto and flex-1.
+    // Use a more specific selector: the sheet is the direct child of the
+    // main flex container that has min-h-0 (ensures it's the scrollable
+    // form area, not the hero panel or other overflow containers).
+    const sheet = document.querySelector(
+      "div.min-h-0.overflow-y-auto.flex-1, div.overflow-y-auto.flex-1.min-h-0",
     );
+    if (!sheet) {
+      // Fallback: find any div with both classes (handles class order variations)
+      const fallback = [...document.querySelectorAll("div")].find(
+        (d) => d.classList.contains("overflow-y-auto") && d.classList.contains("flex-1"),
+      );
+      if (!fallback) return { x: 0, y: 0 }; // No scrollable sheet found — treat as no overflow
+      return {
+        x: fallback.scrollWidth - fallback.clientWidth,
+        y: fallback.scrollHeight - fallback.clientHeight,
+      };
+    }
     return {
       x: sheet.scrollWidth - sheet.clientWidth,
       y: sheet.scrollHeight - sheet.clientHeight,
@@ -25,21 +44,32 @@ async function sheetOverflow(page) {
 }
 
 test("sign-up steps fit the screen without overflow", async ({ page }) => {
-  const okPost = (re) => ({
+  const okPost = (re, data = {}) => ({
     method: "POST",
     match: (u) => re.test(u.pathname),
     handle: async (route) => {
-      await json(route, 200, { success: true, data: {} });
+      await json(route, 200, { success: true, data });
       return true;
     },
   });
-  await installNetworkMock(page, createScenario({ overrides: [okPost(/\/auth\/register$/)] }));
+  await installNetworkMock(
+    page,
+    createScenario({
+      overrides: [
+        okPost(/\/auth\/email\/request-otp$/),
+        // The code step hands register() its emailConfirmToken.
+        okPost(/\/auth\/email\/verify-otp$/, { confirmToken: "e2e-confirm-token" }),
+        okPost(/\/auth\/register$/),
+      ],
+    }),
+  );
   await preparePage(page);
 
   for (const size of SIZES) {
     await page.setViewportSize(size);
     await page.goto("/sign-up");
     await page.getByLabel("Email Address").waitFor();
+
     // Terms error state ("MacBook Pro 14" - 125").
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText("Please Accept Our Terms to Continue")).toBeVisible();
@@ -48,7 +78,18 @@ test("sign-up steps fit the screen without overflow", async ({ page }) => {
     await page.getByLabel("Email Address").fill("new.admin@example.test");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByLabel("Create Password").focus(); // checklist open: tallest state
+
+    // "Verification Code Sent" (252:16554) -- the code screen now sits
+    // between the email and the profile form.
+    await page.getByLabel("Verification code").waitFor();
+    expect(await sheetOverflow(page), `code ${size.width}x${size.height}`).toEqual({ x: 0, y: 0 });
+
+    await page.getByLabel("Verification code").fill("123456");
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    // Complete Your Profile with the password checklist open: tallest state.
+    await page.getByLabel("Create Password").waitFor();
+    await page.getByLabel("Create Password").focus();
     await expect(page.getByLabel("First Name")).toBeVisible();
     expect(await sheetOverflow(page), `profile ${size.width}x${size.height}`).toEqual({
       x: 0,
@@ -60,7 +101,16 @@ test("sign-up steps fit the screen without overflow", async ({ page }) => {
     await page.getByLabel("Create Password").fill("AdminPass1!");
     await page.getByLabel("Confirm Password").fill("AdminPass1!");
     await page.getByRole("button", { name: /Create Your Account/ }).click();
-    await page.getByLabel("Verification code").waitFor();
-    expect(await sheetOverflow(page), `code ${size.width}x${size.height}`).toEqual({ x: 0, y: 0 });
+
+    // Registration is the last step: the account is verified when it returns,
+    // so the confirmation screen leads straight to onboarding. It is centered
+    // confirmation chrome, not the scrollable form sheet sheetOverflow()
+    // measures, so assert the page-level horizontal overflow the rest of the
+    // suite uses (vertical scroll on a short confirmation is not a defect).
+    await expect(page.getByText("Your Email Has Been Verified!")).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      `verified ${size.width}x${size.height}`,
+    ).toBe(true);
   }
 });

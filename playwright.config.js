@@ -26,7 +26,7 @@ export default defineConfig({
       // Values are public (inlined into the client bundle) — same set CI
       // already hardcodes for the unit/build job. TEST_MODE=true so a stray
       // unmocked payment call can never hit live keys in this harness.
-      VITE_API_BASE_URL: "https://api.glasspay.app",
+      VITE_API_BASE_URL: "https://staging-api.glasspay.app",
       VITE_CLOUDINARY_CLOUD_NAME: "ece5jmhy",
       VITE_TEST_MODE: "true",
       VITE_APP_URL: "http://127.0.0.1:4173",
