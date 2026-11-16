@@ -137,6 +137,7 @@ function usersFixture(scenario) {
     platformRole: "USER",
     isPlatformAdmin: false,
     enabled: !scenario.suspended,
+    accountNonLocked: !scenario.suspended,
     emailVerified: true,
     lastLoginAt: "2026-09-20T09:30:00.000Z",
     metrics: { totalRelatedCommunities: 2 },

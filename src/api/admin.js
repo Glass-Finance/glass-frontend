@@ -28,6 +28,13 @@ export const getAdminUser = (userId) => client.get(`/admin/users/${userId}`);
 export const suspendUser = (userId, payload) =>
   client.patch(`/admin/users/${userId}/suspend`, payload);
 export const unsuspendUser = (userId) => client.patch(`/admin/users/${userId}/unsuspend`);
+// Undoes a *deletion*, not a suspension: PENDING_DELETION -> ACTIVE, clears
+// deletionRequestedAt and re-enables the account. Permission is
+// platform.user.restore (SUPER_ADMIN / OPERATIONS_ADMIN), which is NOT the same
+// grant as suspend/unsuspend. Only valid while status is PENDING_DELETION —
+// the backend 400s otherwise, and it will NOT cancel a purge that has already
+// run.
+export const restoreUser = (userId) => client.patch(`/admin/users/${userId}/restore`);
 export const getAdminUserCommunities = (userId, params) =>
   client.get(`/admin/users/${userId}/communities`, { params });
 // Mirrors the self-service flow in members.js (DELETE /user/me marks for

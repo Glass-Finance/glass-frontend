@@ -15,6 +15,7 @@ This directory records the current frontend architecture, operational convention
 - [Cloudinary assets](cloudinary.md)
 - [Landing drift](landing-drift.md)
 - [Data fetching](data-fetching.md)
+- [Backend change requests](backend-change-requests.md)
 - [Error handling](error-handling.md)
 - [Testing strategy](testing-strategy.md)
 - [Team conventions](team-conventions.md)
