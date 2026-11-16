@@ -4,9 +4,7 @@
  */
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Info } from "lucide-react";
 import CloudImage from "../../components/common/CloudImage";
-import StepIndicator from "../../components/onboarding/StepIndicator";
 import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { MobileBackButton } from "../../components/ui/MobileBackButton";
@@ -33,7 +31,13 @@ export default function ChoosePath() {
     {
       id: "join",
       title: "Join Community",
-      description: "Your community already exists. Join Now.",
+      // Figma sets "Join Now." on its own line on desktop; phones wrap freely.
+      description: (
+        <>
+          Your community already exists. <br className="max-lg:hidden" />
+          Join Now.
+        </>
+      ),
       icon: "glass/auth/join-community",
     },
   ];
@@ -83,16 +87,18 @@ export default function ChoosePath() {
           screen (auth pages, Communities Home) shows. */}
       <div className="fixed inset-0 lg:hidden -z-10 bg-cover bg-center bg-no-repeat bg-mobile-auth-default" />
 
-      <header className="relative hidden lg:flex items-center px-6 lg:px-8 py-5 flex-shrink-0">
+      {/* Desktop logo per Figma "MacBook Pro 14" - 24" (node 1:3917): 42px
+          mark + 24px wordmark, 49px from the top. */}
+      <header className="relative hidden lg:flex items-center px-6 lg:px-7 py-5 lg:pt-[49px] lg:[@media(max-height:800px)]:pt-5! lg:pb-0 flex-shrink-0">
         <div className="flex items-center gap-2">
           <CloudImage
             publicId="glass/Glass"
             alt="Glass"
-            width={56}
+            width={84}
             objectFit="contain"
-            className="w-7 h-7"
+            className="w-7 h-7 lg:w-[42px] lg:h-[42px]"
           />
-          <span className="font-medium text-gray-900 text-base">Glass</span>
+          <span className="font-medium text-gray-900 text-base lg:text-[24px]">Glass</span>
         </div>
       </header>
 
@@ -103,16 +109,17 @@ export default function ChoosePath() {
         <MobileBackButton aria-label="Go back" onClick={() => navigate("/dashboard/home")} />
       </div>
 
-      <main className="relative flex-1 flex flex-col items-center justify-start lg:justify-center px-4 lg:px-8 pt-6 lg:pt-0 pb-10">
-        {/* The phone frame drops the "Step X of Y" label; desktop keeps it. */}
-        <div className="hidden lg:contents">
-          <StepIndicator stepId="choose-path" />
-        </div>
-        <div className="text-center mb-20 lg:mb-8">
-          <h1 className="text-base font-medium text-ink mb-1 lg:text-3xl lg:font-bold lg:text-gray-900 lg:mb-2">
+      {/* Desktop (lg+) follows Figma "MacBook Pro 14" - 24": no step label
+          (the phone frame dropped it too), Headline/Large title at y=148, a
+          938px column of two 300px cards, the blue "isn't final" banner and a
+          420px, 64px Continue. Every desktop value is lg:, so the phone
+          layout is untouched. */}
+      <main className="relative flex-1 flex flex-col items-center justify-start px-4 lg:px-8 pt-6 lg:pt-[57px] lg:[@media(max-height:800px)]:pt-5! pb-10 lg:[@media(max-height:800px)]:pb-4!">
+        <div className="text-center mb-20 lg:mb-[66px] lg:[@media(max-height:800px)]:mb-7!">
+          <h1 className="text-base font-medium text-ink mb-1 lg:text-[32px] lg:leading-10 lg:font-semibold lg:text-ink">
             What would you like to do?
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 lg:text-[18px] lg:leading-7 lg:text-black/60">
             Are you setting up a community, or joining one you've been invited to?
           </p>
         </div>
@@ -122,35 +129,35 @@ export default function ChoosePath() {
         <p className="lg:hidden w-full max-w-[500px] text-left text-sm text-ink mb-4">
           Choose the type of plan you want to create
         </p>
-        <div className="flex flex-col lg:flex-row lg:justify-center gap-4 lg:gap-5 mb-4 lg:mb-8 w-full max-w-[500px] lg:max-w-none items-stretch">
+        <div className="flex flex-col lg:flex-row lg:justify-center gap-4 lg:gap-6 mb-4 lg:mb-6 lg:[@media(max-height:800px)]:mb-4! w-full max-w-[500px] lg:max-w-[938px] items-stretch">
           {options.map((option) => {
             const isSelected = selected === option.id;
             return (
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
-                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:px-10 lg:py-8 rounded-g-1 lg:rounded-2xl transition-all duration-200 cursor-pointer w-full lg:w-[380px] border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-white"}`}
+                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:h-[300px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:h-[220px]! lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
               >
-                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 mb-4 lg:w-14 lg:h-14 lg:mt-6 lg:mb-5">
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 mb-4">
                   <CloudImage
                     publicId={option.icon}
                     alt={option.title}
                     width={112}
                     objectFit="contain"
-                    className="w-7 h-7 lg:w-14 lg:h-14"
+                    className="w-7 h-7 lg:w-8 lg:h-8"
                   />
                 </div>
                 <div className="flex-none min-w-0">
-                  <h3 className="font-medium text-ink text-lg mb-1 lg:font-semibold lg:text-gray-900 lg:text-base lg:mb-2">
+                  <h3 className="font-medium text-ink text-lg mb-1 lg:text-[24px] lg:leading-[29px]">
                     {option.title}
                   </h3>
-                  <p className="text-base lg:text-sm text-gray-500 leading-relaxed">
+                  <p className="text-base text-gray-500 leading-relaxed lg:text-[18px] lg:leading-[22px] lg:tracking-[0.5px] lg:text-black/60">
                     {option.description}
                   </p>
                 </div>
-                <div className="flex-shrink-0 absolute top-6 left-6 lg:top-4 lg:left-4">
+                <div className="flex-shrink-0 absolute top-6 left-6">
                   {isSelected ? (
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-brand">
+                    <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full flex items-center justify-center bg-brand">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                         <path
                           d="M2 6l3 3 5-5"
@@ -162,7 +169,7 @@ export default function ChoosePath() {
                       </svg>
                     </div>
                   ) : (
-                    <div className="w-6 h-6 rounded-full border-2 border-hairline-disabled" />
+                    <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full border-2 border-hairline-disabled" />
                   )}
                 </div>
               </button>
@@ -170,10 +177,17 @@ export default function ChoosePath() {
           })}
         </div>
 
-        {/* Not in the phone frame. */}
-        <div className="hidden lg:flex items-start gap-1.5 mb-6 w-full max-w-[500px]">
-          <Info size={13} className="text-gray-400 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-gray-500 leading-snug text-left">
+        {/* Desktop only (not in the phone frame): the design-system Banner
+            (docs/design-system.md §9.4 -- #ccdaff fill, brand @20% stroke,
+            r=4) with the info icon, 48px above Continue. */}
+        <div className="hidden lg:flex items-center gap-6 px-6 py-4 lg:[@media(max-height:800px)]:py-3 mb-12 lg:[@media(max-height:800px)]:mb-6 w-full max-w-[938px] rounded-g-1 bg-brand-100 border border-brand/20">
+          <span
+            aria-hidden="true"
+            className="w-6 h-6 rounded-full bg-brand text-white text-sm font-semibold flex items-center justify-center flex-shrink-0"
+          >
+            !
+          </span>
+          <p className="text-sm leading-5 text-ink text-left">
             This choice isn't final — whichever option you pick now, you can still create or join
             additional communities later from your dashboard.
           </p>
@@ -181,7 +195,7 @@ export default function ChoosePath() {
 
         {/* Phones: Skip and Continue share one row, Skip on the left (row-
             reverse keeps Continue first in tab order, as on desktop). */}
-        <div className="flex flex-row-reverse lg:flex-col items-center gap-4 w-full max-w-[500px]">
+        <div className="flex flex-row-reverse lg:flex-col items-center gap-4 lg:gap-6 lg:[@media(max-height:800px)]:gap-3! w-full max-w-[500px]">
           {/* Create is gated: while the KYC summary resolves the button
               holds (never "still loading ⇒ let them through") and Continue
               then routes to the verify step or straight past it (see
@@ -189,7 +203,7 @@ export default function ChoosePath() {
           <Button
             onClick={handleContinue}
             loading={selected === "create" && kycGate.isLoading}
-            className="max-lg:flex-[2] max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px]"
+            className="max-lg:flex-[2] max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px] lg:w-[420px] lg:h-16 lg:[@media(max-height:800px)]:h-14! lg:py-5 lg:[@media(max-height:800px)]:py-4! lg:px-10"
           >
             Continue
           </Button>
@@ -198,7 +212,7 @@ export default function ChoosePath() {
             size="sm"
             fullWidth={false}
             onClick={() => navigate("/dashboard/home")}
-            className="max-lg:flex-1 max-lg:text-brand"
+            className="max-lg:flex-1 max-lg:text-brand lg:text-brand lg:text-[16px] lg:h-auto lg:px-0 lg:py-0 lg:hover:bg-transparent"
           >
             Skip
           </Button>

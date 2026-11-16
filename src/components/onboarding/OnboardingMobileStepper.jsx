@@ -1,7 +1,7 @@
 import { StepIcon } from "./OnboardingStepsSidebar";
 
 // Phone-only (below lg) stepper for the three community-setup screens,
-// replacing StepIndicator's "Step X of 5" bar there. Figma "iPhone 16 - 108 /
+// replacing the old "Step X of 5" bar there. Figma "iPhone 16 - 108 /
 // 109 / 111": three 48px circles with the step glyph, the label under each,
 // and a 1px connector level with the circles' bottom edge.
 //
