@@ -7,6 +7,8 @@ import { useAuth } from "../../store/AuthContext";
 import { getAccessToken } from "../../store/sessionStorage";
 import { useMfaChallenge } from "../../hooks/useMfaChallenge";
 import { getMyInvites, getMyCommunityJoinRequests, submitJoinRequest } from "../../api/invites";
+import { getMe } from "../../api/members";
+import { parseUserData } from "../../utils/userData";
 import { notifyError } from "../../utils/errorHandler";
 import { resolvePostAuthDestination } from "../../utils/postAuthDestination";
 import { toastInfo, toastSuccess } from "../../utils/toast";
@@ -230,6 +232,21 @@ export default function SignIn() {
       sessionStorage.removeItem("paymentPendingRef");
     }
 
+    // The backend's create/join-community decision flag (2026-11-13) lives in
+    // current-user profile data — auth responses are unchanged, so a fresh
+    // password login doesn't carry it yet. Reuse a status hydration already
+    // fetched (Google sign-in, session restore); otherwise read /user/me once.
+    // Unknown (null) means no gate — same fail-open as the invite lookups.
+    let onboardingStatus = user?.onboardingStatus ?? null;
+    if (onboardingStatus == null && !user?.isPlatformAdmin && !user?.isAdmin) {
+      try {
+        const meRes = await getMe();
+        onboardingStatus = parseUserData(meRes.data?.data ?? meRes.data).onboardingStatus ?? null;
+      } catch {
+        onboardingStatus = null;
+      }
+    }
+
     // login() has already succeeded by the time we get here -- a failure in
     // either of these two lookups must not surface as "Incorrect email or
     // password" (handleSignIn's catch would otherwise blame the wrong step).
@@ -259,6 +276,7 @@ export default function SignIn() {
       returnTo,
       pendingPaymentRef: pendingRef,
       hasPendingInvites,
+      onboardingStatus,
     }).to;
   }
 

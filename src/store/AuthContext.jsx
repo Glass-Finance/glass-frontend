@@ -26,7 +26,7 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { login as apiLogin, logout as apiLogout, storeAuthSession } from "../services/authService";
-import { getMe } from "../api/members";
+import { getMe, completeOnboarding as apiCompleteOnboarding } from "../api/members";
 import { setSessionRestoring } from "../api/client";
 import { fetchCompleteMyCommunityList } from "../api/communityList";
 import {
@@ -106,6 +106,15 @@ async function buildUser(authData) {
   // OAuth responses have not always matched the password-login response
   // shape. Fill missing identity fields from the authenticated profile so
   // role routing remains identical across both login methods.
+  //
+  // onboardingStatus (backend 2026-11-13) is also read here when the profile
+  // is fetched — Google-created accounts start PENDING and SignIn's
+  // destination resolver can skip its own /user/me roundtrip when the user
+  // object already carries the field. Password-logins don't hit this branch
+  // (auth responses carry all identity fields), so they fetch it in
+  // resolveDestination instead — auth responses are unchanged by contract,
+  // so the flag is never inferred from them.
+  let onboardingStatus;
   if (!id || !email || !role) {
     try {
       const meRes = await getMe();
@@ -114,6 +123,9 @@ async function buildUser(authData) {
       email ??= profile?.email;
       role ??= profile?.platformRole;
       emailVerified ??= profile?.emailVerified;
+      // userData can come back as a JSON string or an object depending on the
+      // field — same parse as hydration (see utils/userData.js).
+      onboardingStatus = parseUserData(profile).onboardingStatus;
     } catch {
       // Keep the auth response fields; missing roles fail closed below.
     }
@@ -125,6 +137,9 @@ async function buildUser(authData) {
     email,
     role,
     emailVerified,
+    // Absent for staff/admin (no onboarding field) and unknown-status
+    // sessions; both read as "not pending" wherever it is consumed.
+    onboardingStatus,
     isPlatformAdmin,
     isAdmin: isPlatformAdmin,
   };
@@ -428,6 +443,10 @@ export function AuthProvider({ children }) {
         role,
         firstName: ud.firstName,
         lastName: ud.lastName,
+        // Same rationale as externalReference: a re-hydration that omits the
+        // field (older backend, partial response) must not downgrade a status
+        // we already hold. Staff/admin never carry it and stay undefined.
+        onboardingStatus: ud.onboardingStatus ?? prev.onboardingStatus,
         phoneNumber: profile.phoneNumber ?? ud.phone,
         profileImage: normalizeProfileImage(ud.profileImage),
         isPlatformAdmin,
@@ -478,6 +497,31 @@ export function AuthProvider({ children }) {
 
   // Backwards-compatible alias — public API stays stable.
   const refreshUser = hydrateUserProfile;
+
+  // ── completeOnboarding ─────────────────────────────────────────────────────
+  // Marks the create/join-community decision as answered. Backend 2026-11-13:
+  // PATCH /user/onboarding {"status":"COMPLETED"} — idempotent, so callers
+  // (ChoosePath Continue, the Join funnel) don't pre-check status. The flag
+  // only tracks that presentation; it is not proof of KYC or community
+  // membership and the backend stays the authority.
+  //
+  // Never throws: the caller's chosen path must not hinge on this bookkeeping
+  // write. Any failure (transport ambiguity, 409 concurrent profile update)
+  // reconciles through refreshUser() instead of retrying — if another session
+  // already completed it, state settles to COMPLETED; otherwise the prompt
+  // stays pending and reappears on the next sign-in, per the contract.
+  const completeOnboarding = useCallback(async () => {
+    try {
+      await apiCompleteOnboarding();
+      updateUser({ onboardingStatus: "COMPLETED" });
+      return true;
+    } catch {
+      // hydrateUserProfile catches its own failures and returns false; the
+      // void promise here is deliberate fire-and-forget.
+      void refreshUser();
+      return false;
+    }
+  }, [updateUser, refreshUser]);
 
   // Restore session on mount. Until hydrateUserProfile() confirms the cached
   // token + roles against the backend, nothing renders as authenticated:
@@ -598,6 +642,7 @@ export function AuthProvider({ children }) {
       updateUser,
       refreshUser,
       hydrateUserProfile,
+      completeOnboarding,
     }),
     [
       user,
@@ -614,6 +659,7 @@ export function AuthProvider({ children }) {
       updateUser,
       refreshUser,
       hydrateUserProfile,
+      completeOnboarding,
     ],
   );
 
