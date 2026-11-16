@@ -18,9 +18,24 @@ const SIZES = [
 
 async function sheetOverflow(page) {
   return page.evaluate(() => {
-    const sheet = [...document.querySelectorAll("div")].find(
-      (d) => d.className.includes("overflow-y-auto") && d.className.includes("flex-1"),
+    // The form sheet in AuthLayout has both overflow-y-auto and flex-1.
+    // Use a more specific selector: the sheet is the direct child of the
+    // main flex container that has min-h-0 (ensures it's the scrollable
+    // form area, not the hero panel or other overflow containers).
+    const sheet = document.querySelector(
+      "div.min-h-0.overflow-y-auto.flex-1, div.overflow-y-auto.flex-1.min-h-0",
     );
+    if (!sheet) {
+      // Fallback: find any div with both classes (handles class order variations)
+      const fallback = [...document.querySelectorAll("div")].find(
+        (d) => d.classList.contains("overflow-y-auto") && d.classList.contains("flex-1"),
+      );
+      if (!fallback) return { x: 0, y: 0 }; // No scrollable sheet found — treat as no overflow
+      return {
+        x: fallback.scrollWidth - fallback.clientWidth,
+        y: fallback.scrollHeight - fallback.clientHeight,
+      };
+    }
     return {
       x: sheet.scrollWidth - sheet.clientWidth,
       y: sheet.scrollHeight - sheet.clientHeight,

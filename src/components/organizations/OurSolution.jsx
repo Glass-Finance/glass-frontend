@@ -1,35 +1,75 @@
 import SolutionSection from "../common/SolutionSection";
+import {
+  RecurringIcon,
+  OutstandingIcon,
+  HistoryIcon,
+  ContributionIcon,
+} from "../common/SolutionIcons";
 
+// Copy, icons and artwork follow the Figma "organizations" solution frame.
+//
+// illustration: { publicId, width, left, w, h }
+//   width  – pixel width of the uploaded PNG (drives the srcSet)
+//   left/w/h – the artwork's box in Figma px on a 592-wide card (bottom-anchored)
+// Upload the PNGs from /solution-assets as glass/solution/<publicId tail>.
 const features = [
   {
-    icon: { publicId: "glass/icon/frame-payment", width: 100 },
-    title: "Automate Recurring Payments",
-    desc: "Members link their cards once, and dues are deducted automatically.",
-    illustration: { publicId: "glass/solution/automate", width: 800, aspect: "475 / 241" },
+    Icon: RecurringIcon,
+    title: "Set Up Recurring Payment Plans",
+    desc: ["Set up recurring dues and let Glass handle", "scheduled collections."],
+    illustration: {
+      publicId: "glass/solution/org-recurring-plans",
+      width: 686,
+      left: 129,
+      w: 343,
+      h: 223,
+    },
   },
   {
-    icon: { publicId: "glass/icon/frame-reminder", width: 100 },
-    title: "Auto-recover failed payments",
-    desc: "When a payment fails, Glass retries securely and sends gentle SMS reminders",
-    illustration: { publicId: "glass/solution/recover", width: 800, aspect: "475 / 241" },
+    Icon: OutstandingIcon,
+    title: "Stay on Top of Outstanding Payments",
+    desc: [
+      "Easily identify unpaid contributions and follow up",
+      "with members who still need to pay.",
+    ],
+    illustration: {
+      publicId: "glass/solution/org-outstanding",
+      width: 971,
+      left: 64,
+      w: 485.5,
+      h: 232,
+    },
   },
   {
-    icon: { publicId: "glass/icon/frame-receipt", width: 100 },
-    title: "Generate Instant Proof",
-    desc: "Auto-issued receipts and reconciled transaction logs.",
-    illustration: { publicId: "glass/solution/proof", width: 800, aspect: "476 / 242" },
+    Icon: HistoryIcon,
+    title: "Track Each Member Payment History",
+    desc: ["Review individual member payments and total", "collections per plan."],
+    illustration: {
+      publicId: "glass/solution/org-payment-history",
+      width: 982,
+      left: 48,
+      w: 491,
+      h: 225,
+    },
   },
   {
-    icon: { publicId: "glass/icon/frame-flexible", width: 100 },
-    title: "Monitor Payments in Real Time",
-    desc: "See who has paid, who hasn't, and your total balance instantly",
-    illustration: { publicId: "glass/solution/monitor", width: 800, aspect: "475 / 241" },
+    Icon: ContributionIcon,
+    title: "Built for Every Contribution",
+    desc: ["Create recurring plans for regular dues or one-", "time plans for any specific need."],
+    illustration: {
+      publicId: "glass/solution/org-contribution-types",
+      width: 980,
+      left: 49,
+      w: 490,
+      h: 225,
+    },
   },
 ];
 
 export default function OurSolution() {
   return (
     <SolutionSection
+      variant="orgs"
       headline="Built-In Transparency for Every Transaction"
       subtext="Centralize payments, records, and visibility in one shared system, so your team stops chasing and starts leading."
       subtextMaxWidth="640px"
