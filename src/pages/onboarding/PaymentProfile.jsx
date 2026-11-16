@@ -187,12 +187,6 @@ export default function PaymentProfile() {
   // and there's no skip on this step otherwise — so onboarding would be a
   // hard dead end. The account can still be set up later from
   // Settings → Finance → Paystack Account.
-  const handleSkip = () => {
-    navigate("/onboarding/members", {
-      state: { email, communityId, communitySlug, communityName },
-    });
-  };
-
   // Same escape hatch as OrganizationProfile.jsx's own handleBack: an
   // already-authenticated user goes straight to their dashboard instead of
   // stepping back into the middle of onboarding.
@@ -410,17 +404,7 @@ export default function PaymentProfile() {
               >
                 {saving ? "Setting up…" : "Set-Up Account"}
               </Button>
-              <Button
-                variant="tertiary"
-                size="sm"
-                fullWidth={false}
-                onClick={handleSkip}
-                disabled={saving}
-                className="mt-3"
-              >
-                Skip for now — set this up later
-              </Button>
-            </div>
+              </div>
             <div className="h-[env(safe-area-inset-bottom,20px)] lg:hidden" />
           </div>
         </main>

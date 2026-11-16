@@ -207,17 +207,7 @@ export default function ChoosePath() {
           >
             Continue
           </Button>
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth={false}
-            onClick={() => navigate("/dashboard/home")}
-            className="max-lg:flex-1 max-lg:text-brand lg:text-brand lg:text-[16px] lg:h-auto lg:px-0 lg:py-0 lg:hover:bg-transparent"
-          >
-            Skip
-          </Button>
-        </div>
-        <div className="h-[env(safe-area-inset-bottom,0px)]" />
+          <div className="h-[env(safe-area-inset-bottom,0px)]" />
       </main>
     </div>
   );
