@@ -14,6 +14,8 @@
  *   pending payment reference → payment callback
  *   invite token → home (register path) or invites (Google path fallback)
  *   pending invites/requests → invites
+ *   onboarding pending → choose-path decision (backend 2026-11-13 flag; only
+ *     when nothing above is in flight, and staff/admin never carry the field)
  *   fallback (member home, or discover-search for fresh joins)
  *
  * Returns { to: string } for direct navigation, or
@@ -28,9 +30,12 @@ export const MEMBER_INVITES = "/member/invites";
 export const DASHBOARD_HOME = "/dashboard/home";
 export const ADMIN_PANEL = "/dashboard/admin-panel";
 export const DISCOVER_COMMUNITIES = "/member/communities/search";
+// Where the backend's onboardingStatus PENDING flag routes platform users who
+// have not yet answered the create/join-community decision.
+export const ONBOARDING_CHOOSE_PATH = "/onboarding/choose-path";
 
 /**
- * @param {{ user?: { isPlatformAdmin?: boolean, isAdmin?: boolean }|null, returnTo?: string, pendingCommunity?: string, pendingPaymentRef?: string, inviteToken?: string, viaGoogle?: boolean, hasPendingInvites?: boolean, fallback?: string }} [opts]
+ * @param {{ user?: { isPlatformAdmin?: boolean, isAdmin?: boolean }|null, returnTo?: string, pendingCommunity?: string, pendingPaymentRef?: string, inviteToken?: string, viaGoogle?: boolean, hasPendingInvites?: boolean, onboardingStatus?: string|null, fallback?: string }} [opts]
  */
 export function resolvePostAuthDestination({
   user,
@@ -40,6 +45,7 @@ export function resolvePostAuthDestination({
   inviteToken,
   viaGoogle = false,
   hasPendingInvites = false,
+  onboardingStatus = null,
   fallback = MEMBER_HOME,
 } = {}) {
   if (user?.isPlatformAdmin) return { to: ADMIN_PANEL };
@@ -68,6 +74,14 @@ export function resolvePostAuthDestination({
   if (inviteToken) return { to: viaGoogle ? MEMBER_INVITES : MEMBER_HOME };
 
   if (hasPendingInvites) return { to: MEMBER_INVITES };
+
+  // Backend 2026-11-13: userData.onboardingStatus === "PENDING" means this
+  // account has never answered the create/join-community decision. Show it
+  // before the destination, but only when nothing concrete is in flight — an
+  // interrupted payment, an invite, or a saved return target all tell the user
+  // more than the decision screen would. Staff/admin have no onboarding field,
+  // and the early admin branches above return before reaching here regardless.
+  if (onboardingStatus === "PENDING") return { to: ONBOARDING_CHOOSE_PATH };
 
   return { to: fallback };
 }

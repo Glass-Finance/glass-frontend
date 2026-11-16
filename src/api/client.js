@@ -314,6 +314,12 @@ export const PRE_AUTH_PATHS = [
   "/auth/register",
   "/auth/phone/request-otp",
   "/auth/phone/verify-otp",
+  // The email-code pair completes the same pre-registration verification the
+  // phone pair does: /request-otp proves the address, /verify-otp hands back
+  // the confirmToken register() requires. Both run with no session, and a
+  // rejected code is the likeliest 401 shape — so the same guard applies.
+  "/auth/email/request-otp",
+  "/auth/email/verify-otp",
 ];
 
 // ── Global response handler ───────────────────────────────────────────────────

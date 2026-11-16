@@ -36,7 +36,12 @@ import { createHash } from "crypto";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = join(here, "..");
-const siblingRoot = join(appRoot, "..", "glass-waitlist-v1");
+
+// The sibling marketing repo was renamed from `glass-waitlist-v1` to
+// `glass-marketing` on GitHub. Resolve either name so the gate still runs
+// for checkouts made before or after the rename.
+const SIBLING_NAMES = ["glass-marketing", "glass-waitlist-v1"];
+const siblingRoot = SIBLING_NAMES.map((n) => join(appRoot, "..", n)).find((p) => existsSync(p));
 
 // Shared subtrees that are intentionally duplicated across the two repos.
 const SHARED_ROOTS = [
@@ -157,10 +162,10 @@ function lastTouched(repoRoot, relPath) {
   }
 }
 
-if (!existsSync(siblingRoot)) {
+if (!siblingRoot) {
   console.log(
-    `SKIP: sibling repo not found at ${siblingRoot} — clone glass-waitlist-v1 ` +
-      `next to this repo (or add a CI checkout) to run the landing-sync check.`,
+    `SKIP: sibling repo not found at ${SIBLING_NAMES.map((n) => join(appRoot, "..", n)).join(" or ")} — ` +
+      `clone the marketing repo next to this repo (or add a CI checkout) to run the landing-sync check.`,
   );
   process.exit(0);
 }

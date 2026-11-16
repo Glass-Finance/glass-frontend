@@ -131,6 +131,7 @@ describe("script-src", () => {
       "https://apis.google.com",
       "https://cdn.pendo.io", // Pendo agent
       "https://cdn.usesmileid.com", // Smile ID inline SDK
+      "https://vercel.live", // Vercel feedback toolbar
     ]) {
       expect(sources).toContain(host);
     }
@@ -142,6 +143,7 @@ describe("connect-src", () => {
     const sources = sourcesFor("connect-src");
     for (const host of [
       "https://api.glasspay.app",
+      "https://staging-api.glasspay.app",
       "https://api.smileidentity.com",
       "https://testapi.smileidentity.com",
       "https://res.cloudinary.com",

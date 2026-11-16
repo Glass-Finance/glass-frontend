@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, ShieldAlert, ShieldCheck, EyeOff, MoreVertical, Users } from "lucide-react";
+import { Loader2, ShieldAlert, ShieldCheck, MoreVertical, Users } from "lucide-react";
 import ModalShell from "../../../components/dashboard/ModalShell";
 import { Button } from "../../../components/ui/Button";
 import { toTitleCase } from "../../../utils/format";
@@ -51,7 +51,7 @@ const FILTERS = [
 // confirm step is type-the-identifier rather than a reason box — so the audit
 // trail records what the operator actually did here instead of inventing a
 // reason on their behalf.
-const DELETE_REASON = "Confirmed by typing the account identifier before deletion";
+const MARK_DELETION_REASON = "Confirmed by typing the account identifier before deletion";
 
 function displayName(u) {
   return [u.userData?.firstName, u.userData?.lastName]
@@ -179,17 +179,17 @@ function UnsuspendModal({ user, onClose, onConfirm, unsuspending }) {
   );
 }
 
-// IRREVERSIBLE confirm (design: Admin – Users (confirm)): type the account
+// Mark-for-deletion confirm (design: Admin – Users (confirm)): type the account
 // identifier to arm the button. Falls back to the user id when there is no
-// email on file, so the flow still works for the anonymised-looking rows.
-function DeleteConfirmModal({ user, onClose, onConfirm, deleting }) {
+// email on file. This is REVERSIBLE (30-day grace, Restore button on row).
+function MarkForDeletionModal({ user, onClose, onConfirm, deleting }) {
   const [typed, setTyped] = useState("");
   const name = displayName(user) || "this user";
   const target = user.email ?? user.id;
   const matches = typed.trim() === target;
 
   return (
-    <ModalShell className="rounded-g-1!" title={`Delete ${name}?`} onClose={onClose}>
+    <ModalShell className="rounded-g-1!" title={`Mark ${name} for deletion?`} onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -198,7 +198,8 @@ function DeleteConfirmModal({ user, onClose, onConfirm, deleting }) {
         className="px-6 py-5 flex flex-col gap-4"
       >
         <p className="text-xs text-gray-600 leading-relaxed">
-          This permanently deletes the user and cannot be undone. To confirm, type{" "}
+          This marks the user for deletion. A 30-day grace period starts — the account can be
+          restored anytime during this window. To confirm, type{" "}
           <strong className="break-all">{target}</strong> below.
         </p>
         <div>
@@ -238,7 +239,7 @@ function DeleteConfirmModal({ user, onClose, onConfirm, deleting }) {
             size="sm"
             className="flex-1"
           >
-            Delete user
+            Mark for deletion
           </Button>
         </div>
       </form>
@@ -246,13 +247,16 @@ function DeleteConfirmModal({ user, onClose, onConfirm, deleting }) {
   );
 }
 
-function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
+// Irreversible delete confirm (design: Admin – Users (confirm)): requires a
+// reason. This is PERMANENT — scrubs PII, bypasses grace period, cannot be undone.
+// Only available once the account is already pending deletion (backend 409 otherwise).
+function DeleteUserModal({ user, onClose, onConfirm, deleting }) {
   const [reason, setReason] = useState("");
 
   return (
     <ModalShell
       className="rounded-g-1!"
-      title="Anonymize User"
+      title="Delete User"
       subtitle={user.email}
       onClose={onClose}
     >
@@ -264,9 +268,9 @@ function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
         className="px-6 py-5 flex flex-col gap-4"
       >
         <p className="text-xs text-gray-600 leading-relaxed">
-          Immediately scrubs <strong>{user.email}</strong>'s personal data, bypassing the grace
-          period. <strong>This cannot be undone.</strong> Only works on an account already marked
-          for deletion -- if it isn't, this will be rejected.
+          This permanently deletes <strong>{user.email}</strong> and cannot be undone. Personal data
+          is scrubbed immediately, bypassing the 30-day grace period. Only works on an account
+          already marked for deletion — if it isn't, this will be rejected.
         </p>
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">Reason</label>
@@ -276,14 +280,14 @@ function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
             rows={3}
             required
             className="w-full px-3 py-2.5 rounded-g-1 text-xs text-gray-800 outline-none resize-none transition-colors border border-[#D0D0D0] focus:border-brand"
-            placeholder="Why is this account being anonymized now?"
+            placeholder="Why is this account being permanently deleted now?"
           />
         </div>
         <div className="flex gap-3 pt-1">
           <Button
             type="button"
             onClick={onClose}
-            disabled={anonymizing}
+            disabled={deleting}
             fullWidth={false}
             variant="outline-neutral"
             size="sm"
@@ -294,14 +298,14 @@ function AnonymizeModal({ user, onClose, onConfirm, anonymizing }) {
           <Button
             type="submit"
             disabled={!reason.trim()}
-            loading={anonymizing}
+            loading={deleting}
             fullWidth={false}
             variant="critical"
             size="sm"
             className="flex-1 flex items-center justify-center gap-1.5"
           >
-            {anonymizing ? <Loader2 size={12} className="animate-spin" /> : <EyeOff size={12} />}
-            {anonymizing ? "Anonymizing…" : "Anonymize Now"}
+            {deleting ? <Loader2 size={12} className="animate-spin" /> : <ShieldAlert size={12} />}
+            {deleting ? "Deleting…" : "Delete user"}
           </Button>
         </div>
       </form>
@@ -330,31 +334,31 @@ function MenuButton({ danger = false, children, onClick }) {
 // Which actions are legal is decided by the backend, and each one rejects the
 // wrong state with a 400/409 rather than doing nothing quietly:
 //
-//   suspend   requires accountNonLocked == true   (else 400 "already suspended")
-//   delete    requires status == ACTIVE           (else 409)
-//   anonymize requires status == PENDING_DELETION (else 409)
+//   suspend         requires accountNonLocked == true   (else 400 "already suspended")
+//   mark-for-deletion  requires status == ACTIVE           (else 409)
+//   delete (perm)   requires status == PENDING_DELETION    (else 409)
 //
 // So the menu is driven off the derived status instead of `user.enabled`.
 // Gating Suspend on `enabled` was the old check and it was wrong twice over:
 // suspension never touches `enabled`, so a suspended row still offered
 // "Suspend", and a pending-deletion row (enabled=false) offered Suspend even
 // though only Restore can help it. Offering an action the backend will reject
-// reads as a broken panel, so Suspend and Delete are scoped to ACTIVE only.
+// reads as a broken panel, so Suspend and Mark-for-deletion are scoped to ACTIVE only.
 //
-// The two destructive actions sit under the IRREVERSIBLE divider in red.
-function RowMenu({ user, statusKey, kycAction, onKycAction, onSuspend, onDelete, onAnonymize }) {
+// Only the PERMANENT delete action sits under the IRREVERSIBLE divider in red.
+function RowMenu({ user, statusKey, kycAction, onKycAction, onSuspend, onMarkDeletion, onDelete }) {
   const canSuspend = statusKey === "ACTIVE";
-  // Delete moves ACTIVE -> PENDING_DELETION, so the backend 409s once the
+  // Mark-for-deletion moves ACTIVE -> PENDING_DELETION, so the backend 409s once the
   // account has already moved.
-  const canDelete = statusKey === "ACTIVE";
-  // Anonymize is the second phase and the backend 409s unless the account is
+  const canMarkDeletion = statusKey === "ACTIVE";
+  // Permanent delete is the second phase and the backend 409s unless the account is
   // already PENDING_DELETION. That precondition cannot be detected from the
   // fields shipped today, so it stays offered on every non-anonymized row
   // exactly as before — the modal states the requirement, and skipping straight
   // to it returns a 409 rather than doing something unintended. Tighten to
   // `statusKey === "PENDING_DELETION"` once UserDto serializes `status`.
-  const canAnonymize = statusKey !== "ANONYMIZED";
-  const hasDestructive = canDelete || canAnonymize;
+  const canDelete = statusKey !== "ANONYMIZED";
+  const showIrreversibleDivider = canDelete;
 
   return (
     <div
@@ -368,7 +372,8 @@ function RowMenu({ user, statusKey, kycAction, onKycAction, onSuspend, onDelete,
         </MenuButton>
       )}
       {canSuspend && <MenuButton onClick={onSuspend}>Suspend</MenuButton>}
-      {hasDestructive && (
+      {canMarkDeletion && <MenuButton onClick={onMarkDeletion}>Mark for deletion…</MenuButton>}
+      {showIrreversibleDivider && (
         <>
           <div className="my-1.5 border-t border-surface-sunken" />
           <p className="m-0 px-3 pt-0.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
@@ -379,11 +384,6 @@ function RowMenu({ user, statusKey, kycAction, onKycAction, onSuspend, onDelete,
       {canDelete && (
         <MenuButton danger onClick={onDelete}>
           Delete user…
-        </MenuButton>
-      )}
-      {canAnonymize && (
-        <MenuButton danger onClick={onAnonymize}>
-          Anonymize…
         </MenuButton>
       )}
     </div>
@@ -403,8 +403,8 @@ export default function UsersSection() {
   const [kycDialog, setKycDialog] = useState(null);
   const [suspending, setSuspending] = useState(null);
   const [unsuspending, setUnsuspending] = useState(null);
-  const [deleting, setDeleting] = useState(null);
-  const [anonymizing, setAnonymizing] = useState(null);
+  const [markingDeletion, setMarkingDeletion] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
   const debouncedSet = useDebounce((v) => {
     setDebouncedSearch(v);
@@ -459,7 +459,7 @@ export default function UsersSection() {
     mutationFn: ({ userId, reason }) => markUserForDeletion(userId, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      setDeleting(null);
+      setMarkingDeletion(null);
     },
     meta: { successMessage: "User marked for deletion" },
   });
@@ -468,9 +468,9 @@ export default function UsersSection() {
     mutationFn: ({ userId, reason }) => anonymizeUser(userId, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      setAnonymizing(null);
+      setDeletingUser(null);
     },
-    meta: { successMessage: "User anonymized" },
+    meta: { successMessage: "User deleted" },
   });
 
   const items = data?.content ?? [];
@@ -707,13 +707,13 @@ export default function UsersSection() {
                               setOpenMenu(null);
                               setSuspending(u);
                             }}
+                            onMarkDeletion={() => {
+                              setOpenMenu(null);
+                              setMarkingDeletion(u);
+                            }}
                             onDelete={() => {
                               setOpenMenu(null);
-                              setDeleting(u);
-                            }}
-                            onAnonymize={() => {
-                              setOpenMenu(null);
-                              setAnonymizing(u);
+                              setDeletingUser(u);
                             }}
                           />
                         )}
@@ -751,20 +751,22 @@ export default function UsersSection() {
           unsuspending={unsuspend.isPending}
         />
       )}
-      {deleting && (
-        <DeleteConfirmModal
-          user={deleting}
-          onClose={() => setDeleting(null)}
-          onConfirm={() => markForDeletion.mutate({ userId: deleting.id, reason: DELETE_REASON })}
+      {markingDeletion && (
+        <MarkForDeletionModal
+          user={markingDeletion}
+          onClose={() => setMarkingDeletion(null)}
+          onConfirm={() =>
+            markForDeletion.mutate({ userId: markingDeletion.id, reason: MARK_DELETION_REASON })
+          }
           deleting={markForDeletion.isPending}
         />
       )}
-      {anonymizing && (
-        <AnonymizeModal
-          user={anonymizing}
-          onClose={() => setAnonymizing(null)}
-          onConfirm={(reason) => anonymize.mutate({ userId: anonymizing.id, reason })}
-          anonymizing={anonymize.isPending}
+      {deletingUser && (
+        <DeleteUserModal
+          user={deletingUser}
+          onClose={() => setDeletingUser(null)}
+          onConfirm={(reason) => anonymize.mutate({ userId: deletingUser.id, reason })}
+          deleting={anonymize.isPending}
         />
       )}
     </div>

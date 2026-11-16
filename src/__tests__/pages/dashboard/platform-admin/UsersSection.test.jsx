@@ -220,7 +220,7 @@ describe("UsersSection — details", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it.each(["Suspend", "Delete user…", "Anonymize…"])(
+  it.each(["Suspend", "Mark for deletion…", "Delete user…"])(
     "does not open details for the %s action",
     async (name) => {
       renderSection();
@@ -362,12 +362,12 @@ describe("UsersSection — unsuspend / delete / anonymize", () => {
     markUserForDeletion.mockResolvedValue({});
     renderSection();
     const row = await findRow();
-    fireEvent.click(openMenu(row, "Delete user…"));
+    fireEvent.click(openMenu(row, "Mark for deletion…"));
 
-    expect(screen.getByText("Delete Ada Lovelace?")).toBeTruthy();
+    expect(screen.getByText("Mark Ada Lovelace for deletion?")).toBeTruthy();
     const input = screen.getByPlaceholderText("Type the email to confirm");
     const form = input.closest("form");
-    const submit = within(form).getByRole("button", { name: "Delete user" });
+    const submit = within(form).getByRole("button", { name: "Mark for deletion" });
     expect(submit.disabled).toBe(true);
 
     // A near-miss keeps the destructive button armed-off.
@@ -383,19 +383,21 @@ describe("UsersSection — unsuspend / delete / anonymize", () => {
         reason: "Confirmed by typing the account identifier before deletion",
       }),
     );
-    await waitFor(() => expect(screen.queryByText("Delete Ada Lovelace?")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Mark Ada Lovelace for deletion?")).toBeNull());
   });
 
-  it("anonymizes an account with a required reason", async () => {
+  it("deletes an account permanently with a required reason", async () => {
     anonymizeUser.mockResolvedValue({});
     renderSection();
     const row = await findRow();
-    fireEvent.click(openMenu(row, "Anonymize…"));
+    fireEvent.click(openMenu(row, "Delete user…"));
 
-    expect(screen.getByText("Anonymize User")).toBeTruthy();
-    const textarea = screen.getByPlaceholderText("Why is this account being anonymized now?");
+    expect(screen.getByText("Delete User")).toBeTruthy();
+    const textarea = screen.getByPlaceholderText(
+      "Why is this account being permanently deleted now?",
+    );
     const form = textarea.closest("form");
-    expect(within(form).getByRole("button", { name: "Anonymize Now" }).disabled).toBe(true);
+    expect(within(form).getByRole("button", { name: "Delete user" }).disabled).toBe(true);
 
     fireEvent.change(textarea, { target: { value: "Data subject verified" } });
     fireEvent.submit(form);
@@ -405,7 +407,7 @@ describe("UsersSection — unsuspend / delete / anonymize", () => {
         reason: "Data subject verified",
       }),
     );
-    await waitFor(() => expect(screen.queryByText("Anonymize User")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Delete User")).toBeNull());
   });
 });
 
@@ -483,15 +485,16 @@ describe("UsersSection — recovery actions are contextual", () => {
     expect(within(row).queryByRole("button", { name: "Unsuspend" })).toBeNull();
   });
 
-  it("omits Delete on a pending-deletion account, which would 409", async () => {
+  it("omits Mark for deletion on a pending-deletion account, which would 409", async () => {
     getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
     renderSection();
 
     const row = await findRow();
     fireEvent.click(within(row).getByRole("button", { name: /^Actions for/ }));
 
-    expect(within(row).queryByRole("button", { name: "Delete user…" })).toBeNull();
-    // The second deletion phase is still reachable.
-    expect(within(row).getByRole("button", { name: "Anonymize…" })).toBeTruthy();
+    // Mark for deletion only on ACTIVE; pending-deletion shows only Delete user (irreversible)
+    expect(within(row).queryByRole("button", { name: "Mark for deletion…" })).toBeNull();
+    // The irreversible delete action IS available on pending-deletion.
+    expect(within(row).getByRole("button", { name: "Delete user…" })).toBeTruthy();
   });
 });

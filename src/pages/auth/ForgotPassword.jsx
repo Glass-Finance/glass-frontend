@@ -91,7 +91,7 @@ export default function ForgotPassword() {
   const otpComplete = otp.every((d) => d !== "");
 
   return (
-    <AuthLayout heroTitle="Manage Your Community" heroSubtitle="Finance Effortlessly">
+    <AuthLayout heroHeadline="Manage Your Community Finance Effortlessly">
       <div
         className={`w-full ${step === "otp" ? "max-w-lg gap-12" : "max-w-md gap-6"} flex flex-col md:mt-14 mb-auto`}
       >
