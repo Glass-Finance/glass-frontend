@@ -1,17 +1,94 @@
 /**
  * Shared "our solution" section shell used by both the organizations and
- * members marketing pages. The tilt-card mechanics, entrance keyframes,
- * and layout are identical between them; only the badge/copy/feature
- * list vary — see organizations/OurSolution.jsx and
+ * members marketing pages. The card anatomy, tilt mechanics, entrance
+ * keyframes, and layout are identical between them; only the badge/copy/
+ * feature list vary — see organizations/OurSolution.jsx and
  * members/MembersSolution.jsx for the per-audience data.
+ *
+ * ── Figma fidelity ───────────────────────────────────────────────────────────
+ * Every card is built to the Figma frame (592 × 380 card, 24px grid gap):
+ *
+ *   card      white @ 60%, 1px rim black @ 10%, 4px radius
+ *   icon      64px ring (1px black @ 10%) holding a 30px #002FA7 glyph
+ *   title     Inter 600, #001F6E          (orgs 22/28 · members 24/32)
+ *   desc      Inter 400, 18px             (orgs 22px pitch · members 28px pitch)
+ *   panel     "glass" frame 24px in from the left, 30px from the right, 8px top
+ *             corners, 24px under the header, running off the bottom edge. It
+ *             carries the two soft glows (blue left, purple right) that sit
+ *             107px / 130px below the panel's top.
+ *   artwork   bottom-anchored PNG per card, positioned as a % of card width.
+ *
+ * Everything is sized in container-query units (cqw) of the card, so at any
+ * card width ≥ ~480px the card is a pixel-proportional scale of the Figma
+ * frame (text wraps where Figma wraps, artwork keeps its position). Below
+ * that, text/icon sizes bottom out at readable minimums and wrap naturally.
+ *
+ * The orgs and members frames were drawn with slightly different type metrics
+ * in Figma; VARIANTS below carries each one faithfully.
  */
 
 import { useCallback, useEffect, useRef } from "react";
 import BlurText from "../ui/BlurText";
-import CloudImage from "./CloudImage";
 import CloudAspectImage from "./CloudAspectImage";
 
-const lightBg = { publicId: "glass/solution/bg-light", width: 1200 };
+// ─── Figma constants (all in Figma px on a 592-wide card) ────────────────────
+const CARD_W = 592;
+const CARD_H = 380;
+const cq = (px) => `${+((px / CARD_W) * 100).toFixed(3)}cqw`;
+/** Scales with the card width, never above the Figma size nor below `min`. */
+const fluid = (px, min) => `clamp(${min}px, ${cq(px)}, ${px}px)`;
+
+const VARIANTS = {
+  orgs: {
+    titlePx: 22,
+    titleLH: 26 / 22,
+    descGap: 5.5,
+    descLH: 22 / 18,
+    descTracking: "0.027em",
+    descColor: "rgba(0,0,0,0.6)",
+  },
+  members: {
+    titlePx: 24,
+    titleLH: 32 / 24,
+    descGap: 4.5,
+    descLH: 28 / 18,
+    descTracking: "0",
+    descColor: "#808080",
+  },
+};
+
+// ── Glows ────────────────────────────────────────────────────────────────────
+// Figma blurs two discs (blue #002FA7 left, purple #6B2FB5 right) behind the
+// artwork. A blurred disc is a Gaussian, so each glow is a radial-gradient
+// sampled from one: peak alpha `peak`, spread `sigma` (Figma px). Values were
+// fitted against the exported frames (≈1% RMS error), not eyeballed.
+const BLUE = "0,47,167";
+const PURPLE = "107,47,181";
+const gaussStops = (rgb, peak, sigma) =>
+  [0, 0.5, 1, 1.5, 2, 2.5, 3]
+    .map((k) => `rgba(${rgb},${(peak * Math.exp((-k * k) / 2)).toFixed(4)}) ${cq(k * sigma)}`)
+    .join(",");
+const glow = (rgb, peak, sigma, x, y) =>
+  `radial-gradient(circle ${cq(3 * sigma)} at ${cq(x)} ${cq(y)},${gaussStops(rgb, peak, sigma)},transparent ${cq(3 * sigma)})`;
+
+// Glow centres sit 107px (blue, x=128) / 130px (purple, x=425) below the
+// panel's top edge, measured from the card's left edge.
+const GLOW_REACH = 300; // how far above the panel the card-level glow layer extends
+const CARD_GLOW = [
+  glow(PURPLE, 0.177, 85.4, 425, GLOW_REACH + 130),
+  glow(BLUE, 0.214, 85.4, 128, GLOW_REACH + 107),
+].join(",");
+
+// Inside the panel the artwork sits on a slightly richer surface than the card:
+// an extra purple glow, a faint left→right tint, and a thin inner shadow along
+// the top edge. Panel-relative coords: its padding box starts at (25, top+1).
+const PANEL_BG = [
+  // top inner shadow: e^(-y/6.6px) falloff
+  `linear-gradient(180deg,rgba(0,0,0,0.049) 0,rgba(0,0,0,0.018) ${cq(6.6)},rgba(0,0,0,0.0066) ${cq(13.2)},rgba(0,0,0,0.0024) ${cq(19.8)},transparent ${cq(27)})`,
+  "linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.196))",
+  "linear-gradient(90deg,rgba(0,0,0,0.0069),rgba(0,0,0,0))",
+  glow(PURPLE, 0.0935, 77.2, 400, 129),
+].join(",");
 
 // ─── Per-card tilt hook ───────────────────────────────────────────────────────
 function useTilt(strength = 14) {
@@ -36,11 +113,12 @@ function useTilt(strength = 14) {
     const scale = hovering.current ? 1.03 : 1;
     card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(${scale},${scale},1)`;
 
+    // The Figma card is flat at rest, so the shadow only appears while lifted.
     const sx = (-rotY * 1.2).toFixed(2);
     const sy = (rotX * 1.2).toFixed(2);
     card.style.boxShadow = hovering.current
-      ? `0 0 0 1px rgba(255,255,255,0.85) inset, ${sx}px ${sy}px 40px rgba(28,43,138,0.16), 0 2px 8px rgba(0,0,0,0.06)`
-      : "0 0 0 1px rgba(255,255,255,0.75) inset, 0 2px 12px rgba(28,43,138,0.07), 0 1px 3px rgba(0,0,0,0.05)";
+      ? `${sx}px ${sy}px 40px rgba(28,43,138,0.14), 0 2px 8px rgba(0,0,0,0.05)`
+      : "none";
 
     if (sheen) {
       const nx = (rotY / strength + 1) / 2;
@@ -98,9 +176,22 @@ function useTilt(strength = 14) {
   return { cardRef, sheenRef, onMouseMove, onMouseEnter, onMouseLeave };
 }
 
+// ─── Description: explicit Figma line breaks, natural wrap on small cards ────
+function Desc({ lines }) {
+  return lines.map((line, i) => (
+    <span key={i}>
+      {i > 0 && !lines[i - 1].endsWith("-") && " "}
+      {i > 0 && <br className="sol-br" />}
+      <span className="sol-line">{line}</span>
+    </span>
+  ));
+}
+
 // ─── Feature card ─────────────────────────────────────────────────────────────
-function FeatureCard({ icon, title, desc, illustration, entryDelay }) {
+function FeatureCard({ Icon, title, desc, illustration, entryDelay, v }) {
   const { cardRef, sheenRef, onMouseMove, onMouseEnter, onMouseLeave } = useTilt(14);
+  const lines = Array.isArray(desc) ? desc : [desc];
+  const ring = fluid(64, 44);
 
   return (
     <div
@@ -108,61 +199,105 @@ function FeatureCard({ icon, title, desc, illustration, entryDelay }) {
       onMouseMove={onMouseMove}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="relative rounded-[14px] bg-[#EFEFF1] shadow-[0_0_0_1px_rgba(255,255,255,0.75)_inset,0_2px_12px_rgba(28,43,138,0.07),0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col cursor-default will-change-transform [transform-style:preserve-3d] opacity-0"
+      // overflow-clip (not -hidden): hidden makes this a scroll container, which zeroes the
+      // aspect-ratio box's automatic min-height, so it could never grow to fit its content.
+      // w-full: a stretched item with aspect-ratio and `width:auto` would otherwise derive
+      // its width from the stretched height and overflow its grid column on narrow screens.
+      className="relative flex w-full min-w-0 flex-col self-stretch overflow-clip rounded-[4px] bg-white/60 cursor-default will-change-transform"
       style={{
-        animation: `glassCardIn 0.65s cubic-bezier(0.22,1,0.36,1) ${entryDelay}ms forwards`,
+        containerType: "inline-size",
+        aspectRatio: `${CARD_W} / ${CARD_H}`,
+        // `backwards`, not `forwards`: a forwards fill would keep overriding the
+        // inline transform the tilt hook writes, freezing the hover effect.
+        animation: `glassCardIn 0.65s cubic-bezier(0.22,1,0.36,1) ${entryDelay}ms backwards`,
       }}
     >
       {/* Sheen */}
       <div
         ref={sheenRef}
-        className="absolute inset-0 rounded-[14px] pointer-events-none z-20 transition-opacity duration-200 ease-in-out"
+        className="absolute inset-0 rounded-[4px] pointer-events-none z-20 transition-opacity duration-200 ease-in-out"
         style={{ opacity: 0 }}
       />
+      {/* 1px rim, painted over the artwork like the Figma stroke */}
+      <div className="absolute inset-0 rounded-[4px] border border-black/10 pointer-events-none z-30" />
 
-      {/* Icon + text */}
-      <div className="flex items-start gap-3 [padding:clamp(16px,3vw,28px)_clamp(14px,2.5vw,20px)_0px]">
-        <CloudImage
-          publicId={icon.publicId}
-          alt=""
-          width={icon.width}
-          objectFit="contain"
-          className="[width:clamp(36px,5vw,50px)] [height:clamp(36px,5vw,50px)] flex-shrink-0"
-        />
-        <div className="min-w-0">
-          {/* Title types first */}
-          <h3 className="text-[clamp(16px,2.5vw,18px)] font-bold text-brand-ink leading-[1.3] mb-1.5">
+      {/* Icon ring + text */}
+      <div
+        className="relative z-10 flex items-start"
+        style={{ padding: `${fluid(32, 20)} ${fluid(24, 16)} 0`, gap: fluid(24, 12) }}
+      >
+        <span
+          className="flex flex-none items-center justify-center rounded-full border border-black/10 text-[#002FA7]"
+          style={{ width: ring, height: ring }}
+        >
+          <Icon style={{ width: fluid(30, 20), height: fluid(30, 20) }} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3
+            className="sol-title m-0 font-semibold text-[#001F6E]"
+            style={{ fontSize: fluid(v.titlePx, 16), lineHeight: v.titleLH }}
+          >
             {title}
           </h3>
-
-          <p className="text-[clamp(14px,2vw,14px)] text-black/60 leading-[1.6] m-0">{desc}</p>
+          <p
+            className="m-0"
+            style={{
+              marginTop: fluid(v.descGap, 2),
+              fontSize: fluid(18, 14),
+              lineHeight: v.descLH,
+              letterSpacing: v.descTracking,
+              color: v.descColor,
+            }}
+          >
+            <Desc lines={lines} />
+          </p>
         </div>
       </div>
 
-      {/* Illustration — flex-1 (not a fixed height) so this box absorbs
-          whatever extra height CSS Grid's row-stretch adds when a sibling
-          card's longer description wraps to more lines; a fixed height
-          here left that leftover space as a visible gap below the image,
-          which also made the bottom-anchored image read as too small/cut
-          off short of the card's real bottom edge (#151). The clamp still
-          sets the natural/minimum size when no stretch is happening. */}
-      <div className="solution-illus relative flex-1 [min-height:clamp(160px,45vw,240px)] overflow-hidden">
-        <CloudImage
-          publicId={lightBg.publicId}
-          alt=""
-          width={lightBg.width}
-          className="absolute inset-0 opacity-30"
-          draggable={false}
+      {/* Glass panel. flex-1 so it absorbs whatever height the header leaves
+          (1- vs 2-line descriptions, wrapped titles, grid row stretch); the
+          artwork is bottom-anchored so it never moves. min-height keeps the
+          panel tall enough for its artwork when the header wraps on small
+          screens. */}
+      <div
+        className="relative flex-1 rounded-t-[8px] border border-b-0 border-white/80"
+        style={{
+          marginTop: fluid(24, 16),
+          marginLeft: fluid(24, 16),
+          marginRight: fluid(30, 16),
+          minHeight: cq(illustration.h + 16),
+          backgroundImage: PANEL_BG,
+        }}
+      >
+        {/* Card-level glows: a card-wide layer anchored to the panel's top
+            edge, so the haze also spills a little outside the panel. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -z-10"
+          style={{
+            left: `calc(${cq(-24)} - 1px)`,
+            top: `calc(${cq(-GLOW_REACH)} - 1px)`,
+            width: "100cqw",
+            height: `calc(${cq(GLOW_REACH)} + 100% + 2px)`,
+            backgroundImage: CARD_GLOW,
+          }}
         />
-        <div className="solution-fade absolute top-0 left-0 right-0 h-[18%] bg-[linear-gradient(to_bottom,#EFEFF1_0%,rgba(239,239,241,0.7)_55%,transparent_100%)] pointer-events-none z-[5]" />
+      </div>
+
+      {/* Artwork — positioned by its Figma offsets as a % of card width */}
+      <div
+        className="absolute bottom-0 z-10 select-none"
+        style={{
+          left: `${+((illustration.left / CARD_W) * 100).toFixed(3)}%`,
+          width: `${+((illustration.w / CARD_W) * 100).toFixed(3)}%`,
+        }}
+      >
         <CloudAspectImage
           publicId={illustration.publicId}
           width={illustration.width}
-          aspectRatio={illustration.aspect}
-          sizes="(min-width: 768px) 50vw, 85vw"
+          aspectRatio={`${illustration.w} / ${illustration.h}`}
+          sizes="(min-width: 1140px) 480px, (min-width: 768px) 42vw, 90vw"
           alt={title}
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] z-10"
-          imgClassName="object-contain"
           draggable={false}
           loading="lazy"
         />
@@ -178,7 +313,10 @@ export default function SolutionSection({
   subtext,
   subtextMaxWidth = "640px",
   features,
+  variant = "orgs",
 }) {
+  const v = VARIANTS[variant] ?? VARIANTS.orgs;
+
   return (
     <>
       <style>{`
@@ -186,9 +324,12 @@ export default function SolutionSection({
         from { opacity: 0; transform: perspective(900px) translateY(32px) rotateX(6deg); }
         to   { opacity: 1; transform: perspective(900px) translateY(0px) rotateX(0deg); }
       }
-      @media (min-width: 640px) and (max-width: 1023px) {
-        .solution-illus { min-height: 180px !important; }
-        .solution-fade { height: 8% !important; background: linear-gradient(to bottom, #EFEFF1 0%, transparent 100%) !important; }
+      /* Forced Figma line breaks only once the card is wide enough that the
+         scaled text is guaranteed to fit; smaller cards wrap naturally. */
+      .sol-br { display: none; }
+      @container (min-width: 480px) {
+        .sol-br { display: inline; }
+        .sol-line, .sol-title { white-space: nowrap; }
       }
     `}</style>
 
@@ -221,16 +362,17 @@ export default function SolutionSection({
             </p>
           </div>
 
-          {/* ── Cards ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {features.map(({ icon, title, desc, illustration }, i) => (
+          {/* ── Cards (Figma gap: 24px) ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {features.map(({ Icon, title, desc, illustration }, i) => (
               <FeatureCard
                 key={title}
-                icon={icon}
+                Icon={Icon}
                 title={title}
                 desc={desc}
                 illustration={illustration}
                 entryDelay={200 + i * 120}
+                v={v}
               />
             ))}
           </div>
