@@ -21,8 +21,7 @@ export const updateProfile = (payload) => client.patch("/user/profile", payload)
 // accounts have no onboarding field and get 400 — callers gate on the user
 // object instead of pre-checking (see AuthContext.completeOnboarding).
 // Contract: glass-backend docs/frontend-integration/releases/2026-11-13-user-onboarding.md
-export const completeOnboarding = () =>
-  client.patch("/user/onboarding", { status: "COMPLETED" });
+export const completeOnboarding = () => client.patch("/user/onboarding", { status: "COMPLETED" });
 
 // PATCH /api/v1/user/password — { oldPassword, newPassword, confirmPassword }
 export const updatePassword = (payload) => client.patch("/user/password", payload);
