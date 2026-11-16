@@ -139,7 +139,7 @@ export default function ChoosePath() {
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
-                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:min-h-[320px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:h-[220px]! lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
+                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:min-h-[320px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:h-[220px] lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 mb-4">
                   <CloudImage
