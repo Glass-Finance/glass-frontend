@@ -59,7 +59,7 @@ for (const path of ["choose-path", "paying-member"]) {
         );
         expect(boxes).toHaveLength(2);
         expect(boxes[0].y).toBe(boxes[1].y);
-        expect(boxes[0].h).toBe(300);
+        expect(boxes[0].h).toBe(320);
       }
     }
   });

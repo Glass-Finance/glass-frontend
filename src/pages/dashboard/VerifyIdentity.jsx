@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useEffect, useRef } from "react";
 import { Button } from "../../components/ui/Button";
 import { ArrowLeft, History } from "lucide-react";
 import useKycFlow from "../../components/kyc/useKycFlow";
@@ -23,12 +23,12 @@ export default function VerifyIdentity() {
     onHistory: () => navigate("/dashboard/verify-identity/history"),
   });
 
-  const [email, setEmail] = useState("");
+  const emailRef = useRef("");
   // Restore email from onboardingProgress if no router state carries it:
   useEffect(() => {
     const stored = readOnboardingProgress();
     if (stored?.email && !location.state?.email) {
-      setEmail(stored.email);
+      emailRef.current = stored.email;
     }
   }, []);
 

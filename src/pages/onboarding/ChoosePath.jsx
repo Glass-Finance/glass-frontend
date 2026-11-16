@@ -9,6 +9,7 @@ import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { MobileBackButton } from "../../components/ui/MobileBackButton";
 import { useKycGate } from "../../hooks/useKycGate";
+import { saveOnboardingProgress } from "../../utils/onboardingProgress";
 
 export default function ChoosePath() {
   const navigate = useNavigate();

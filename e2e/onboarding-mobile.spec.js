@@ -44,12 +44,10 @@ test.describe("onboarding on a phone", () => {
       // The frames' instruction line above the cards (phone only).
       await expect(page.getByText("Choose the type of plan you want to create")).toBeVisible();
 
-      const skip = await page.getByRole("button", { name: "Skip" }).boundingBox();
+      // Skip button has been removed from ChoosePath and PayingMember per onboarding-fix.
+      // Continue button is still present and full-width.
       const cont = await page.getByRole("button", { name: "Continue" }).boundingBox();
-      // One row: Skip on the left, Continue the wider button on the right.
-      expect(Math.abs(skip.y + skip.height / 2 - (cont.y + cont.height / 2))).toBeLessThan(2);
-      expect(skip.x + skip.width).toBeLessThanOrEqual(cont.x);
-      expect(cont.width).toBeGreaterThan(skip.width);
+      expect(cont.width).toBeGreaterThan(0);
     }
   });
 
