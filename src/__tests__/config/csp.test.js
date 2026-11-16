@@ -176,6 +176,7 @@ describe("img-src", () => {
     // GET /communities/me and /user/me return logo.url and
     // profileImage.url on this host. Without it the images simply never load.
     expect(sourcesFor("img-src")).toContain("https://files.glasspay.app");
+    expect(sourcesFor("img-src")).toContain("https://files-cqhym3i5wilhrzya-vc.t3.storageapi.dev");
   });
 
   it("allows the Google avatar host, or the 'Continue with Google' avatar is blocked", () => {
