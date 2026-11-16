@@ -404,7 +404,7 @@ export default function PaymentProfile() {
               >
                 {saving ? "Setting up…" : "Set-Up Account"}
               </Button>
-              </div>
+            </div>
             <div className="h-[env(safe-area-inset-bottom,20px)] lg:hidden" />
           </div>
         </main>
