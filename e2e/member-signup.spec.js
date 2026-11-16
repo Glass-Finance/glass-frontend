@@ -6,10 +6,28 @@ test("member registration works on desktop and mobile", async ({ page }) => {
     overrides: [
       {
         method: "POST",
+        match: (url) => url.pathname.endsWith("/auth/email/request-otp"),
+        handle: async (route) => {
+          await json(route, 200, { success: true, data: {} });
+          return true;
+        },
+      },
+      {
+        method: "POST",
+        match: (url) => url.pathname.endsWith("/auth/email/verify-otp"),
+        handle: async (route) => {
+          await json(route, 200, { success: true, data: { confirmToken: "e2e-confirm-token" } });
+          return true;
+        },
+      },
+      {
+        method: "POST",
         match: (url) => url.pathname.endsWith("/auth/register"),
         handle: async (route, request) => {
           scenario.registerRequest = request.postDataJSON();
-          await json(route, 201, { success: true, data: { emailVerified: false } });
+          // No session in the response: this test stops at the payload, and
+          // the legacy fallback screen it lands on is not what it asserts.
+          await json(route, 201, { success: true, data: { emailVerified: true } });
           return true;
         },
       },
@@ -24,6 +42,13 @@ test("member registration works on desktop and mobile", async ({ page }) => {
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Continue" }).click();
 
+  // Verify-then-create: the emailed code comes BEFORE the profile form,
+  // because register() needs the confirmToken it yields.
+  await expect(page.getByRole("heading", { name: "Check Your Email" })).toBeVisible();
+  await expect(page.getByText("new.member@example.test")).toBeVisible();
+  await page.getByLabel("Verification code").fill("123456");
+  await page.getByRole("button", { name: "Continue" }).click();
+
   await expect(page.getByRole("heading", { name: "Complete Your Profile" })).toBeVisible();
   await page.getByLabel("First Name").fill("New");
   await page.getByLabel("Last Name").fill("Member");
@@ -31,12 +56,13 @@ test("member registration works on desktop and mobile", async ({ page }) => {
   await page.getByLabel("Confirm Password").fill("MemberPass1!");
   await page.getByRole("button", { name: "Create Account" }).click();
 
-  await expect(page.getByRole("heading", { name: "Check Your Email" })).toBeVisible();
-  await expect(page.getByText("new.member@example.test")).toBeVisible();
-  expect(scenario.registerRequest).toMatchObject({
-    email: "new.member@example.test",
-    firstName: "New",
-    lastName: "Member",
-    password: "MemberPass1!",
-  });
+  await expect
+    .poll(() => scenario.registerRequest)
+    .toMatchObject({
+      email: "new.member@example.test",
+      firstName: "New",
+      lastName: "Member",
+      password: "MemberPass1!",
+      emailConfirmToken: "e2e-confirm-token",
+    });
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { verifyEmail, resendVerification } from "../../../services/authService";
+import { requestEmailOtp, verifyEmailOtp } from "../../../services/authService";
 import { notifyError } from "../../../utils/errorHandler";
 import { useCountdown, formatCountdown } from "../../../hooks/useCountdown";
 import { useOtpSend } from "../../../hooks/useOtpSend";
@@ -11,18 +11,25 @@ import { Button } from "../../../components/ui/Button";
 // SignIn.jsx and member/Join.jsx).
 const OTP_VALIDITY_SECONDS = 15 * 60;
 
-// ── Step 2: OTP Verification ───────────────────────────────────────────────────
+// ── Step 2: email code verification ──────────────────────────────────────────
 //
-// The FIRST code is not sent from here: POST /auth/register dispatches it
-// server-side, and the account doesn't exist until it does — there is nothing
-// to request a code for before that call returns. The frontend can't tell
-// whether that first mail actually went out, which is why the heading says
-// "Check Your Email" rather than asserting a code was sent.
+// The code is requested BEFORE the account exists: POST /auth/email/request-otp
+// only proves control of the address, and the account is created afterwards
+// by POST /auth/register with the confirmToken this screen obtains. That
+// ordering is the backend's, not a UI choice — register() answers 400 "Email
+// must be verified" when emailConfirmToken is missing, so a signup that
+// registers first can no longer complete.
 //
-// Resend IS the frontend's to make (POST /auth/verify/resend), so its result
-// is reported honestly: a failed resend is toasted and shown here, and a
-// rate-limited one waits exactly as long as the server asked.
-export default function OTPStep({ email, onVerified, onBack }) {
+// The first code is sent by EmailPhoneStep's submit, one level up, for the
+// same reason the phone code is: a refused send (an address that is already
+// registered, a rate limit) has to surface on the form that owns the address,
+// where the person can still fix it, rather than on a screen they have
+// already been navigated away to.
+//
+// RESEND is this screen's to make — POST /auth/email/request-otp again — so
+// its result is reported honestly: a failed resend is toasted and shown here,
+// and a rate-limited one waits exactly as long as the server asked.
+export default function EmailOTPStep({ email, onVerified, onBack }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,7 +43,7 @@ export default function OTPStep({ email, onVerified, onBack }) {
     cooldownSeconds,
     send: resend,
   } = useOtpSend({
-    sendRequest: () => resendVerification({ email }),
+    sendRequest: () => requestEmailOtp({ email }),
     onSent: () => {
       setResendCount((c) => c + 1);
       setOtp(["", "", "", "", "", ""]);
@@ -53,8 +60,11 @@ export default function OTPStep({ email, onVerified, onBack }) {
     setError("");
     setLoading(true);
     try {
-      const result = await verifyEmail({ email, token: otp.join("") });
-      onVerified(result);
+      // The backend returns a single-use confirmToken, not a session: the
+      // account does not exist yet. register() consumes it and returns the
+      // authentication.
+      const result = await verifyEmailOtp({ email, token: otp.join("") });
+      onVerified(result.confirmToken);
     } catch (err) {
       setError(
         notifyError(err, {

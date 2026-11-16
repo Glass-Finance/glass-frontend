@@ -4,19 +4,19 @@ import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 import SignUp from "../../../../pages/auth/SignUp/SignUp";
 import { useAuth } from "../../../../store/AuthContext";
 
-// The SignUp orchestrator owns step selection (1 → 2 → 3), the session
-// hand-off after register/verify, and the final onboarding navigation.
+// The SignUp orchestrator owns step selection (email → email code → register),
+// the session hand-off after register, and the final onboarding navigation.
 // EmailPhoneStep's own submit behavior is already covered by
 // EmailPhoneStep.test.jsx — this file drives the real step components through
 // the orchestrator and asserts the wiring between them instead of duplicating
 // that coverage.
 vi.mock("../../../../store/AuthContext", () => ({ useAuth: vi.fn() }));
-// The service calls the child steps make (register/verifyEmail/resend/phone
-// OTP) — mocked so the orchestrator flow can run end-to-end offline.
+// The service calls the child steps make (request/verify email code, register,
+// phone OTP) — mocked so the orchestrator flow can run end-to-end offline.
 vi.mock("../../../../services/authService", () => ({
   register: vi.fn(),
-  verifyEmail: vi.fn(),
-  resendVerification: vi.fn(),
+  requestEmailOtp: vi.fn(),
+  verifyEmailOtp: vi.fn(),
   requestPhoneOtp: vi.fn(),
   verifyPhoneOtp: vi.fn(),
 }));
@@ -32,6 +32,7 @@ vi.mock("../../../../components/auth/GoogleAuthButton", () => ({
 
 const VALID_PASSWORD = "Glass123!";
 const EMAIL = "sulaimon@example.com";
+const CONFIRM_TOKEN = "confirm-abc";
 
 function ChoosePathMarker() {
   const location = useLocation();
@@ -50,11 +51,20 @@ function renderSignUp() {
   );
 }
 
-function fillEmailStep() {
+async function fillEmailStep() {
   fireEvent.change(screen.getByPlaceholderText("Enter Your Email Address"), {
     target: { value: EMAIL },
   });
   fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  // The submit dispatches the code before advancing.
+  await screen.findByLabelText("Verification code");
+}
+
+function fillEmailCodeStep() {
+  fireEvent.change(screen.getByLabelText("Verification code"), {
+    target: { value: "123456" },
+  });
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 }
 
@@ -81,13 +91,35 @@ beforeEach(() => {
 });
 
 describe("SignUp step selection", () => {
-  it("advances email-only sign-up straight to the register step (phone stays optional)", async () => {
+  it("sends the code on the email step and advances to the code step, not the register step", async () => {
+    const { requestEmailOtp } = await import("../../../../services/authService");
+    requestEmailOtp.mockResolvedValue({ expiresAt: "2026-11-15T12:00:00Z" });
     renderSignUp();
 
-    fillEmailStep();
+    await fillEmailStep();
 
-    expect(await screen.findByText("Complete Your Profile")).toBeDefined();
+    // Verification must precede account creation: the backend rejects
+    // register() without the confirmToken this step produces.
+    expect(requestEmailOtp).toHaveBeenCalledWith({ email: EMAIL });
+    expect(screen.queryByText("Complete Your Profile")).toBeNull();
     expect(useAuth().storeSessionIfPresent).not.toHaveBeenCalled();
+  });
+
+  it("keeps the person on the email step when the code cannot be sent", async () => {
+    const { requestEmailOtp } = await import("../../../../services/authService");
+    requestEmailOtp.mockRejectedValue({
+      response: { status: 400, data: { message: "Email is already registered" } },
+    });
+    renderSignUp();
+
+    fireEvent.change(screen.getByPlaceholderText("Enter Your Email Address"), {
+      target: { value: EMAIL },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByText("Email is already registered")).toBeDefined();
+    expect(screen.queryByLabelText("Verification code")).toBeNull();
   });
 
   it("routes the 'Sign In' switch to the sign-in page", async () => {
@@ -100,44 +132,40 @@ describe("SignUp step selection", () => {
 });
 
 describe("SignUp full flow", () => {
-  it("runs email → register → email OTP → onboarding, settling the session at each step", async () => {
-    const { register, verifyEmail } = await import("../../../../services/authService");
+  it("runs email → email code → register → onboarding, carrying the confirmToken", async () => {
+    const { register, requestEmailOtp, verifyEmailOtp } =
+      await import("../../../../services/authService");
     const auth = useAuth();
+    requestEmailOtp.mockResolvedValue({ expiresAt: "2026-11-15T12:00:00Z" });
+    verifyEmailOtp.mockResolvedValue({ confirmToken: CONFIRM_TOKEN });
     register.mockResolvedValue({ accessToken: "reg-token" });
-    verifyEmail.mockResolvedValue({ accessToken: "verified-token" });
     renderSignUp();
 
-    fillEmailStep();
+    await fillEmailStep();
+    fillEmailCodeStep();
+
     await screen.findByText("Complete Your Profile");
+    expect(verifyEmailOtp).toHaveBeenCalledWith({ email: EMAIL, token: "123456" });
+
     fillRegisterStep();
 
-    // Step 3: session from the register response is stored before the OTP
-    // screen renders (SignUp.jsx's handleRegistered contract).
-    await screen.findByText("Check Your Email");
+    // Registration is the last API step — there is no activation code after
+    // it, because the address was verified before the account was created.
+    expect(await screen.findByText("Your Email Has Been Verified!")).toBeDefined();
     expect(register).toHaveBeenCalledWith({
       email: EMAIL,
       firstName: "Sulaimon",
       lastName: "Balogun",
       password: VALID_PASSWORD,
+      emailConfirmToken: CONFIRM_TOKEN,
     });
     expect(auth.storeSessionIfPresent).toHaveBeenCalledWith({ accessToken: "reg-token" });
 
-    fireEvent.change(screen.getByLabelText("Verification code"), {
-      target: { value: "123456" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-
-    // The "Your Email Has Been Verified!" page shows first, then onboarding
-    // follows on its own (SignUp.jsx's VERIFIED_HOLD_MS, 2.5s).
-    expect(await screen.findByText("Your Email Has Been Verified!")).toBeDefined();
-    expect(screen.queryByTestId("choose-path")).toBeNull();
     const marker = await screen.findByTestId("choose-path", {}, { timeout: 4000 });
     expect(marker.textContent).toContain(EMAIL);
-    expect(verifyEmail).toHaveBeenCalledWith({ email: EMAIL, token: "123456" });
-    expect(auth.storeSessionIfPresent).toHaveBeenCalledTimes(2);
   });
 
-  it("skips the OTP step for Google sign-up and lands on onboarding with the Google email", async () => {
+  it("skips the code and register steps for Google sign-up and lands on onboarding", async () => {
     const auth = useAuth();
     renderSignUp();
 

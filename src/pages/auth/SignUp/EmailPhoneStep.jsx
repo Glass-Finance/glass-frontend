@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { getEmailError } from "../../../utils/validators";
+import { requestEmailOtp } from "../../../services/authService";
+import { notifyError, getRetryAfterSeconds } from "../../../utils/errorHandler";
 import GoogleAuthButton from "../../../components/auth/GoogleAuthButton";
 import { SignUpTextInput, SignUpFieldError } from "./SignUpTextInput";
 import { Button, Button as PrimaryBtn } from "../../../components/ui/Button";
@@ -23,16 +25,26 @@ const Divider = () => (
 // Your Phone Number" flow) -- not here. It's optional at registration per
 // the backend (Meta/WhatsApp verification isn't fully wired up yet), and
 // collecting it upfront meant sending a phone OTP and an email OTP as two
-// separate verification steps in the same signup session. Email/phone are
-// just handed up to SignUp/index.jsx's local state and combined with
-// CompleteProfileStep's fields into the same single register() call the old
-// one-screen form used to make; SignUp.jsx's routing and RegisterStep.jsx's
-// payload already treat an empty phone as the normal case.
+// separate verification steps in the same signup session.
+//
+// The CODE is sent from here, before the account exists: POST
+// /auth/email/request-otp only proves control of the address, and
+// register() later consumes the confirmToken that comes back from
+// /auth/email/verify-otp. The backend requires that order -- register()
+// answers 400 "Email must be verified" without the confirmToken -- so the
+// account cannot be created first any more.
+//
+// The send happens on THIS screen rather than on the code screen, for the
+// same reason the phone code is sent from the form that owns the number: a
+// refused send (an address that is already registered, a rate limit) has to
+// surface here, where the person can still fix it, instead of on a screen
+// they have already been navigated away to.
 export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogleAuth }) {
   const [email, setEmail] = useState(initialEmail ?? "");
   const [agreed, setAgreed] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: "" });
   const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
   function handleFieldChange(setValue) {
     return (e) => {
@@ -42,7 +54,7 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
     };
   }
 
-  const handleSubmit = (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     // Explicit over implicit per CEO direction: the button stays clickable
@@ -57,8 +69,29 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
       setFieldErrors({ email: emailError });
       return;
     }
-    onNext({ email: email.trim().toLowerCase(), phone: "" });
-  };
+    const normalizedEmail = email.trim().toLowerCase();
+    setSending(true);
+    try {
+      // The code is delivered by email; the response carries only its expiry.
+      // Nothing here creates the account -- that is register()'s job, once
+      // the code has been read back.
+      await requestEmailOtp({ email: normalizedEmail });
+      onNext({ email: normalizedEmail, phone: "" });
+    } catch (err) {
+      // A refused send is the difference between "check your inbox" and
+      // "nothing was ever dispatched", so it is both toasted and shown here.
+      // A 429 is the API's own limiter answering: wait exactly as long as it
+      // asked (Retry-After), not a guess.
+      const message = notifyError(err, {
+        context: "Send verification code",
+        fallback: "We couldn't send a code to that address. Please try again.",
+      });
+      const retryAfter = getRetryAfterSeconds(err);
+      setError(retryAfter ? `${message} Try again in ${retryAfter}s.` : message);
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     // Desktop (md+) matches Figma "MacBook Pro 14" - 125": a 652px column
@@ -148,13 +181,16 @@ export default function EmailPhoneStep({ initialEmail, onNext, onSwitch, onGoogl
 
         {/* Always enabled, per Figma: a disabled Primary renders at 60%
             opacity, which read as a washed-out blue. An empty email is
-            caught on submit by getEmailError ("Email is required."). */}
+            caught on submit by getEmailError ("Email is required."). The one
+            exception is the send in flight, which gets the Button's own
+            loading treatment so a double tap cannot fire two codes. */}
         <PrimaryBtn
           type="submit"
+          loading={sending}
           className="mt-2 md:mt-4 md:h-16 md:py-5 md:px-10 md:text-[16px]"
           size="sm"
         >
-          Continue
+          {sending ? "Sending Code..." : "Continue"}
         </PrimaryBtn>
       </form>
 

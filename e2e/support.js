@@ -1,6 +1,6 @@
 // Shared fixtures and the single catch-all network dispatcher for the E2E
 // suite. Every request whose pathname starts with /api/v1 (whether the app's
-// API base is the absolute https://api.glasspay.app or a same-origin
+// API base is the absolute https://staging.api.glasspay.app or a same-origin
 // /api/v1) is answered right here; the Paystack authorization URL is served
 // a local stub; everything else outside our own dev server (Pendo, Google
 // Identity Services, Sentry, Vercel, Cloudinary) is aborted. No test ever

@@ -8,10 +8,12 @@ import PasswordChecklist from "../../../components/auth/PasswordChecklist";
 import { SignUpTextInput, SignUpFieldError } from "./SignUpTextInput";
 import { Button, Button as PrimaryBtn } from "../../../components/ui/Button";
 
-// ── Step 2: Complete Profile (Name + Password) ────────────────────────────────
-// Fires the single register() call with email/phone carried over from
-// EmailPhoneStep plus the fields collected here -- same payload shape and
-// same one-call-only backend contract the old single-screen form used.
+// ── Step 3: Complete Profile (Name + Password) ────────────────────────────────
+// Fires the single register() call with the identity carried over from the
+// earlier steps plus the fields collected here. The email confirmToken is
+// NOT optional any more: the backend verifies the address before it creates
+// the account and answers 400 "Email must be verified" without it, so it
+// comes from the email-code step and travels with this payload.
 function validateField(field, value, otherValue) {
   if (field === "firstName" && !value.trim()) return "First name is required.";
   if (field === "lastName" && !value.trim()) return "Last name is required.";
@@ -25,7 +27,14 @@ function validateField(field, value, otherValue) {
   return "";
 }
 
-export default function RegisterStep({ email, phone, phoneConfirmToken, onNext, onSwitch }) {
+export default function RegisterStep({
+  email,
+  emailConfirmToken,
+  phone,
+  phoneConfirmToken,
+  onNext,
+  onSwitch,
+}) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -96,6 +105,10 @@ export default function RegisterStep({ email, phone, phoneConfirmToken, onNext, 
           lastName: form.lastName,
           email,
           password: form.password,
+          // Proves the address, obtained by reading the code back on the
+          // email-code step. The backend rejects the registration without
+          // it, so it always travels with this payload.
+          emailConfirmToken,
           // Phone stays optional at registration -- phoneConfirmToken is only
           // required (and only sent) when a number was actually verified in
           // the phone OTP step. Omitting phoneRegion: numbers collected here
