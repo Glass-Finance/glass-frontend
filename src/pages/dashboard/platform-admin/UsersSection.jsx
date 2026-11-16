@@ -6,23 +6,44 @@ import { Button } from "../../../components/ui/Button";
 import { toTitleCase } from "../../../utils/format";
 import { kycStatusLabel } from "../../../utils/kycStatus";
 import { getInitials } from "../../../utils/getInitials";
-import { suspendUser, unsuspendUser, markUserForDeletion, anonymizeUser } from "../../../api/admin";
-import { pageParams, fmtDateTime, initialSearchFromUrl } from "./shared";
-import { useAdminUsers, canManageUserKyc, userKycAction } from "../../../hooks/useAdminKyc";
+import {
+  suspendUser,
+  unsuspendUser,
+  restoreUser,
+  markUserForDeletion,
+  anonymizeUser,
+} from "../../../api/admin";
+import { pageParams, fmtDateTime, initialSearchFromUrl, userStatus, STATUS_COLORS } from "./shared";
+import {
+  useAdminUsers,
+  canManageUserKyc,
+  canRestoreUser,
+  userKycAction,
+} from "../../../hooks/useAdminKyc";
 import { AdminUserKycDialog } from "../../../components/dashboard/AdminUserKycActions";
 import { useAuth } from "../../../store/AuthContext";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { SearchBar, TableShell, TableFooter } from "./SharedUI";
 import UserDetailModal from "./UserDetailModal";
 
-// Status filter tabs (design: Users (interactive)). "Unverified" maps to the
-// AdminUserQueryDto.emailVerified flag; the rest map to `enabled`. There is
-// deliberately no KYC filter here — that was a design-only column param the
-// panel never wired, and the KYC section already covers the queue.
+// Status filter tabs. "Unverified" maps to the AdminUserQueryDto.emailVerified
+// flag; "Active" maps to `enabled`. There is deliberately no KYC filter here —
+// that was a design-only column param the panel never wired, and the KYC
+// section already covers the queue.
+//
+// There is NO "Suspended" tab: AdminUserQueryDto exposes no accountNonLocked
+// filter, so it cannot be expressed as a query. It used to send { enabled:
+// false }, which is the *deletion* flag — so the tab labelled "Suspended"
+// actually returned accounts pending deletion, and returned no suspended users
+// at all. Removed rather than left returning the wrong rows; reinstate it when
+// the backend can filter on accountNonLocked (docs/backend-change-requests.md).
+//
+// "Active" is also an approximation for the same reason: enabled=true means
+// "not being deleted", which still includes suspended accounts. The badge on
+// each row is now accurate, so those rows read correctly even inside this tab.
 const FILTERS = [
   { value: "ALL", label: "All users" },
   { value: "ACTIVE", label: "Active" },
-  { value: "SUSPENDED", label: "Suspended" },
   { value: "UNVERIFIED", label: "Unverified" },
 ];
 
@@ -304,10 +325,37 @@ function MenuButton({ danger = false, children, onClick }) {
   );
 }
 
-// Row overflow menu (design: Admin – Users (menu)). Suspend only exists for
-// enabled rows — suspended rows get the inline Unsuspend button instead — and
-// the two destructive actions sit under the IRREVERSIBLE divider in red.
-function RowMenu({ user, kycAction, onKycAction, onSuspend, onDelete, onAnonymize }) {
+// Row overflow menu (design: Admin – Users (menu)).
+//
+// Which actions are legal is decided by the backend, and each one rejects the
+// wrong state with a 400/409 rather than doing nothing quietly:
+//
+//   suspend   requires accountNonLocked == true   (else 400 "already suspended")
+//   delete    requires status == ACTIVE           (else 409)
+//   anonymize requires status == PENDING_DELETION (else 409)
+//
+// So the menu is driven off the derived status instead of `user.enabled`.
+// Gating Suspend on `enabled` was the old check and it was wrong twice over:
+// suspension never touches `enabled`, so a suspended row still offered
+// "Suspend", and a pending-deletion row (enabled=false) offered Suspend even
+// though only Restore can help it. Offering an action the backend will reject
+// reads as a broken panel, so Suspend and Delete are scoped to ACTIVE only.
+//
+// The two destructive actions sit under the IRREVERSIBLE divider in red.
+function RowMenu({ user, statusKey, kycAction, onKycAction, onSuspend, onDelete, onAnonymize }) {
+  const canSuspend = statusKey === "ACTIVE";
+  // Delete moves ACTIVE -> PENDING_DELETION, so the backend 409s once the
+  // account has already moved.
+  const canDelete = statusKey === "ACTIVE";
+  // Anonymize is the second phase and the backend 409s unless the account is
+  // already PENDING_DELETION. That precondition cannot be detected from the
+  // fields shipped today, so it stays offered on every non-anonymized row
+  // exactly as before — the modal states the requirement, and skipping straight
+  // to it returns a 409 rather than doing something unintended. Tighten to
+  // `statusKey === "PENDING_DELETION"` once UserDto serializes `status`.
+  const canAnonymize = statusKey !== "ANONYMIZED";
+  const hasDestructive = canDelete || canAnonymize;
+
   return (
     <div
       role="menu"
@@ -319,17 +367,25 @@ function RowMenu({ user, kycAction, onKycAction, onSuspend, onDelete, onAnonymiz
           {kycAction === "APPROVE" ? "Approve manually" : "Revoke KYC"}
         </MenuButton>
       )}
-      {user.enabled && <MenuButton onClick={onSuspend}>Suspend</MenuButton>}
-      <div className="my-1.5 border-t border-surface-sunken" />
-      <p className="m-0 px-3 pt-0.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-        Irreversible
-      </p>
-      <MenuButton danger onClick={onDelete}>
-        Delete user…
-      </MenuButton>
-      <MenuButton danger onClick={onAnonymize}>
-        Anonymize…
-      </MenuButton>
+      {canSuspend && <MenuButton onClick={onSuspend}>Suspend</MenuButton>}
+      {hasDestructive && (
+        <>
+          <div className="my-1.5 border-t border-surface-sunken" />
+          <p className="m-0 px-3 pt-0.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+            Irreversible
+          </p>
+        </>
+      )}
+      {canDelete && (
+        <MenuButton danger onClick={onDelete}>
+          Delete user…
+        </MenuButton>
+      )}
+      {canAnonymize && (
+        <MenuButton danger onClick={onAnonymize}>
+          Anonymize…
+        </MenuButton>
+      )}
     </div>
   );
 }
@@ -338,6 +394,7 @@ export default function UsersSection() {
   const queryClient = useQueryClient();
   const { user: actor } = useAuth();
   const canKyc = canManageUserKyc(actor?.role);
+  const canRestore = canRestoreUser(actor?.role);
   const [search, setSearch] = useState(initialSearchFromUrl);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearchFromUrl);
   const [filter, setFilter] = useState("ALL");
@@ -359,11 +416,9 @@ export default function UsersSection() {
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(filter === "ACTIVE"
       ? { enabled: true }
-      : filter === "SUSPENDED"
-        ? { enabled: false }
-        : filter === "UNVERIFIED"
-          ? { emailVerified: false }
-          : {}),
+      : filter === "UNVERIFIED"
+        ? { emailVerified: false }
+        : {}),
   };
 
   const { data, isLoading, isFetching, error } = useAdminUsers(params);
@@ -386,6 +441,18 @@ export default function UsersSection() {
       setUnsuspending(null);
     },
     meta: { successMessage: "User unsuspended" },
+  });
+
+  // Undoes a *deletion*. Kept as a separate mutation from unsuspend above
+  // because it hits a different endpoint (PATCH .../restore) under a different
+  // permission (platform.user.restore), and its success message has to say the
+  // account was restored rather than unsuspended — those are not the same claim.
+  const restore = useMutation({
+    mutationFn: (userId) => restoreUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    meta: { successMessage: "User restored — deletion cancelled" },
   });
 
   const markForDeletion = useMutation({
@@ -499,6 +566,32 @@ export default function UsersSection() {
             {items.map((u, i) => {
               const name = displayName(u);
               const kycAction = canKyc ? userKycAction(u) : null;
+              const status = userStatus(u);
+              const statusColor = STATUS_COLORS[status.key];
+              // One contextual recovery button, never two: Unsuspend undoes a
+              // suspension, Restore undoes a deletion. They are different
+              // endpoints under different permissions, so showing the wrong one
+              // would silently fail to do what the operator asked — unsuspending
+              // a pending-deletion account leaves the 30-day purge on schedule.
+              // Unsuspend keeps its confirm modal; Restore is a single click
+              // because it only reverses an admin-initiated action, unlike the
+              // self-service deletion it cancels.
+              const recovery =
+                status.key === "SUSPENDED"
+                  ? {
+                      label: "Unsuspend",
+                      variant: "outline-neutral",
+                      onClick: () => setUnsuspending(u),
+                      busy: unsuspend.isPending,
+                    }
+                  : canRestore && status.key === "PENDING_DELETION"
+                    ? {
+                        label: "Restore",
+                        variant: "success",
+                        onClick: () => restore.mutate(u.id),
+                        busy: restore.isPending,
+                      }
+                    : null;
               const initials = getInitials({
                 firstName: u.userData?.firstName,
                 lastName: u.userData?.lastName,
@@ -548,13 +641,13 @@ export default function UsersSection() {
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${u.enabled ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusColor.bg} ${statusColor.text}`}
                     >
                       <span
                         aria-hidden="true"
                         className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0"
                       />
-                      {u.enabled ? "Active" : "Suspended"}
+                      {status.label}
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -579,15 +672,15 @@ export default function UsersSection() {
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1.5">
-                      {!u.enabled && (
+                      {recovery && (
                         <Button
-                          variant="outline-neutral"
+                          variant={recovery.variant}
                           size="xs"
-                          onClick={() => setUnsuspending(u)}
-                          disabled={unsuspend.isPending}
+                          onClick={recovery.onClick}
+                          disabled={recovery.busy}
                           fullWidth={false}
                         >
-                          Unsuspend
+                          {recovery.label}
                         </Button>
                       )}
                       <div className="relative inline-block">
@@ -604,6 +697,7 @@ export default function UsersSection() {
                         {openMenu === u.id && (
                           <RowMenu
                             user={u}
+                            statusKey={status.key}
                             kycAction={kycAction}
                             onKycAction={(action) => {
                               setOpenMenu(null);

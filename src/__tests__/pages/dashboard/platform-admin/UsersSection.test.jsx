@@ -10,14 +10,15 @@ import {
   getAdminUser,
   suspendUser,
   unsuspendUser,
+  restoreUser,
   markUserForDeletion,
   anonymizeUser,
 } from "../../../../api/admin";
 
 // Platform-admin user moderation: every destructive action (suspend,
-// unsuspend, mark-for-deletion, anonymize) is gated behind a confirm modal
-// with a required reason, and a 403 renders the Access-denied shell instead
-// of a broken table. Mock the api module (not the hooks) so the real
+// unsuspend, restore, mark-for-deletion, anonymize) is gated behind a confirm
+// modal with a required reason, and a 403 renders the Access-denied shell
+// instead of a broken table. Mock the api module (not the hooks) so the real
 // mutation onSuccess/invalidate wiring is exercised.
 
 vi.mock("../../../../api/admin", async (importOriginal) => {
@@ -28,6 +29,7 @@ vi.mock("../../../../api/admin", async (importOriginal) => {
     getAdminUser: vi.fn(),
     suspendUser: vi.fn(),
     unsuspendUser: vi.fn(),
+    restoreUser: vi.fn(),
     markUserForDeletion: vi.fn(),
     anonymizeUser: vi.fn(),
   };
@@ -44,7 +46,14 @@ function userFixture(overrides = {}) {
     userData: { firstName: "ada", lastName: "lovelace" },
     isPlatformAdmin: false,
     platformRole: null,
+    // Suspension is accountNonLocked, NOT enabled — suspendUser() never touches
+    // enabled. A fixture meaning "suspended" must set accountNonLocked: false.
     enabled: true,
+    accountNonLocked: true,
+    // Deliberately no `status`: UserDto does not serialize it yet, so fixtures
+    // must match what the API actually sends. userStatus() falls back to
+    // `enabled === false` to mean pending deletion. See the forward-path test
+    // below for the `status` branch.
     emailVerified: true,
     lastLoginAt: "2026-01-01T10:00:00.000Z",
     metrics: { totalRelatedCommunities: 2 },
@@ -122,10 +131,10 @@ describe("UsersSection — rendering", () => {
     expect(getAdminUsers.mock.calls[0][0]).not.toHaveProperty("enabled");
     expect(getAdminUsers.mock.calls[0][0]).not.toHaveProperty("emailVerified");
 
-    fireEvent.click(screen.getByRole("button", { name: "Suspended" }));
-    await waitFor(() =>
-      expect(getAdminUsers).toHaveBeenCalledWith(expect.objectContaining({ enabled: false })),
-    );
+    // There is deliberately no "Suspended" tab: AdminUserQueryDto has no
+    // accountNonLocked filter, so the old tab sent { enabled: false } and
+    // returned pending-deletion accounts instead of suspended ones.
+    expect(screen.queryByRole("button", { name: "Suspended" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Unverified" }));
     await waitFor(() =>
@@ -223,7 +232,7 @@ describe("UsersSection — details", () => {
   );
 
   it("keeps Unsuspend independent from details", async () => {
-    getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
+    getAdminUsers.mockResolvedValue(page([userFixture({ accountNonLocked: false })]));
     renderSection();
     fireEvent.click(await screen.findByRole("button", { name: "Unsuspend", exact: true }));
     expect(getAdminUser).not.toHaveBeenCalled();
@@ -336,7 +345,7 @@ describe("UsersSection — suspend", () => {
 describe("UsersSection — unsuspend / delete / anonymize", () => {
   it("unsuspends a suspended user and closes the confirm modal", async () => {
     unsuspendUser.mockResolvedValue({});
-    getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
+    getAdminUsers.mockResolvedValue(page([userFixture({ accountNonLocked: false })]));
     renderSection();
     const row = await findRow();
     fireEvent.click(within(row).getByRole("button", { name: "Unsuspend" }));
@@ -397,5 +406,92 @@ describe("UsersSection — unsuspend / delete / anonymize", () => {
       }),
     );
     await waitFor(() => expect(screen.queryByText("Anonymize User")).toBeNull());
+  });
+});
+
+// The badge is derived from status + accountNonLocked (see userStatus() in
+// platform-admin/shared.js). Suspension is NOT a status value and never
+// touches `enabled`, so reading `enabled` alone — which the table used to do —
+// rendered every suspended account as "Active".
+describe("UsersSection — lifecycle status badge", () => {
+  it("shows Active for an unlocked, enabled account", async () => {
+    renderSection();
+    const row = await findRow();
+    expect(within(row).getByText("Active")).toBeTruthy();
+  });
+
+  it("shows Suspended for a locked account even though enabled is still true", async () => {
+    getAdminUsers.mockResolvedValue(page([userFixture({ accountNonLocked: false })]));
+    renderSection();
+
+    const row = await findRow();
+    expect(within(row).getByText("Suspended")).toBeTruthy();
+    expect(within(row).queryByText("Active")).toBeNull();
+  });
+
+  it("shows Pending Deletion for a disabled account", async () => {
+    // enabled=false is set only by the backend deletion flow, so it is the
+    // pending-deletion signal until UserDto serializes `status`.
+    getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
+    renderSection();
+
+    const row = await findRow();
+    expect(within(row).getByText("Pending Deletion")).toBeTruthy();
+  });
+
+  it("prefers a serialized status over the enabled fallback", async () => {
+    // Forward path: once UserMapper sends `status`, it must win over the
+    // enabled=false heuristic — otherwise a restored account (status ACTIVE,
+    // enabled still false until the next save) would keep reading as deleted.
+    getAdminUsers.mockResolvedValue(page([userFixture({ status: "ACTIVE", enabled: false })]));
+    renderSection();
+
+    const row = await findRow();
+    expect(within(row).getByText("Active")).toBeTruthy();
+  });
+});
+
+describe("UsersSection — recovery actions are contextual", () => {
+  it("offers Unsuspend, not Suspend, on a suspended row", async () => {
+    getAdminUsers.mockResolvedValue(page([userFixture({ accountNonLocked: false })]));
+    renderSection();
+
+    const row = await findRow();
+    expect(within(row).getByRole("button", { name: "Unsuspend" })).toBeTruthy();
+    // Re-suspending would 400 ("User is already suspended").
+    fireEvent.click(within(row).getByRole("button", { name: /^Actions for/ }));
+    expect(within(row).queryByRole("button", { name: "Suspend", exact: true })).toBeNull();
+  });
+
+  it("restores a pending-deletion account through the restore endpoint", async () => {
+    restoreUser.mockResolvedValue({});
+    getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
+    renderSection();
+
+    const row = await findRow();
+    fireEvent.click(within(row).getByRole("button", { name: "Restore" }));
+
+    await waitFor(() => expect(restoreUser).toHaveBeenCalledWith("user-1"));
+    expect(unsuspendUser).not.toHaveBeenCalled();
+  });
+
+  it("shows no recovery button on an active account", async () => {
+    renderSection();
+    const row = await findRow();
+
+    expect(within(row).queryByRole("button", { name: "Restore" })).toBeNull();
+    expect(within(row).queryByRole("button", { name: "Unsuspend" })).toBeNull();
+  });
+
+  it("omits Delete on a pending-deletion account, which would 409", async () => {
+    getAdminUsers.mockResolvedValue(page([userFixture({ enabled: false })]));
+    renderSection();
+
+    const row = await findRow();
+    fireEvent.click(within(row).getByRole("button", { name: /^Actions for/ }));
+
+    expect(within(row).queryByRole("button", { name: "Delete user…" })).toBeNull();
+    // The second deletion phase is still reachable.
+    expect(within(row).getByRole("button", { name: "Anonymize…" })).toBeTruthy();
   });
 });

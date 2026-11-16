@@ -17,6 +17,16 @@ export function canManageUserKyc(role) {
   return role === "SUPER_ADMIN" || role === "OPERATIONS_ADMIN";
 }
 
+// platform.user.restore is seeded to SUPER_ADMIN and OPERATIONS_ADMIN only
+// (V57__community_delete_and_user_deletion.sql). Deliberately NOT the same set
+// as suspend/delete: OPERATIONS_ADMIN can restore a pending-deletion account
+// but cannot suspend or delete one, because platform.users.update and
+// platform.users.delete are SUPER_ADMIN-only in the V2 seed. Presentation-only
+// mirror — the API is authoritative and will 403 anything else.
+export function canRestoreUser(role) {
+  return role === "SUPER_ADMIN" || role === "OPERATIONS_ADMIN";
+}
+
 export function userKycAction(user) {
   if (user?.platformRole !== "USER" || !user.userData) return null;
   if (isKycApproved(user.kycStatus)) return "REVOKE";
