@@ -144,6 +144,7 @@ describe("connect-src", () => {
     for (const host of [
       "https://api.glasspay.app",
       "https://staging-api.glasspay.app",
+      "https://staging-app.glasspay.app",
       "https://api.smileidentity.com",
       "https://testapi.smileidentity.com",
       "https://res.cloudinary.com",
