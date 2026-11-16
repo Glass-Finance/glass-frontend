@@ -15,6 +15,35 @@ export async function register(payload) {
 }
 
 /**
+ * Request a pre-registration email OTP (POST /auth/email/request-otp).
+ *
+ * The code is delivered by email and is never returned to the client — only
+ * data.expiresAt comes back. This does NOT create a user: it proves control
+ * of the address, which register() then consumes as emailConfirmToken.
+ *
+ * @returns {Promise<{expiresAt}>}
+ */
+export async function requestEmailOtp({ email }) {
+  const { data } = await client.post("/auth/email/request-otp", { email });
+  return data.data;
+}
+
+/**
+ * Verify a pre-registration email OTP (POST /auth/email/verify-otp).
+ *
+ * Returns the single-use emailConfirmToken that register() now REQUIRES —
+ * without it the backend answers 400 "Email must be verified". The field is
+ * `token` here (not `otp`): the pre-registration phone endpoint uses `otp`,
+ * the email one uses `token`.
+ *
+ * @returns {Promise<{confirmToken, expiresAt}>}
+ */
+export async function verifyEmailOtp({ email, token }) {
+  const { data } = await client.post("/auth/email/verify-otp", { email, token });
+  return data.data;
+}
+
+/**
  * Request a registration OTP for an unclaimed phone number.
  * @returns {Promise<{expiresAt}>}
  */
@@ -35,6 +64,13 @@ export async function verifyPhoneOtp({ phoneNumber, phoneRegion, otp }) {
 
 /**
  * Verify email with the code sent to the user's inbox.
+ *
+ * LEGACY. POST /auth/verify is the old activation endpoint, deprecated in
+ * Swagger. It only still makes sense for accounts created BEFORE the
+ * verify-before-register change — a new registration is already verified by
+ * the time register() returns, and has no activation code at all. New
+ * sign-ups use requestEmailOtp() + verifyEmailOtp() above.
+ *
  * @param {string} email
  * @param {string} token - the OTP/verification code
  */
@@ -45,6 +81,10 @@ export async function verifyEmail({ email, token }) {
 
 /**
  * Resend the verification email/code.
+ *
+ * LEGACY. POST /auth/verify/resend is deprecated in Swagger. The new signup
+ * flow re-requests through POST /auth/email/request-otp instead — the same
+ * endpoint that sent the first code.
  */
 export async function resendVerification({ email }) {
   const { data } = await client.post("/auth/verify/resend", { email });

@@ -16,6 +16,7 @@ import PageLoadingState from "../../../../components/common/PageLoadingState";
 import AuthLayout from "../../../../layouts/AuthLayout";
 import { STEPS, PENDING_KEY } from "./constants";
 import StepContact from "./StepContact";
+import StepEmailOTP from "./StepEmailOTP";
 import StepProfile from "./StepProfile";
 import StepOTP from "./StepOTP";
 import StepSignInOtp from "./StepSignInOtp";
@@ -78,6 +79,7 @@ export default function Join() {
   // read, but useState only consults its argument on mount, so the later
   // re-render (with the param gone) doesn't clobber this.
   const [contact, setContact] = useState({ email: joinEmail, phone: "" });
+  const [emailConfirmToken, setEmailConfirmToken] = useState("");
   const [phoneConfirmToken, setPhoneConfirmToken] = useState("");
   const [step, setStep] = useState(() => {
     if (email) return STEPS.OTP; // resuming a pending registration verification
@@ -179,12 +181,18 @@ export default function Join() {
 
   function handleContactNext({ email: enteredEmail, phone }) {
     setContact({ email: enteredEmail, phone });
-    // StepContact no longer collects a phone number -- phone stays optional
-    // at registration (Meta/WhatsApp verification isn't fully wired up
-    // backend-side yet), added later via Settings/Profile instead. This
-    // always takes the empty-phone branch today; STEPS.PHONE_OTP is a dead
-    // code path kept in case phone-at-signup comes back.
-    setStep(phone ? STEPS.PHONE_OTP : STEPS.PROFILE);
+    // The code has already been sent by StepContact; the next step is always
+    // the one that reads it back.
+    setStep(STEPS.EMAIL_OTP);
+  }
+
+  // The address is proven: the backend handed us the single-use confirmToken
+  // register() requires. Phone is optional at registration, so the next step
+  // is the phone code only when a number was actually collected (a dead path
+  // today — StepContact no longer asks for one).
+  function handleEmailVerified(confirmToken) {
+    setEmailConfirmToken(confirmToken);
+    setStep(contact.phone ? STEPS.PHONE_OTP : STEPS.PROFILE);
   }
 
   function handlePhoneVerified(confirmToken) {
@@ -204,13 +212,20 @@ export default function Join() {
     if (step === STEPS.OTP) {
       sessionStorage.removeItem(PENDING_KEY);
       setStep(STEPS.CONTACT);
+    } else if (step === STEPS.EMAIL_OTP) {
+      setStep(STEPS.CONTACT);
     }
   }
 
-  // Registration has to happen before any verification code can be sent —
-  // there's no account yet to send one for. This was previously inverted
-  // (collecting just an email and calling a nonexistent /api/auth/send-otp
-  // before the account existed), which is why no code was ever delivered.
+  // Registration is the last API step of the signup flow: the address was
+  // verified before this point, so register() carries the confirmToken from
+  // StepEmailOTP and returns the account's authentication. There is no
+  // activation code afterwards — the account is already verified.
+  //
+  // The legacy activation step survives only as a fallback: if some
+  // deployment still answers register() without a session (the pre-change
+  // contract), PENDING_KEY + STEPS.OTP keep that path working via the
+  // deprecated POST /auth/verify.
   async function handleProfileSubmit({
     firstName,
     lastName,
@@ -220,21 +235,27 @@ export default function Join() {
     setAccountExists,
   }) {
     try {
-      // Backend RegisterRequest: firstName, lastName, email, password, plus
-      // phoneNumber/phoneConfirmToken only when a verified number exists.
-      // No confirmPassword, no inviteToken — neither field exists server-side
-      // (invite access is email-bound and completed via /member/invites).
+      // Backend RegisterRequest: firstName, lastName, email, password,
+      // emailConfirmToken, plus phoneNumber/phoneConfirmToken only when a
+      // verified number exists. No confirmPassword, no inviteToken — neither
+      // field exists server-side (invite access is email-bound and completed
+      // via /member/invites).
       const payload = buildRegisterPayload({
         email: contact.email,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         password,
+        emailConfirmToken,
         ...(contact.phone && { phoneNumber: contact.phone, phoneConfirmToken }),
       });
       const authData = await register(payload);
-      // Awaited: settle the session (if the backend issued one here) before
-      // advancing to the OTP step — see AuthContext.storeSessionIfPresent.
-      await storeSessionIfPresent(authData);
+      // Awaited: settle the session before routing — see
+      // AuthContext.storeSessionIfPresent.
+      const stored = await storeSessionIfPresent(authData);
+      if (stored) {
+        finishAndRoute();
+        return;
+      }
       sessionStorage.setItem(PENDING_KEY, JSON.stringify({ email: contact.email }));
       setEmail(contact.email);
       setStep(STEPS.OTP);
@@ -302,6 +323,13 @@ export default function Join() {
         />
       ) : (
         <div className="w-full max-w-md flex flex-col md:mt-14 mb-auto gap-5">
+          {step === STEPS.EMAIL_OTP && (
+            <StepEmailOTP
+              email={contact.email}
+              onVerified={handleEmailVerified}
+              onBack={handleBack}
+            />
+          )}
           {step === STEPS.PHONE_OTP && (
             <PhoneOTPStep
               phone={contact.phone}

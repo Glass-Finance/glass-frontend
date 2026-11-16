@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import OTPStep from "../../../../pages/auth/SignUp/OTPStep";
-import { verifyEmail, resendVerification } from "../../../../services/authService";
+import EmailOTPStep from "../../../../pages/auth/SignUp/EmailOTPStep";
+import { verifyEmailOtp, requestEmailOtp } from "../../../../services/authService";
 
-// The final step of sign-up: verifies the emailed code and hands the session
-// back to the orchestrator. Uncovered off the baseline; services mocked at the
-// module boundary, countdown/OtpBoxes run for real (deterministic: the code
-// window starts at 15 minutes, far beyond test runtime).
+// The step that reads back the emailed code BEFORE the account exists: it
+// exchanges the code for the single-use confirmToken register() requires, and
+// hands that token to the orchestrator. Uncovered off the baseline; services
+// mocked at the module boundary, countdown/OtpBoxes run for real
+// (deterministic: the code window starts at 15 minutes, far beyond test
+// runtime).
 vi.mock("../../../../services/authService", () => ({
-  verifyEmail: vi.fn(),
-  resendVerification: vi.fn(),
+  verifyEmailOtp: vi.fn(),
+  requestEmailOtp: vi.fn(),
 }));
 
 const EMAIL = "sulaimon@example.com";
@@ -17,7 +19,7 @@ const EMAIL = "sulaimon@example.com";
 function renderStep() {
   const onVerified = vi.fn();
   const onBack = vi.fn();
-  render(<OTPStep email={EMAIL} onVerified={onVerified} onBack={onBack} />);
+  render(<EmailOTPStep email={EMAIL} onVerified={onVerified} onBack={onBack} />);
   return { onVerified, onBack };
 }
 
@@ -41,7 +43,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("OTPStep continue button", () => {
+describe("EmailOTPStep continue button", () => {
   it("stays disabled until all six digits are entered", () => {
     renderStep();
 
@@ -55,26 +57,28 @@ describe("OTPStep continue button", () => {
   });
 });
 
-describe("OTPStep verification", () => {
-  it("verifies the code, shows loading, then hands the session to onVerified", async () => {
+describe("EmailOTPStep verification", () => {
+  it("exchanges the code for a confirmToken, shows loading, then hands it to onVerified", async () => {
     const { onVerified } = renderStep();
-    const result = { accessToken: "verified-token" };
+    const result = { confirmToken: "confirm-abc", expiresAt: "2026-11-15T12:00:00Z" };
     const gate = deferred();
-    verifyEmail.mockReturnValue(gate.promise);
+    verifyEmailOtp.mockReturnValue(gate.promise);
 
     typeCode("123456");
     submit();
 
-    expect(verifyEmail).toHaveBeenCalledWith({ email: EMAIL, token: "123456" });
+    expect(verifyEmailOtp).toHaveBeenCalledWith({ email: EMAIL, token: "123456" });
     expect(screen.getByText("Verifying...")).toBeDefined();
 
     gate.resolve(result);
-    await waitFor(() => expect(onVerified).toHaveBeenCalledWith(result));
+    // Only the token is handed up: this proves the address, it is not a
+    // session — register() consumes it and returns the authentication.
+    await waitFor(() => expect(onVerified).toHaveBeenCalledWith("confirm-abc"));
   });
 
   it("explains a rejected code inline and does not advance", async () => {
     const { onVerified } = renderStep();
-    verifyEmail.mockRejectedValue({
+    verifyEmailOtp.mockRejectedValue({
       response: { status: 400, data: { message: "Invalid verification code" } },
     });
 
@@ -85,23 +89,23 @@ describe("OTPStep verification", () => {
     expect(onVerified).not.toHaveBeenCalled();
   });
 
-  it("resends to the same email, confirms it, and clears the entered code", async () => {
+  it("resends through the same request endpoint, confirms it, and clears the entered code", async () => {
     renderStep();
-    resendVerification.mockResolvedValue({});
+    requestEmailOtp.mockResolvedValue({ expiresAt: "2026-11-15T12:00:00Z" });
 
     typeCode("123456");
     fireEvent.click(screen.getByRole("button", { name: "Resend" }));
 
     expect(await screen.findByText("A new code has been sent.")).toBeDefined();
-    expect(resendVerification).toHaveBeenCalledWith({ email: EMAIL });
+    expect(requestEmailOtp).toHaveBeenCalledWith({ email: EMAIL });
     expect(screen.getByLabelText("Verification code").value).toBe("");
   });
 
   it("surfaces a resend rate-limit failure in the resend message", async () => {
     renderStep();
-    resendVerification.mockRejectedValue({
+    requestEmailOtp.mockRejectedValue({
       response: { status: 429, data: {} },
-      config: { url: "/auth/register/resend" },
+      config: { url: "/auth/email/request-otp" },
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Resend" }));
