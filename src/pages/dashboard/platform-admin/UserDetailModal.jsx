@@ -8,7 +8,7 @@ import { toTitleCase } from "../../../utils/format";
 import { kycStatusLabel } from "../../../utils/kycStatus";
 import { parseUserData } from "../../../utils/userData";
 import { getInitials } from "../../../utils/getInitials";
-import { fmtDateTime } from "./shared";
+import { fmtDateTime, userStatus } from "./shared";
 
 function Field({ label, value }) {
   return (
@@ -20,6 +20,11 @@ function Field({ label, value }) {
 }
 
 const yesNo = (value) => (value == null ? null : value ? "Yes" : "No");
+// Same derivation the table badge uses, so the header line and the row can
+// never disagree. This read `enabled` alone before, which reported a suspended
+// account as "Active account" — suspension flips accountNonLocked and leaves
+// enabled untouched.
+const userStatusLabel = (user) => `${userStatus(user).label} account`;
 const METRICS = [
   ["Communities owned", "communitiesOwned"],
   ["Communities joined", "communitiesJoined"],
@@ -89,13 +94,7 @@ export default function UserDetailModal({ userId, onClose }) {
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">
                 {name || user.email || "User"}
               </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {user.enabled == null
-                  ? "Account status unavailable"
-                  : user.enabled
-                    ? "Active account"
-                    : "Suspended account"}
-              </p>
+              <p className="text-sm text-gray-500 mt-1">{userStatusLabel(user)}</p>
             </div>
           </div>
           <section>
@@ -109,6 +108,13 @@ export default function UserDetailModal({ userId, onClose }) {
               <Field label="Timezone" value={user.timezone} />
               <Field label="Platform role" value={user.platformRole} />
               <Field label="Platform administrator" value={yesNo(user.isPlatformAdmin)} />
+              {/* Raw auth.users.status enum, shown next to the derived badge so
+                  an operator can see which of the three the backend actually
+                  holds. Null until UserDto starts serializing it (see
+                  docs/backend-change-requests.md), hence the ?? fallback. */}
+              <Field label="Lifecycle status" value={user.status?.replace(/_/g, " ") ?? null} />
+              <Field label="Deletion requested" value={fmtDateTime(user.deletionRequestedAt)} />
+              <Field label="Anonymized" value={fmtDateTime(user.anonymizedAt)} />
               <Field label="Account enabled" value={yesNo(user.enabled)} />
               <Field label="Account not expired" value={yesNo(user.accountNonExpired)} />
               <Field label="Account unlocked" value={yesNo(user.accountNonLocked)} />

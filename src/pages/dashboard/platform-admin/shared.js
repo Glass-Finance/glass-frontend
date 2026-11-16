@@ -101,8 +101,14 @@ export const STATUS_COLORS = {
   ACTIVE: { bg: "bg-green-50", text: "text-green-700" },
   PENDING: { bg: "bg-amber-50", text: "text-amber-700" },
   PENDING_ONBOARDING: { bg: "bg-amber-50", text: "text-amber-700" },
+  // auth.users.status enum (V57__community_delete_and_user_deletion.sql).
+  // PENDING_DELETION is a 30-day grace window, not a failure — the account is
+  // disabled but fully recoverable via POST /admin/users/{id}/restore until
+  // the grace period lapses and the anonymization job runs.
+  PENDING_DELETION: { bg: "bg-amber-50", text: "text-amber-700" },
   SUSPENDED: { bg: "bg-red-50", text: "text-red-700" },
   INACTIVE: { bg: "bg-gray-100", text: "text-gray-500" },
+  ANONYMIZED: { bg: "bg-gray-100", text: "text-gray-500" },
   VERIFIED: { bg: "bg-green-50", text: "text-green-700" },
   // CommunityAccountResponse.status enum (accounts review flow). DISABLED
   // isn't listed here on purpose — it falls through to the default gray
@@ -146,3 +152,60 @@ export const STATUS_COLORS = {
   APPROVED: { bg: "bg-green-50", text: "text-green-700" },
   REVOKED: { bg: "bg-red-50", text: "text-red-700" },
 };
+
+// ─── User lifecycle status ────────────────────────────────────────────────────
+//
+// The backend models a user's lifecycle in TWO places, and neither alone is
+// enough to render a truthful badge:
+//
+//   auth.users.status          ACTIVE | PENDING_DELETION | DELETED
+//   auth.users.account_non_locked  boolean — false while SUSPENDED
+//
+// Suspension is NOT a status value: suspendUser() flips accountNonLocked to
+// false and leaves status at ACTIVE, while deleteAccount()/markUserForDeletion()
+// set status=PENDING_DELETION and enabled=false, and anonymizeUserByAdmin()
+// sets status=DELETED. So reading `enabled` alone — which is what the table
+// used to do — renders a suspended user as "Active", because suspension never
+// touches `enabled`.
+//
+// NOTE: `status`, `deletionRequestedAt` and `anonymizedAt` are NOT yet
+// serialized by the backend's UserMapper.toUserDto(), so every branch reading
+// `status` is inert today. They are written now so the table starts
+// distinguishing the states the moment the fields ship, with no second
+// frontend change (see docs/backend-change-requests.md).
+//
+// Until then the `enabled === false` branch carries the deletion signal: I
+// checked every setEnabled() call in the backend and the ONLY one that passes
+// false is the deletion flow (UserDeletionServiceImpl, on mark-for-deletion and
+// self-service delete). Registration and email verification only ever set it
+// true. So enabled=false reliably means "deletion in progress" today.
+//
+// Two consequences of that stand-in, both removed once `status` ships:
+//   - an already-anonymized account also has enabled=false, so it reads as
+//     "Pending Deletion" rather than "Anonymized";
+//   - the two cannot be told apart, so anonymized rows stay in the list.
+export function userStatus(user) {
+  if (user?.status === "DELETED" || user?.anonymizedAt) {
+    return { key: "ANONYMIZED", label: "Anonymized" };
+  }
+  if (user?.status === "PENDING_DELETION") {
+    return { key: "PENDING_DELETION", label: "Pending Deletion" };
+  }
+  // Suspension is the ONLY thing accountNonLocked=false means, and it leaves
+  // `enabled` untouched — so it must be tested before the enabled fallback
+  // below, or a suspended account falls through to Active. This ordering is
+  // the whole fix for the badge.
+  if (user?.accountNonLocked === false) {
+    return { key: "SUSPENDED", label: "Suspended" };
+  }
+  // `status` is authoritative when the backend sends it, so it outranks the
+  // enabled fallback below: a restored account can briefly be status=ACTIVE
+  // with enabled still false, and must not read as deleted.
+  if (user?.status === "ACTIVE") {
+    return { key: "ACTIVE", label: "Active" };
+  }
+  if (user?.enabled === false) {
+    return { key: "PENDING_DELETION", label: "Pending Deletion" };
+  }
+  return { key: "ACTIVE", label: "Active" };
+}
