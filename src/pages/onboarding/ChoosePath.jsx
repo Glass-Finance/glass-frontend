@@ -207,7 +207,8 @@ export default function ChoosePath() {
           >
             Continue
           </Button>
-          <div className="h-[env(safe-area-inset-bottom,0px)]" />
+        </div>
+        <div className="h-[env(safe-area-inset-bottom,0px)]" />
       </main>
     </div>
   );
