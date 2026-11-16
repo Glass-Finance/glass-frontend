@@ -35,9 +35,7 @@ export default function PayingMember() {
   // browser back/forward) goes straight to their dashboard instead of
   // stepping back into the middle of onboarding. This page previously had
   // no way back at all, not even to the previous step.
-  const handleBack = () => {
-    navigate(isAuthenticated ? "/dashboard/home" : "/onboarding/choose-path", { state: { email } });
-  };
+  const handleBack = () => navigate(isAuthenticated ? "/dashboard/home" : "/dashboard/home");
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-start px-4 lg:px-6 pt-12 pb-14 lg:pt-[152px] lg:[@media(max-height:800px)]:pt-[72px]! lg:[@media(max-height:800px)]:pb-4! bg-contain bg-center lg:bg-page-default">
