@@ -151,11 +151,6 @@ export default function PayingMember() {
             variant="tertiary"
             size="sm"
             fullWidth={false}
-            onClick={() => go(true)}
-            className="max-lg:flex-1 max-lg:text-brand lg:mt-6 lg:[@media(max-height:800px)]:mt-3! lg:text-brand lg:text-[16px] lg:h-auto lg:px-0 lg:py-0 lg:hover:bg-transparent"
-          >
-            Skip
-          </Button>
         </div>
         <div className="h-[env(safe-area-inset-bottom,0px)]" />
       </div>
