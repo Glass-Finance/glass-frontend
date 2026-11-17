@@ -308,7 +308,7 @@ export default function Join() {
   }
 
   return (
-    <AuthLayout heroTitle="Manage Your Community" heroSubtitle="Finance Effortlessly">
+    <AuthLayout heroHeadline="Manage Your Community Finance Effortlessly">
       {step === STEPS.CONTACT ? (
         // StepContact renders its own top-level Fragment (content block +
         // a separately-pinned consent line) rather than sitting inside the

@@ -9,6 +9,7 @@ import { useAuth } from "../../store/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { MobileBackButton } from "../../components/ui/MobileBackButton";
 import { useKycGate } from "../../hooks/useKycGate";
+import { saveOnboardingProgress } from "../../utils/onboardingProgress";
 
 export default function ChoosePath() {
   const navigate = useNavigate();
@@ -54,6 +55,8 @@ export default function ChoosePath() {
       //   - known not-approved → /onboarding/verify-identity
       if (kycGate.isLoading) return;
       const skip = kycGate.exempt || kycGate.isError || kycGate.isApproved || !kycGate.status;
+      // Persist the email so it survives a new tab opened from this route:
+      saveOnboardingProgress({ email });
       navigate(skip ? "/onboarding/paying-member" : "/onboarding/verify-identity", {
         state: { email },
       });
@@ -136,7 +139,7 @@ export default function ChoosePath() {
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
-                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:h-[300px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:h-[220px]! lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
+                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:h-[320px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 mb-4">
                   <CloudImage
@@ -206,15 +209,6 @@ export default function ChoosePath() {
             className="max-lg:flex-[2] max-lg:h-12 max-lg:py-3 max-lg:px-6 max-lg:text-[14px] lg:w-[420px] lg:h-16 lg:[@media(max-height:800px)]:h-14! lg:py-5 lg:[@media(max-height:800px)]:py-4! lg:px-10"
           >
             Continue
-          </Button>
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth={false}
-            onClick={() => navigate("/dashboard/home")}
-            className="max-lg:flex-1 max-lg:text-brand lg:text-brand lg:text-[16px] lg:h-auto lg:px-0 lg:py-0 lg:hover:bg-transparent"
-          >
-            Skip
           </Button>
         </div>
         <div className="h-[env(safe-area-inset-bottom,0px)]" />

@@ -74,7 +74,7 @@ export default function GettingStartedChecklist({
                 variant="outline"
                 size="xs"
                 fullWidth={false}
-                onClick={() => navigate("/dashboard/verify-identity")}
+                onClick={() => window.open("/dashboard/verify-identity", "_blank")}
                 className="flex-shrink-0"
               >
                 Verify
