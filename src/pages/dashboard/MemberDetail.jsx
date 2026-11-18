@@ -7,14 +7,13 @@ import { useMembersWithPayments, useMemberPaymentLinks } from "../../hooks/useMe
 import { useCommunityMember, useCommunityMembers } from "../../hooks/useCommunityMembers";
 import { useCommunity } from "../../hooks/useCommunity";
 import ReceiptDownloadButton from "../../components/dashboard/ReceiptDownloadButton";
-import { SkeletonTable } from "../../components/common/SkeletonUI";
+import { Skeleton, SkeletonTable } from "../../components/common/SkeletonUI";
 import EmptyState from "../../components/common/EmptyState";
 import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
 import { Button } from "../../components/ui/Button";
 import StatCard from "../../components/dashboard/StatCard";
-import { formatNaira, formatDate } from "../../utils/format";
+import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
 import { resolveDisplayName, resolveEmail, resolvePhone } from "../../utils/memberName";
-import { isPaidObligationStatus } from "../../utils/paymentStatus";
 
 const TABS = ["All Plans", "Payment History", "Contact Details"];
 
@@ -29,17 +28,16 @@ const memberEmail = (m) => resolveEmail(m);
 const memberPhone = (m) => resolvePhone(m);
 
 function PlanCard({ plan }) {
-  const isRecurring = !!plan.recurringPlan;
-  const isPaid = isPaidObligationStatus(plan.status);
+  const isRecurring = plan.paymentType === "RECURRING" || !!plan.recurringPlan;
   return (
     <div className="bg-surface-container rounded-md border border-surface-container-border p-4">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm font-medium text-black pt-0.5">{plan.paymentLink?.title ?? "Plan"}</p>
-        <span
-          className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${isPaid ? "text-success-strong bg-success-wash" : "text-danger-bright bg-danger-wash-2"}`}
-        >
-          {isPaid ? "Paid" : "Unpaid"}
-        </span>
+        <p className="text-sm font-medium text-black pt-0.5">{plan.title ?? "Plan"}</p>
+        {plan.status && (
+          <span className="text-xs font-semibold text-gray-500">
+            {toTitleCase(plan.status.toLowerCase())}
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-md font-semibold text-gray-900">{formatNaira(plan.amount)}</span>
@@ -48,7 +46,7 @@ function PlanCard({ plan }) {
         </span>
       </div>
       <p className="text-xs text-gray-400">
-        Joined {formatDate(plan.cycleStart)} · Due {formatDate(plan.dueAt)}
+        Starts {formatDate(plan.startAt)} · Due {formatDate(plan.dueAt)}
       </p>
     </div>
   );
@@ -68,10 +66,13 @@ export default function MemberDetail() {
   const member = members.find((m) => String(m.id) === String(memberId));
   usePageTitle(member ? memberName(member) : "Member");
   // Audience-aware: only the payment links that actually target this member
-  // (ALL_MEMBERS, their group, or explicit selection), unlike planCount on
-  // `member` above which assumes every active community plan applies to
-  // every member.
-  const { paymentLinks: memberPaymentLinks } = useMemberPaymentLinks(communityId, member?.id);
+  // (ALL_MEMBERS, their group, or explicit selection). Historical obligation
+  // counts on `member.stats` are independent of this list.
+  const {
+    paymentLinks: memberPaymentLinks,
+    isLoading: plansLoading,
+    error: plansError,
+  } = useMemberPaymentLinks(communityId, member?.id);
 
   function handleRemove() {
     if (!member) return;
@@ -112,25 +113,9 @@ export default function MemberDetail() {
   // used by the tabs. Missing stats mean unavailable, not zero activity.
   const stats = memberDetail?.stats;
 
-  // Distinct plans (one card per payment link, latest obligation for that
-  // link). Obligations carry the per-cycle amount/due-date/paid-status. An
-  // active link without an obligation is shown as pending until the backend
-  // creates the authoritative obligation record.
-  const obligationsByLinkId = new Map(member.obligations.map((o) => [o.paymentLink?.id, o]));
-  const syntheticPlans = memberPaymentLinks
-    .filter(
-      (link) => (link.status ?? "").toUpperCase() === "ACTIVE" && !obligationsByLinkId.has(link.id),
-    )
-    .map((link) => ({
-      id: link.id,
-      paymentLink: { id: link.id, title: link.title },
-      amount: link.amount,
-      status: undefined,
-      recurringPlan: link.recurringPlan,
-      cycleStart: link.startAt,
-      dueAt: link.dueAt,
-    }));
-  const distinctPlans = [...obligationsByLinkId.values(), ...syntheticPlans];
+  // The member-filtered links are the sole source for All Plans. Historical
+  // obligations must not add plans the backend no longer assigns to this member.
+  const billingExempt = memberDetail?.billingExempt ?? member.billingExempt;
 
   return (
     <div className="px-4 md:px-6 py-6 overflow-y-auto h-full">
@@ -193,15 +178,25 @@ export default function MemberDetail() {
       </div>
 
       {tab === "All Plans" &&
-        (distinctPlans.length === 0 ? (
+        (plansLoading ? (
+          <div role="status" aria-label="Loading plans" aria-busy="true">
+            <Skeleton className="h-28 w-full" />
+          </div>
+        ) : plansError ? (
+          <EmptyState icon={CreditCard} title="Unable to load plans" subtitle="Please try again." />
+        ) : memberPaymentLinks.length === 0 ? (
           <EmptyState
             icon={CreditCard}
-            title="No plans assigned yet"
-            subtitle="This member isn't enrolled in any payment plans in this community yet."
+            title="No plans"
+            subtitle={
+              billingExempt
+                ? "This member is billing exempt and has no payment plans."
+                : "This member has no payment plans."
+            }
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {distinctPlans.map((plan) => (
+            {memberPaymentLinks.map((plan) => (
               <PlanCard key={plan.id} plan={plan} />
             ))}
           </div>
