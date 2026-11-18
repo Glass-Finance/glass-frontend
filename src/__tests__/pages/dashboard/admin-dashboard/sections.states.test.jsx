@@ -140,3 +140,37 @@ describe("MemberPaymentsSection error branch", () => {
     expect(screen.getByText("Couldn't load member payments.")).toBeDefined();
   });
 });
+
+describe("Dashboard payment-plan member progress", () => {
+  it.each([
+    [0, 2, 0],
+    [1, 2, 50],
+    [1, 3, 33],
+    [0, 0, 0],
+    [4, 3, 100],
+  ])("shows %s/%s fully paid members as %s percent", (paidCount, totalCount, percent) => {
+    render(
+      <PaymentPlansCard
+        plans={[
+          {
+            id: "p1",
+            name: "Monthly Dues",
+            amount: 5000,
+            paidCount,
+            totalCount,
+            amountCollected: 30000,
+            expectedAmount: 10000,
+          },
+        ]}
+        plansLoading={false}
+        onManageAll={vi.fn()}
+      />,
+    );
+    const bar = screen.getByRole("progressbar", { name: "Monthly Dues members paid" });
+    expect(bar.getAttribute("aria-valuenow")).toBe(String(percent));
+    expect(bar.style.width).toBe(`${percent}%`);
+    expect(screen.getByText(`${percent}% members paid`)).toBeDefined();
+    expect(screen.getByText(`${paidCount} / ${totalCount} members paid`)).toBeDefined();
+    expect(screen.queryByText(/% Collected/)).toBeNull();
+  });
+});
