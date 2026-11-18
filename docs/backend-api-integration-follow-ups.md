@@ -45,12 +45,13 @@ Confirmed by the user on 2026-11-18:
   response does include the date. The previous follow-up list overstated this as
   required work.
 
-## Separate member-statistics change
+## Member statistics and obligation-backed plans
 
-The member-statistics work is on `fix/member-payment-statistics`. Integrate that
-branch as a separate change: list/detail `stats`, paid/total obligation-plan counts,
-explicit `0/0 Paid`, unavailable missing stats, and member-cache refresh behavior.
-The deletion work does not replace that change.
+The combined work is on `fix/community-payment-plans`, based on the latest `dev`.
+Member list/detail statistics use server aggregates, with paid/total obligation-plan
+counts, explicit `0/0 Paid`, unavailable missing stats, and member-cache refreshes.
+The member-detail All Plans tab uses only member-targeted payment links. Personal
+upcoming payments and amounts owed use only the member's obligations.
 
 No new auth flow, request flag or permission is required by these follow-ups.
 The DELETE operation uses the existing delete permission. Existing session handling
