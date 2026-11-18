@@ -392,3 +392,20 @@ describe("Payments — direct status mutations from the menu", () => {
     expect(plans.delete.mutate).not.toHaveBeenCalled();
   });
 });
+
+describe("Payment-plan member progress", () => {
+  it.each([
+    [3, 5, 60],
+    [1, 3, 33],
+    [0, 0, 0],
+    [4, 3, 100],
+  ])("shows %s/%s fully paid members as %s percent", (paidCount, totalCount, percent) => {
+    renderPage(makePlanPlans({ plans: [planFixture({ paidCount, totalCount })] }));
+    const bar = screen.getByRole("progressbar", { name: "Monthly Dues members paid" });
+    expect(bar.getAttribute("aria-valuenow")).toBe(String(percent));
+    expect(bar.style.width).toBe(`${percent}%`);
+    expect(screen.getByText(`${paidCount} / ${totalCount} members paid`)).toBeTruthy();
+    const card = bar.closest("div.rounded-2xl");
+    expect(card.textContent).toContain("50K/100K Collected");
+  });
+});
