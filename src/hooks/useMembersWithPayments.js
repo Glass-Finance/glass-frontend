@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchAllCommunityMembers } from "../api/communities";
 import { fetchAllCommunityObligations, fetchAllCommunityTransactions } from "../api/transactions";
 import { getCommunityPaymentLinks } from "../api/payments";
-import { isPaidObligationStatus, isFailedStatus } from "../utils/paymentStatus";
 
 function unwrapList(res) {
   const data = res.data?.data;
@@ -25,9 +24,9 @@ function memberIdsMatch(member, ref) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Joins the member list with community-wide obligations + transactions to
-// produce the per-member aggregates the Members table and member detail page
-// need: plan count, "X/Y Paid" status, last payment date.
+// Member-list stats own all aggregate counts. Financial lists are retained
+// only for plan filtering, payment history, and last-payment dates; a paged
+// list must never override the server aggregates.
 // ─────────────────────────────────────────────────────────────────────────────
 export function useMembersWithPayments(communityId) {
   const enabled = !!communityId;
@@ -53,26 +52,9 @@ export function useMembersWithPayments(communityId) {
     staleTime: 1000 * 60 * 2,
   });
 
-  // Obligations are generated for a member on a delay (next billing cycle,
-  // a scheduled job, etc.), so a just-added member can have zero obligation
-  // records for days even though they're enrolled in an active plan --
-  // without this, the Members table shows "no plan" for every fresh account.
-  // Mirrors the same gap-covering fallback usePayments.js already applies
-  // on the member's own Home/Upcoming screens.
-  const paymentLinksQuery = useQuery({
-    queryKey: ["community", communityId, "payment-links"],
-    queryFn: async () => unwrapList(await getCommunityPaymentLinks(communityId)),
-    enabled,
-    staleTime: 1000 * 60 * 2,
-  });
-
   const members = membersQuery.data ?? [];
   const obligations = obligationsQuery.data ?? [];
   const transactions = transactionsQuery.data ?? [];
-  const activePlanIds = (paymentLinksQuery.data ?? [])
-    .filter((p) => (p.status ?? "").toUpperCase() === "ACTIVE")
-    .map((p) => p.id);
-
   const enriched = members.map((member) => {
     const memberObligations = obligations.filter((o) => memberIdsMatch(member, o.member ?? o.user));
     const memberTransactions = transactions
@@ -81,28 +63,12 @@ export function useMembersWithPayments(communityId) {
         (a, b) => new Date(b.paidAt ?? b.createdAt ?? 0) - new Date(a.paidAt ?? a.createdAt ?? 0),
       );
 
-    const planIds = new Set(memberObligations.map((o) => o.paymentLink?.id ?? o.recurringPlan?.id));
-
-    const paidCount = memberObligations.filter((o) => isPaidObligationStatus(o.status)).length;
-
-    const failedCount = memberTransactions.filter((t) => isFailedStatus(t.status)).length;
-
-    // Exempt members genuinely have no dues -- only fill the gap for
-    // everyone else, and only for plans that don't already have a real
-    // obligation counted above (avoids double-counting).
-    if (!member.billingExempt) {
-      for (const planId of activePlanIds) {
-        if (!planIds.has(planId)) planIds.add(planId);
-      }
-    }
-    const totalCount = Math.max(memberObligations.length, planIds.size);
-
     return {
       ...member,
-      planCount: planIds.size,
-      paidCount,
-      totalCount,
-      failedCount,
+      planCount: member.stats?.totalObligationPaymentLinkCount ?? null,
+      paidCount: member.stats?.paidObligationPaymentLinkCount ?? null,
+      totalCount: member.stats?.totalObligationPaymentLinkCount ?? null,
+      failedCount: member.stats?.failedPaymentTransactionCount ?? null,
       lastPaymentDate: memberTransactions[0]?.paidAt ?? memberTransactions[0]?.createdAt ?? null,
       obligations: memberObligations,
       transactions: memberTransactions,
@@ -113,11 +79,7 @@ export function useMembersWithPayments(communityId) {
     members: enriched,
     obligations,
     transactions,
-    isLoading:
-      membersQuery.isLoading ||
-      obligationsQuery.isLoading ||
-      transactionsQuery.isLoading ||
-      paymentLinksQuery.isLoading,
+    isLoading: membersQuery.isLoading || obligationsQuery.isLoading || transactionsQuery.isLoading,
     // Gated on "no data at all", not just "error is set" -- same fix as
     // usePayments.js's Home/Upcoming flicker: React Query keeps a query's
     // last-good data around through a failed background refetch, it
@@ -128,7 +90,6 @@ export function useMembersWithPayments(communityId) {
       (membersQuery.error && !membersQuery.data) ||
       (obligationsQuery.error && !obligationsQuery.data) ||
       (transactionsQuery.error && !transactionsQuery.data) ||
-      (paymentLinksQuery.error && !paymentLinksQuery.data) ||
       null,
   };
 }
@@ -137,9 +98,7 @@ export function useMembersWithPayments(communityId) {
 // The payment links that actually target one specific member — audience-aware
 // (ALL_MEMBERS, their group, or explicit selection), via the backend's
 // memberId filter on GET .../payment-links. Used on MemberDetail.jsx instead
-// of the blanket "every active community plan applies to every member"
-// fallback above, which doesn't account for group/selected-member audiences,
-// and doesn't need to wait on the obligation-generation delay noted there.
+// of financial history, so obligations cannot add unassigned plans to that tab.
 export function useMemberPaymentLinks(communityId, memberId) {
   const enabled = !!communityId && !!memberId;
   const query = useQuery({

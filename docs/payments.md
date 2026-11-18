@@ -28,6 +28,29 @@ A payment plan's terms (`amountMode`, `visibility`, `audience`, `memberIds`) are
 - `audience: GROUP` is **not** offered: it needs the community-groups endpoints, which this app has no surface for, and the backend rejects a GROUP audience with no `groupIds`.
 - `shapePlan` in `usePaymentPlans` passes all four through; the edit modal hydrates from them. Omitting a field on PATCH leaves the stored value alone, so the modal re-sends the current terms on every save.
 
+## Community member payment statistics
+
+Member list rows (`GET /communities/{communityIdentifier}/members`) and single-member
+responses include all six fields in `stats`; no opt-in flag is required. The Members
+table uses `totalObligationPaymentLinkCount` for Plans and displays
+`paidObligationPaymentLinkCount/totalObligationPaymentLinkCount Paid`, including
+`0/0 Paid` for explicit zeros. Missing statistics render as unavailable, never zero.
+
+These counts group recurring cycles by payment link. A link qualifies as paid when
+it has PAID or WAIVED obligations and no DUE/OVERDUE cycle. Total includes links
+with DUE, OVERDUE, PAID or WAIVED obligations; CANCELLED-only links are excluded.
+The obligation counts retain history across link statuses and billing exemption.
+`activePaymentLinkCount` instead counts currently targeted ACTIVE plans for active,
+non-exempt members, even without obligations, and is not this table's denominator.
+
+The hook retains financial lists for plan filtering, history and last-payment dates,
+not aggregate counts. Member mutations refresh list/detail caches together; payment-plan
+mutations also invalidate both member caches. Existing asynchronous cancellation can
+briefly leave pending statistics visible until the backend finishes processing.
+
+Contract: [Community Member Payment Statistics — Frontend Guide](https://app.notion.com/p/41a9a22eb2a981bdbfd4c0a5f7351219),
+updated 2026-11-18.
+
 ## Platform-admin amount units and community commissions
 
 Admin transaction, settlement, payment-link (including collected metrics), obligation,

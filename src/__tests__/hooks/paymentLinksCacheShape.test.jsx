@@ -1,14 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePaymentPlans } from "../../hooks/usePaymentPlans";
-import { useMembersWithPayments } from "../../hooks/useMembersWithPayments";
+import { useMemberPaymentLinks } from "../../hooks/useMembersWithPayments";
 import { getCommunityPaymentLinks } from "../../api/payments";
-import { fetchAllCommunityMembers } from "../../api/communities";
-import {
-  fetchAllCommunityObligations,
-  fetchAllCommunityTransactions,
-} from "../../api/transactions";
 
 vi.mock("../../api/payments", () => ({
   getCommunityPaymentLinks: vi.fn(),
@@ -22,22 +17,14 @@ vi.mock("../../api/payments", () => ({
   duplicatePaymentLink: vi.fn(),
 }));
 
-vi.mock("../../api/communities", () => ({
-  fetchAllCommunityMembers: vi.fn(),
-}));
-
-vi.mock("../../api/transactions", () => ({
-  fetchAllCommunityObligations: vi.fn(),
-  fetchAllCommunityTransactions: vi.fn(),
-}));
-
 const CID = "community-1";
-const RAW_KEY = ["community", CID, "payment-links"];
+const PREFIX_KEY = ["community", CID, "payment-links"];
+const RAW_KEY = [...PREFIX_KEY, "member", "member-1"];
 const PLANS_KEY = ["community", CID, "payment-links", "plans"];
 
 // The same GET .../payment-links response both hooks read. usePaymentPlans
-// maps it through shapePlan; useMembersWithPayments keeps it raw and only
-// reads id/status. The two shapes are mutually unreadable, which is the point.
+// maps it through shapePlan; useMemberPaymentLinks keeps it raw and
+// exposes raw links. The two shapes are mutually unreadable, which is the point.
 const RAW_LINKS = [
   {
     id: "link-active",
@@ -90,9 +77,9 @@ function mountInOrder(order) {
   let members;
   if (order === "plans-first") {
     plans = renderHook(() => usePaymentPlans(CID), { wrapper });
-    members = renderHook(() => useMembersWithPayments(CID), { wrapper });
+    members = renderHook(() => useMemberPaymentLinks(CID, "member-1"), { wrapper });
   } else {
-    members = renderHook(() => useMembersWithPayments(CID), { wrapper });
+    members = renderHook(() => useMemberPaymentLinks(CID, "member-1"), { wrapper });
     plans = renderHook(() => usePaymentPlans(CID), { wrapper });
   }
 
@@ -102,14 +89,7 @@ function mountInOrder(order) {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
-  // getCommunityPaymentLinks returns the raw axios response (the hooks unwrap
-  // it); the three fetchAll* helpers below already unwrap to bare arrays.
   getCommunityPaymentLinks.mockImplementation(async () => ENVELOPE(RAW_LINKS));
-  fetchAllCommunityMembers.mockResolvedValue([
-    { id: "member-1", name: "Ada", user: { id: "user-1" } },
-  ]);
-  fetchAllCommunityObligations.mockResolvedValue([]);
-  fetchAllCommunityTransactions.mockResolvedValue([]);
 });
 
 describe('F2 — ["community", id, "payment-links"] cache shape', () => {
@@ -119,7 +99,7 @@ describe('F2 — ["community", id, "payment-links"] cache shape', () => {
       const { queryClient, plans, members } = mountInOrder(order);
 
       await waitFor(() => expect(plans.result.current.plans).toHaveLength(2));
-      await waitFor(() => expect(members.result.current.members).toHaveLength(1));
+      await waitFor(() => expect(members.result.current.paymentLinks).toHaveLength(2));
 
       const raw = queryClient.getQueryData(RAW_KEY);
       const shaped = queryClient.getQueryData(PLANS_KEY);
@@ -154,24 +134,21 @@ describe('F2 — ["community", id, "payment-links"] cache shape', () => {
       expect(plans.result.current.plans[0].name).toBe("Dues");
       expect(plans.result.current.plans[1].name).toBe("Last term's plan");
 
-      // ...and the member-payment consumer still derives plan coverage from
-      // the RAW list: only the ACTIVE link counts (archived one excluded).
-      expect(members.result.current.members[0].planCount).toBe(1);
-      expect(members.result.current.members[0].totalCount).toBe(1);
-      expect(members.result.current.members[0].paidCount).toBe(0);
+      expect(members.result.current.paymentLinks[0].title).toBe("Dues");
+      expect(members.result.current.paymentLinks[1].title).toBe("Last term's plan");
     },
   );
 
   it('still reaches both entries through the ["community", id, "payment-links"] prefix', async () => {
     const { queryClient, plans, members } = mountInOrder("plans-first");
     await waitFor(() => expect(plans.result.current.plans).toHaveLength(2));
-    await waitFor(() => expect(members.result.current.members).toHaveLength(1));
+    await waitFor(() => expect(members.result.current.paymentLinks).toHaveLength(2));
 
     const before = getCommunityPaymentLinks.mock.calls.length;
     expect(before).toBe(2);
 
     // What usePaymentPlans.invalidate() issues after create/update/archive.
-    await queryClient.invalidateQueries({ queryKey: RAW_KEY });
+    await queryClient.invalidateQueries({ queryKey: PREFIX_KEY });
 
     await waitFor(() => expect(getCommunityPaymentLinks.mock.calls.length).toBe(before + 2));
     expect(queryClient.getQueryState(PLANS_KEY)).toBeDefined();
@@ -186,11 +163,8 @@ describe('F2 — ["community", id, "payment-links"] cache shape', () => {
     // so the assertions only run once both queries have resolved.
     await waitFor(() => expect(queryClient.getQueryData(PLANS_KEY)).toEqual([]));
     await waitFor(() => expect(queryClient.getQueryData(RAW_KEY)).toEqual([]));
-    await waitFor(() => expect(members.result.current.members).toHaveLength(1));
-
     expect(plans.result.current.plans).toEqual([]);
-    expect(members.result.current.members[0].planCount).toBe(0);
-    expect(members.result.current.members[0].totalCount).toBe(0);
+    expect(members.result.current.paymentLinks).toEqual([]);
   });
 
   it("tolerates an empty data object instead of a content array", async () => {
@@ -204,4 +178,21 @@ describe('F2 — ["community", id, "payment-links"] cache shape', () => {
     expect(members.result.current.isLoading).toBe(false);
     expect(members.result.current.error).toBeNull();
   });
+});
+
+it("refreshes member list and detail stats after a payment-plan mutation", async () => {
+  const { queryClient, plans } = mountInOrder("plans-first");
+  await waitFor(() => expect(plans.result.current.plans).toHaveLength(2));
+  const listKey = ["community", CID, "members"];
+  const detailKey = [...listKey, "detail", "member-1"];
+  const otherKey = ["community", "other-community", "members"];
+  queryClient.setQueryData(listKey, [{ id: "member-1", stats: { activePaymentLinkCount: 1 } }]);
+  queryClient.setQueryData(detailKey, { id: "member-1", stats: { activePaymentLinkCount: 1 } });
+  queryClient.setQueryData(otherKey, []);
+  await act(async () => {
+    await plans.result.current.activate.mutateAsync("link-active");
+  });
+  expect(queryClient.getQueryState(listKey).isInvalidated).toBe(true);
+  expect(queryClient.getQueryState(detailKey).isInvalidated).toBe(true);
+  expect(queryClient.getQueryState(otherKey).isInvalidated).toBe(false);
 });
