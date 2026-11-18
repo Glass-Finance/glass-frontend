@@ -7,7 +7,7 @@ import client from "./client";
 // GET /api/v1/communities/{communityIdentifier}/payment-links
 // params supports memberId (audience-aware: returns only links that actually
 // target that member — ALL_MEMBERS, their group, or explicit selection) plus
-// the usual search/status/paymentType/audience/includeMetrics filters.
+// the usual search/status/paymentType/audience filters. Admin list metrics are always included.
 export const getCommunityPaymentLinks = (communityId, params = {}) =>
   client.get(`/communities/${communityId}/payment-links`, { params });
 

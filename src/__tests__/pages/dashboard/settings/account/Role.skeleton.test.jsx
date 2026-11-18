@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Regression coverage for the Role settings loading skeleton.
@@ -94,4 +94,27 @@ describe("Role settings loading skeleton", () => {
     expect(tones).toContain("bg-gray-100");
     expect(tones.every(Boolean)).toBe(true);
   });
+});
+
+it("refreshes personal obligations and plan caches after saving billing exemption", async () => {
+  useMyMemberRecord.mockReturnValue({ data: { id: "m1", billingExempt: false }, isLoading: false });
+  updateCommunityMember.mockResolvedValue({ data: { data: {} } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const keys = [
+    ["obligations"],
+    ["community", "community-1", "payment-links"],
+    ["member-record", "community-1"],
+  ];
+  for (const key of keys) queryClient.setQueryData(key, []);
+  render(
+    <QueryClientProvider client={queryClient}>
+      <Role />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: /I am exempt from payments/i }));
+  await screen.findByText("Saved");
+  await waitFor(() => {
+    for (const key of keys) expect(queryClient.getQueryState(key).isInvalidated).toBe(true);
+  });
+  queryClient.clear();
 });

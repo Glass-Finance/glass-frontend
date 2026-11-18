@@ -29,7 +29,6 @@ export default function PaymentLinksSection() {
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(status !== "ALL" ? { status } : {}),
     ...(type !== "ALL" ? { paymentType: type } : {}),
-    includeMetrics: true,
   };
 
   const { data, isLoading, isFetching, error } = useQuery({

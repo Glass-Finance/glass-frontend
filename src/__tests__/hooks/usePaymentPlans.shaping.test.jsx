@@ -66,6 +66,7 @@ describe("usePaymentPlans — shaping the editable plan terms", () => {
     const { result } = renderPlans();
 
     await waitFor(() => expect(result.current.plans).toHaveLength(1));
+    expect(getCommunityPaymentLinks).toHaveBeenCalledWith(COMMUNITY_ID);
     expect(result.current.plans[0]).toMatchObject({
       amountMode: "VARIABLE",
       audience: "SELECTED_MEMBERS",

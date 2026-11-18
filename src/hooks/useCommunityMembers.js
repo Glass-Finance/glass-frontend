@@ -1,3 +1,4 @@
+import { refreshCommunityBilling } from "./refreshCommunityBilling";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAllCommunityMembers,
@@ -57,7 +58,10 @@ export function useCommunityMembers(communityId, { includeHistorical = false } =
 
   const updateMember = useMutation({
     mutationFn: ({ memberId, payload }) => updateCommunityMember(communityId, memberId, payload),
-    onSuccess: invalidate,
+    onSuccess: (_data, { payload }) =>
+      Object.hasOwn(payload, "billingExempt")
+        ? refreshCommunityBilling(queryClient, communityId)
+        : invalidate(),
     meta: { successMessage: "Member updated" },
   });
 
