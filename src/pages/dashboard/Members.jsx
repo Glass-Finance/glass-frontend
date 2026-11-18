@@ -92,7 +92,7 @@ const memberEmail = (m) => resolveEmail(m);
 const isAdminRole = (m) => isCommunityAdmin(m);
 
 function statusStyle(paid, total) {
-  if (total === 0) return "bg-[#f5f6fa] text-ink-muted";
+  if (paid == null || total == null || total === 0) return "bg-[#f5f6fa] text-ink-muted";
   if (paid === total) return "bg-success-wash text-success-strong";
   if (paid === 0) return "bg-danger-wash-2 text-danger-bright";
   return "bg-warning-wash text-warning";
@@ -245,6 +245,7 @@ export default function Members() {
     }
     if (filters.status) {
       list = list.filter((m) => {
+        if (m.paidCount == null || m.totalCount == null) return false;
         if (filters.status === "Paid") return m.totalCount > 0 && m.paidCount === m.totalCount;
         if (filters.status === "Unpaid") return m.paidCount === 0;
         return m.paidCount > 0 && m.paidCount < m.totalCount;
@@ -638,10 +639,12 @@ export default function Members() {
                             <KycStateBadge status={m.kycStatus} />
                           </div>
                         </td>
-                        <td className="px-5 py-3 text-xs text-gray-600">{m.planCount}</td>
+                        <td className="px-5 py-3 text-xs text-gray-600">{m.planCount ?? "—"}</td>
                         <td className="px-5 py-3">
                           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s}`}>
-                            {m.paidCount}/{m.totalCount} Paid
+                            {m.paidCount == null || m.totalCount == null
+                              ? "—"
+                              : `${m.paidCount}/${m.totalCount} Paid`}
                           </span>
                         </td>
                         <td className="hidden md:table-cell px-5 py-3 text-xs text-gray-500">

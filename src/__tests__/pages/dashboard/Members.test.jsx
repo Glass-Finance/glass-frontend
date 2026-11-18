@@ -164,3 +164,43 @@ describe("Members removal flow", () => {
     await waitFor(() => expect(screen.queryByTitle("Remove member")).toBeNull());
   });
 });
+
+describe("Members payment statistics display", () => {
+  it("shows the server obligation-plan count and paid/total status", async () => {
+    useMembersWithPayments.mockReturnValue({
+      members: [member({ planCount: 5, paidCount: 3, totalCount: 5 })],
+      obligations: [],
+      isLoading: false,
+      error: null,
+    });
+    renderPage();
+    const status = await screen.findByText("3/5 Paid");
+    expect(status.closest("tr").children[2].textContent).toBe("5");
+  });
+
+  it("shows 0/0 Paid for explicit zero counts on a billing-exempt member", async () => {
+    useMembersWithPayments.mockReturnValue({
+      members: [member({ billingExempt: true, planCount: 0, paidCount: 0, totalCount: 0 })],
+      obligations: [],
+      isLoading: false,
+      error: null,
+    });
+    renderPage();
+    const status = await screen.findByText("0/0 Paid");
+    expect(status.closest("tr").children[2].textContent).toBe("0");
+  });
+
+  it("shows unavailable counts without presenting missing stats as paid or zero", async () => {
+    useMembersWithPayments.mockReturnValue({
+      members: [member({ planCount: null, paidCount: null, totalCount: null })],
+      obligations: [],
+      isLoading: false,
+      error: null,
+    });
+    renderPage();
+    const row = (await screen.findByText("Amina Bello")).closest("tr");
+    expect(row.children[2].textContent).toBe("—");
+    expect(row.children[3].textContent).toBe("—");
+    expect(screen.queryByText("0/0 Paid")).toBeNull();
+  });
+});
