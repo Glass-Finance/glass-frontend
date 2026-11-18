@@ -22,16 +22,12 @@ import {
   TableFooter,
 } from "./SharedUI";
 
-// ObligationStatus enum from the backend.
+// Admin lists accept this subset of the full obligation lifecycle statuses.
 const STATUS_OPTIONS = [
   { value: "ALL", label: "All statuses" },
-  { value: "PENDING", label: "Pending" },
   { value: "DUE", label: "Due" },
-  { value: "PARTIAL", label: "Partial" },
   { value: "PAID", label: "Paid" },
   { value: "OVERDUE", label: "Overdue" },
-  { value: "FAILED", label: "Failed" },
-  { value: "REFUNDED", label: "Refunded" },
   { value: "WAIVED", label: "Waived" },
   { value: "CANCELLED", label: "Cancelled" },
 ];

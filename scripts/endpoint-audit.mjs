@@ -77,7 +77,7 @@ const TEMPLATE_ACTIONS = [
     // patchAction(action) → PATCH .../payment-links/{id}/{action}; group 1 is
     // everything before the verb, so an expansion is `${prefix}/${verb}`.
     match: /^(.*\/payment-links\/\{\})\/(\{\})$/,
-    values: ["activate", "pause", "resume", "expire", "archive"],
+    values: ["activate", "pause", "resume", "expire"],
   },
 ];
 

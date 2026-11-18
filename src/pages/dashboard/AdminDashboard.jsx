@@ -100,7 +100,7 @@ function DashboardContent({ isPaying, communityId }) {
   // list (that's Payments.jsx, which has its own status filters/badges) --
   // archived/expired plans no longer need attention and would otherwise
   // clutter it indefinitely.
-  const visiblePlans = plans.filter((p) => p.status !== "ARCHIVED" && p.status !== "EXPIRED");
+  const visiblePlans = plans.filter((p) => p.status !== "DELETED" && p.status !== "EXPIRED");
 
   // Paying admin's own dues, as a member of this community -- scoped to
   // whichever community this dashboard is currently showing, not whatever

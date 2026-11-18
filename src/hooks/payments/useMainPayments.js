@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getMyObligations, getMe, getPaymentLinks } from "../../api/members";
+import { getMyObligations, getMe } from "../../api/members";
 import { useMyCommunities } from "../useMyAccount";
 import { unwrapList, deriveStatus, fetchMyTransactions } from "./helpers";
-import { shapeObligation, shapePaymentLink, normalizeCommunity } from "./shape";
+import { shapeObligation, normalizeCommunity } from "./shape";
 import { isPaidObligationStatus } from "../../utils/paymentStatus";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,29 +112,8 @@ export function usePayments(preferredCommunityIdentifier) {
       : activeCommunities[0]);
 
   const communitySlug = rawActiveCommunity?.slug ?? rawActiveCommunity?.community?.slug ?? null;
-  // Use id as fallback identifier when no slug exists
-  const communityIdentifier =
-    communitySlug ?? rawActiveCommunity?.id ?? rawActiveCommunity?.community?.id ?? null;
-
-  // GET /payment-links is the member-accessible endpoint (visibility-gated).
-  // Filter by communityIdentifier so members only see their active community's links.
-  const paymentLinksQuery = useQuery({
-    queryKey: ["payment-links", communityIdentifier],
-    queryFn: async () => {
-      const res = await getPaymentLinks(
-        communityIdentifier ? { communityIdentifier, status: "ACTIVE" } : { status: "ACTIVE" },
-      );
-      return unwrapList(res).map((raw) =>
-        shapePaymentLink(raw, communitySlug ?? communityIdentifier),
-      );
-    },
-    enabled: !!communityIdentifier,
-    staleTime: 1000 * 60 * 2,
-  });
-
   const allObligations = obligationsQuery.data ?? [];
   const allTransactions = transactionsQuery.data ?? [];
-  const paymentLinks = paymentLinksQuery.data ?? [];
 
   // Scope to the active community when one is known
   const obligations = communitySlug
@@ -160,28 +139,17 @@ export function usePayments(preferredCommunityIdentifier) {
     return linkIsActive && !isPaidObligationStatus(o.status);
   });
 
-  // Payment links that are ACTIVE (or have no status set) and have no
-  // corresponding obligation yet (covers plans created before the member
-  // joined, or backend timing gaps).
-  const unmatchedLinks = paymentLinks.filter((link) => {
-    const isActive = link.linkStatus === "ACTIVE" || !link.linkStatus;
-    if (!isActive) return false;
-    if (obligations.some((o) => o.paymentLinkId === link.id)) return false;
-    // There is no authoritative member payment status without an obligation.
-    // The backend must provide the next-cycle obligation before this item can
-    // be classified as paid or unpaid without client-side reconstruction.
-    return true;
-  });
-
-  // Enrich items: if the obligation/link response didn't carry community logo
+  // Enrich items: if the obligation response didn't carry community logo
   // back (not always populated by the backend), fall back to the logo we got
   // from the communities list — which always returns it.
   const activeLogo = normalizeCommunity(rawActiveCommunity)?.logo ?? null;
   const enrichLogo = (item) => (item.logo?.url ? item : { ...item, logo: activeLogo });
 
-  const upcoming = [...unpaidObligations, ...unmatchedLinks].map(enrichLogo);
+  // Only member obligations establish an amount due. An active community
+  // payment link alone does not mean this member owes it (they may be exempt).
+  const upcoming = unpaidObligations.map(enrichLogo);
 
-  // nextDue = first item (obligations take priority via sort order above)
+  // nextDue = first unpaid obligation in the sort order above
   const nextDue = upcoming[0] ?? null;
 
   return {
@@ -192,21 +160,11 @@ export function usePayments(preferredCommunityIdentifier) {
       user: userQuery.data,
       community: normalizeCommunity(rawActiveCommunity),
     },
-    // paymentLinksQuery matters here: it only starts fetching once
-    // communityIdentifier is known (a beat after communitiesQuery resolves),
-    // and unmatchedLinks -- links with no obligation record yet -- can be
-    // the *only* source of nextDue for a plan the backend hasn't generated
-    // an obligation for. Without gating on it too, the page could pass
-    // isLoading=false on the very first render (the other four queries
-    // already resolved) while paymentLinksQuery was still on its first
-    // fetch, rendering "No Payments Due" for a moment before the real due
-    // amount popped in a beat later -- a real flash, not a flaky network.
     isLoading:
       obligationsQuery.isLoading ||
       transactionsQuery.isLoading ||
       userQuery.isLoading ||
-      communitiesQuery.isLoading ||
-      paymentLinksQuery.isLoading,
+      communitiesQuery.isLoading,
     hasNoCommunity: !communitiesQuery.isLoading && activeCommunities.length === 0,
     communityCount: activeCommunities.length,
     hasPendingCommunity:
@@ -216,8 +174,7 @@ export function usePayments(preferredCommunityIdentifier) {
     pendingCommunity: pendingCommunities[0] ? normalizeCommunity(pendingCommunities[0]) : null,
     // Only obligations + communities are truly blocking for the Upcoming
     // Payments view. Transactions and user-profile failures are secondary:
-    // missing transactions means the "already paid" filter is conservative,
-    // and missing user data is only used for display. Neither warrants an
+    // transactions and user data are only used for display. Neither warrants an
     // error wall that prevents members from seeing their obligations.
     //
     // Gated on "no data at all" (not just "error is set"): on a flaky mobile
@@ -238,7 +195,6 @@ export function usePayments(preferredCommunityIdentifier) {
       queryClient.invalidateQueries({ queryKey: ["communities"] });
       queryClient.invalidateQueries({ queryKey: ["obligations"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["payment-links"] });
     },
   };
 }

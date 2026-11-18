@@ -50,9 +50,8 @@ export default function PaymentPlansCard({ plans, plansLoading, onManageAll, err
           {plans.map((p, idx) => {
             const paidCount = p.paidCount ?? 0;
             const totalCount = p.totalCount ?? 0;
-            const collected = p.amountCollected ?? 0;
-            const expected = p.expectedAmount ?? 0;
-            const pct = expected > 0 ? Math.min(100, Math.round((collected / expected) * 100)) : 0;
+            const pct =
+              totalCount > 0 ? Math.min(100, Math.round((paidCount / totalCount) * 100)) : 0;
             const barColorCls = BAR_COLOR_CLASSES[idx % BAR_COLOR_CLASSES.length];
             return (
               <div
@@ -80,11 +79,16 @@ export default function PaymentPlansCard({ plans, plansLoading, onManageAll, err
                     every card background. */}
                 <div className="h-2 rounded-full bg-ink/10 overflow-hidden">
                   <div
+                    role="progressbar"
+                    aria-label={`${p.name} members paid`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={pct}
                     className={`h-full rounded-full ${barColorCls}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                <p className="text-xs text-ink/60 text-right mt-1 mb-0">{pct}% Collected</p>
+                <p className="text-xs text-ink/60 text-right mt-1 mb-0">{pct}% members paid</p>
               </div>
             );
           })}

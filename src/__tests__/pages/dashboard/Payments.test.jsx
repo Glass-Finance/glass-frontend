@@ -5,6 +5,10 @@ import Payments from "../../../pages/dashboard/Payments";
 import { usePaymentPlans } from "../../../hooks/usePaymentPlans";
 import { notifyError } from "../../../utils/errorHandler";
 
+vi.mock("../../../hooks/usePaymentPlanAccess", () => ({
+  usePaymentPlanAccess: () => ({ canDelete: true }),
+}));
+
 // Page-level behavior for the Payments dashboard: state chrome
 // (loading/empty/error), stats + tab filtering, and the wiring of every
 // plan mutation through to its modal/flash-success/notifyError outcome.
@@ -53,7 +57,7 @@ function makePlanPlans(overrides = {}) {
     pause: { mutate: vi.fn(), isPending: false },
     resume: { mutate: vi.fn(), isPending: false },
     expire: { mutate: vi.fn(), isPending: false },
-    archive: { mutate: vi.fn(), isPending: false },
+    delete: { mutate: vi.fn(), reset: vi.fn(), isPending: false, error: null },
     ...overrides,
   };
 }
@@ -363,7 +367,7 @@ describe("Payments — direct status mutations from the menu", () => {
 
     expect(plans.pause.mutate).toHaveBeenCalledWith("plan-1");
     expect(plans.expire.mutate).not.toHaveBeenCalled();
-    expect(plans.archive.mutate).not.toHaveBeenCalled();
+    expect(plans.delete.mutate).not.toHaveBeenCalled();
   });
 
   it("activates a draft plan directly from the menu", () => {
@@ -374,7 +378,7 @@ describe("Payments — direct status mutations from the menu", () => {
     fireEvent.click(screen.getByText("Activate"));
 
     expect(plans.activate.mutate).toHaveBeenCalledWith("plan-1");
-    expect(plans.archive.mutate).not.toHaveBeenCalled();
+    expect(plans.delete.mutate).not.toHaveBeenCalled();
   });
 
   it("resumes a paused plan directly from the menu", () => {
@@ -385,6 +389,23 @@ describe("Payments — direct status mutations from the menu", () => {
     fireEvent.click(screen.getByText("Resume Plan"));
 
     expect(plans.resume.mutate).toHaveBeenCalledWith("plan-1");
-    expect(plans.archive.mutate).not.toHaveBeenCalled();
+    expect(plans.delete.mutate).not.toHaveBeenCalled();
+  });
+});
+
+describe("Payment-plan member progress", () => {
+  it.each([
+    [3, 5, 60],
+    [1, 3, 33],
+    [0, 0, 0],
+    [4, 3, 100],
+  ])("shows %s/%s fully paid members as %s percent", (paidCount, totalCount, percent) => {
+    renderPage(makePlanPlans({ plans: [planFixture({ paidCount, totalCount })] }));
+    const bar = screen.getByRole("progressbar", { name: "Monthly Dues members paid" });
+    expect(bar.getAttribute("aria-valuenow")).toBe(String(percent));
+    expect(bar.style.width).toBe(`${percent}%`);
+    expect(screen.getByText(`${paidCount} / ${totalCount} members paid`)).toBeTruthy();
+    const card = bar.closest("div.rounded-2xl");
+    expect(card.textContent).toContain("50K/100K Collected");
   });
 });

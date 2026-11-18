@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { refreshCommunityBilling } from "./refreshCommunityBilling";
 import {
   getCommunityPaymentLinks,
   createPaymentLink,
@@ -7,7 +8,7 @@ import {
   pausePaymentLink,
   resumePaymentLink,
   expirePaymentLink,
-  archivePaymentLink,
+  deletePaymentLink,
   duplicatePaymentLink,
 } from "../api/payments";
 
@@ -71,22 +72,12 @@ export function usePaymentPlans(communityId) {
   const enabled = !!communityId;
 
   const query = useQuery({
-    // "plans" discriminator: this hook and useMembersWithPayments both read
-    // GET .../payment-links for the same community, but they are not the same
-    // resource in the cache — this one sends includeMetrics=true and maps the
-    // response through shapePlan (plan/summary objects for the Payments table
-    // and dashboard cards), while useMembersWithPayments caches the raw
-    // PaymentLink list under ["community", id, "payment-links"] and only reads
-    // id/status off it. Sharing one key meant whichever queryFn fetched first
-    // decided the shape for both, so plan consumers could be handed raw links
-    // (no name/amountCollected/paidCount) and vice versa.
+    // Shaped plan summaries must stay separate from useMemberPaymentLinks,
+    // whose cache holds raw member-targeted PaymentLink records.
     queryKey: ["community", communityId, "payment-links", "plans"],
     queryFn: async () => {
-      // includeMetrics is a real, confirmed query param on this endpoint
-      // (PaymentLinkQueryDto) -- without it the list response's per-item
-      // metrics object can't be assumed populated, silently zeroing every
-      // amountCollected/expectedAmount card on the dashboard.
-      const res = await getCommunityPaymentLinks(communityId, { includeMetrics: true });
+      // Admin payment-link lists always include metrics; there is no opt-in flag.
+      const res = await getCommunityPaymentLinks(communityId);
       return unwrapList(res).map(shapePlan);
     },
     enabled,
@@ -95,12 +86,13 @@ export function usePaymentPlans(communityId) {
     refetchOnMount: "always",
   });
 
-  // Deliberately left as the payment-links PREFIX, not the "plans" key: it now
-  // has to reach this hook's ["…", "payment-links", "plans"] entry *and* keep
-  // covering the raw member-payment list plus ["…", "member", memberId] under
-  // the same prefix — exactly the set it invalidated before the split.
+  // Refresh raw/shaped links and both list/detail member statistics after
+  // mutations affecting link status or audience.
   function invalidate() {
-    queryClient.invalidateQueries({ queryKey: ["community", communityId, "payment-links"] });
+    return Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["community", communityId, "payment-links"] }),
+      queryClient.invalidateQueries({ queryKey: ["community", communityId, "members"] }),
+    ]);
   }
 
   // silentError: true on create/update/duplicate -- Payments.jsx
@@ -137,13 +129,16 @@ export function usePaymentPlans(communityId) {
   });
   const expire = useMutation({
     mutationFn: (paymentLinkId) => expirePaymentLink(communityId, paymentLinkId),
-    onSuccess: invalidate,
+    onSuccess: () => refreshCommunityBilling(queryClient, communityId),
     meta: { successMessage: "Payment plan expired" },
   });
-  const archive = useMutation({
-    mutationFn: (paymentLinkId) => archivePaymentLink(communityId, paymentLinkId),
+  const remove = useMutation({
+    mutationFn: (paymentLinkId) => deletePaymentLink(communityId, paymentLinkId),
     onSuccess: invalidate,
-    meta: { successMessage: "Payment plan archived" },
+    // Keep the mutation pending until refreshed state arrives before retrying
+    // a stale draft. Eligibility and billing history are server-authoritative.
+    onError: (error) => (error?.response?.status === 409 ? invalidate() : undefined),
+    meta: { successMessage: "Payment plan deleted" },
   });
   // DuplicatePaymentLinkRequest (confirmed via Swagger) takes title, slug,
   // description, startAt/dueAt/expireAt, and an optional recurringPlan
@@ -170,7 +165,7 @@ export function usePaymentPlans(communityId) {
     pause,
     resume,
     expire,
-    archive,
+    delete: remove,
     duplicate,
   };
 }

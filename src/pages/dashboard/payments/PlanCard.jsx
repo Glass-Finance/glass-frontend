@@ -24,7 +24,7 @@ export default function PlanCard({
   const totalCount = plan.totalCount ?? 0;
   const collected = plan.amountCollected ?? 0;
   const expected = plan.expectedAmount ?? 0;
-  const pct = expected > 0 ? Math.min(100, Math.round((collected / expected) * 100)) : 0;
+  const pct = totalCount > 0 ? Math.min(100, Math.round((paidCount / totalCount) * 100)) : 0;
 
   return (
     <div className="bg-surface-container rounded-2xl border border-surface-container-border p-5 flex flex-col gap-4">
@@ -73,6 +73,11 @@ export default function PlanCard({
       <div>
         <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden mb-2">
           <div
+            role="progressbar"
+            aria-label={`${plan.name} members paid`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={pct}
             className={`h-full rounded-full transition-all ${barColorCls}`}
             style={{ width: `${pct}%` }}
           />

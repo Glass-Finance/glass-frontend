@@ -14,7 +14,7 @@
 //     enum is PAID/DUE/OVERDUE/WAIVED (see src/api/payments.js), so the
 //     SUCCESSFUL arm only ever fires defensively.
 //   - Failure is FAILED everywhere it is checked; overdue is OVERDUE.
-// Plan-lifecycle statuses (ACTIVE/ARCHIVED/EXPIRED), export-job states,
+// Plan-lifecycle statuses (ACTIVE/DELETED/EXPIRED), export-job states,
 // payout-account verification, and notification-type tables are different
 // axes and deliberately live elsewhere.
 //

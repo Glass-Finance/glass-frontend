@@ -1,15 +1,18 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 import PlanOverflowMenu from "../../../../pages/dashboard/payments/PlanOverflowMenu";
 
+vi.mock("../../../../hooks/usePaymentPlanAccess", () => ({ usePaymentPlanAccess: vi.fn() }));
+import { usePaymentPlanAccess } from "../../../../hooks/usePaymentPlanAccess";
+beforeEach(() => usePaymentPlanAccess.mockReturnValue({ canDelete: true }));
 afterEach(cleanup);
 
 // planPlans only needs whichever mutation the rendered status path can
-// reach -- these two (archive/expire) are what every status exercises here.
+// reach -- these two (delete/expire) are what every status exercises here.
 function makePlanPlans() {
   return {
-    archive: { mutate: vi.fn(), isPending: false },
+    delete: { mutate: vi.fn(), reset: vi.fn(), isPending: false, error: null },
     expire: { mutate: vi.fn(), isPending: false },
     pause: { mutate: vi.fn(), isPending: false },
     resume: { mutate: vi.fn(), isPending: false },
@@ -37,51 +40,51 @@ function openMenu() {
   fireEvent.click(screen.getByRole("button"));
 }
 
-describe("PlanOverflowMenu — Archive", () => {
-  it("does not archive immediately -- clicking Archive only opens a confirmation", () => {
-    const { planPlans } = renderMenu();
+describe("PlanOverflowMenu — Delete", () => {
+  it("does not delete immediately -- clicking Delete only opens a confirmation", () => {
+    const { planPlans } = renderMenu({ status: "DRAFT" });
     openMenu();
 
-    fireEvent.click(screen.getByText("Archive"));
+    fireEvent.click(screen.getByText("Delete"));
 
-    expect(planPlans.archive.mutate).not.toHaveBeenCalled();
-    expect(screen.getByText("Archive Plan")).toBeTruthy();
-    expect(screen.getByText(/stops any further collection/i)).toBeTruthy();
+    expect(planPlans.delete.mutate).not.toHaveBeenCalled();
+    expect(screen.getByText("Delete Plan")).toBeTruthy();
+    expect(screen.getByText(/permanently deletes this draft/i)).toBeTruthy();
   });
 
-  it("archives the plan only after the confirmation dialog is confirmed", () => {
-    const { plan, planPlans } = renderMenu();
+  it("deletes the plan only after the confirmation dialog is confirmed", () => {
+    const { plan, planPlans } = renderMenu({ status: "DRAFT" });
     openMenu();
-    fireEvent.click(screen.getByText("Archive"));
+    fireEvent.click(screen.getByText("Delete"));
 
-    // Two "Archive"-labelled controls exist now: the confirm dialog's
+    // Two "Delete"-labelled controls exist now: the confirm dialog's
     // button is the last one rendered.
-    const archiveButtons = screen.getAllByText("Archive");
-    fireEvent.click(archiveButtons[archiveButtons.length - 1]);
+    const deleteButtons = screen.getAllByText("Delete");
+    fireEvent.click(deleteButtons[deleteButtons.length - 1]);
 
-    expect(planPlans.archive.mutate).toHaveBeenCalledTimes(1);
-    expect(planPlans.archive.mutate).toHaveBeenCalledWith(
+    expect(planPlans.delete.mutate).toHaveBeenCalledTimes(1);
+    expect(planPlans.delete.mutate).toHaveBeenCalledWith(
       plan.id,
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
   });
 
-  it("backing out of the confirmation via Cancel never archives", () => {
-    const { planPlans } = renderMenu();
+  it("backing out of the confirmation via Cancel never deletes", () => {
+    const { planPlans } = renderMenu({ status: "DRAFT" });
     openMenu();
-    fireEvent.click(screen.getByText("Archive"));
+    fireEvent.click(screen.getByText("Delete"));
 
     fireEvent.click(screen.getByText("Cancel"));
 
-    expect(planPlans.archive.mutate).not.toHaveBeenCalled();
-    expect(screen.queryByText("Archive Plan")).toBeNull();
+    expect(planPlans.delete.mutate).not.toHaveBeenCalled();
+    expect(screen.queryByText("Delete Plan")).toBeNull();
   });
 
-  it("is not offered once a plan is already archived", () => {
-    renderMenu({ status: "ARCHIVED" });
+  it("is not offered once a plan is already deleted", () => {
+    renderMenu({ status: "DELETED" });
     openMenu();
 
-    expect(screen.queryByText("Archive")).toBeNull();
+    expect(screen.queryByText("Delete")).toBeNull();
   });
 });
 
@@ -98,4 +101,29 @@ describe("PlanOverflowMenu — End Plan", () => {
     fireEvent.click(screen.getByRole("button", { name: "End Plan" }));
     expect(planPlans.expire.mutate).toHaveBeenCalledTimes(1);
   });
+});
+
+it.each(["ACTIVE", "PAUSED", "EXPIRED", "ACTIVATING", "ACTIVATION_FAILED", "DELETED"])(
+  "does not offer deletion for %s",
+  (status) => {
+    renderMenu({ status });
+    openMenu();
+    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+  },
+);
+it("requires the delete permission even for a draft", () => {
+  usePaymentPlanAccess.mockReturnValue({ canDelete: false });
+  renderMenu({ status: "DRAFT" });
+  openMenu();
+  expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+});
+it("keeps the dialog open and explains a rejected deletion", () => {
+  const { planPlans } = renderMenu({ status: "DRAFT" });
+  planPlans.delete.error = {
+    response: { status: 400, data: { description: "Draft has billing history" } },
+  };
+  openMenu();
+  fireEvent.click(screen.getByText("Delete"));
+  expect(screen.getByText("Draft has billing history")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Delete Plan" })).toBeTruthy();
 });
