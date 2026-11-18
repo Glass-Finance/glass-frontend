@@ -72,7 +72,7 @@ export default function PaymentLinksSection() {
                 { value: "DRAFT", label: "Draft" },
                 { value: "PAUSED", label: "Paused" },
                 { value: "EXPIRED", label: "Expired" },
-                { value: "ARCHIVED", label: "Archived" },
+                { value: "DELETED", label: "Deleted" },
               ]}
             />
             <FilterSelect

@@ -7,7 +7,7 @@ import {
   pausePaymentLink,
   resumePaymentLink,
   expirePaymentLink,
-  archivePaymentLink,
+  deletePaymentLink,
   duplicatePaymentLink,
 } from "../api/payments";
 
@@ -100,7 +100,10 @@ export function usePaymentPlans(communityId) {
   // covering the raw member-payment list plus ["…", "member", memberId] under
   // the same prefix — exactly the set it invalidated before the split.
   function invalidate() {
-    queryClient.invalidateQueries({ queryKey: ["community", communityId, "payment-links"] });
+    return Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["community", communityId, "payment-links"] }),
+      queryClient.invalidateQueries({ queryKey: ["community", communityId, "members"] }),
+    ]);
   }
 
   // silentError: true on create/update/duplicate -- Payments.jsx
@@ -140,10 +143,13 @@ export function usePaymentPlans(communityId) {
     onSuccess: invalidate,
     meta: { successMessage: "Payment plan expired" },
   });
-  const archive = useMutation({
-    mutationFn: (paymentLinkId) => archivePaymentLink(communityId, paymentLinkId),
+  const remove = useMutation({
+    mutationFn: (paymentLinkId) => deletePaymentLink(communityId, paymentLinkId),
     onSuccess: invalidate,
-    meta: { successMessage: "Payment plan archived" },
+    // Keep the mutation pending until refreshed state arrives before retrying
+    // a stale draft. Eligibility and billing history are server-authoritative.
+    onError: (error) => (error?.response?.status === 409 ? invalidate() : undefined),
+    meta: { successMessage: "Payment plan deleted" },
   });
   // DuplicatePaymentLinkRequest (confirmed via Swagger) takes title, slug,
   // description, startAt/dueAt/expireAt, and an optional recurringPlan
@@ -170,7 +176,7 @@ export function usePaymentPlans(communityId) {
     pause,
     resume,
     expire,
-    archive,
+    delete: remove,
     duplicate,
   };
 }

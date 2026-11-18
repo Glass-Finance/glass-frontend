@@ -21,7 +21,7 @@ vi.mock("../../api/payments", () => ({
   pausePaymentLink: vi.fn(),
   resumePaymentLink: vi.fn(),
   expirePaymentLink: vi.fn(),
-  archivePaymentLink: vi.fn(),
+  deletePaymentLink: vi.fn(),
   duplicatePaymentLink: vi.fn(),
 }));
 

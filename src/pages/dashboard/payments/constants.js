@@ -15,10 +15,10 @@ export const PLAN_STATUS = {
     dotCls: "bg-danger-bright",
     label: "Inactive",
   },
-  ARCHIVED: {
+  DELETED: {
     cls: "bg-danger-wash-2 text-danger-bright",
     dotCls: "bg-danger-bright",
-    label: "Inactive",
+    label: "Deleted",
   },
 };
 

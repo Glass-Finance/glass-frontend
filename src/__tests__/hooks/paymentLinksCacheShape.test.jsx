@@ -18,7 +18,7 @@ vi.mock("../../api/payments", () => ({
   pausePaymentLink: vi.fn(),
   resumePaymentLink: vi.fn(),
   expirePaymentLink: vi.fn(),
-  archivePaymentLink: vi.fn(),
+  deletePaymentLink: vi.fn(),
   duplicatePaymentLink: vi.fn(),
 }));
 
@@ -58,7 +58,7 @@ const RAW_LINKS = [
   {
     id: "link-archived",
     title: "Last term's plan",
-    status: "ARCHIVED",
+    status: "DELETED",
     amount: 1000,
     paymentType: "ONE_TIME",
     metrics: {
