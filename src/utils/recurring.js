@@ -28,6 +28,13 @@ const FREQ_ADVERB = {
   ANNUALLY: "annually",
 };
 
+export function recurringPeriodLabel(frequency, interval) {
+  const cadence = (frequency ?? "").toUpperCase();
+  const unit = cadence === "CUSTOM" ? "day" : FREQ_UNITS[cadence];
+  if (!unit) return null;
+  return interval > 1 ? `${interval} ${unit}s` : unit;
+}
+
 // Short adverb form ("monthly") for copy like "charge you X automatically
 // for Y monthly?" -- scheduleCopy() below is a fuller sentence ("Every
 // month on the 5th") meant for a schedule summary, not this shorter slot.

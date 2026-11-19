@@ -67,6 +67,9 @@ test("retrying a failed payment reuses the same idempotencyKey", async ({ page }
   await page.route("**/api/v1/communities/me", (route) =>
     route.fulfill(json({ success: true, data: { content: [] } })),
   );
+  await page.route("**/api/v1/finance/obligations/me?*", (route) =>
+    route.fulfill(json({ success: true, data: { content: [obligation] } })),
+  );
   await page.route("**/api/v1/finance/obligations/me/obl-e2e-1", (route) =>
     route.fulfill(json({ success: true, data: obligation })),
   );
@@ -83,11 +86,13 @@ test("retrying a failed payment reuses the same idempotencyKey", async ({ page }
   // Payment init: fail the first call (simulated network/backend hiccup),
   // succeed the second — and record every idempotencyKey sent.
   const keys = [];
+  const obligationIds = [];
   let initCalls = 0;
   await page.route("**/api/v1/payments/pay/payment-links/*", async (route) => {
     initCalls += 1;
     const body = route.request().postDataJSON();
     keys.push(body?.idempotencyKey ?? null);
+    obligationIds.push(body?.obligationId);
     if (initCalls === 1) {
       await route.fulfill(json({ success: false, message: "temporary failure" }, 500));
     } else {
@@ -106,7 +111,8 @@ test("retrying a failed payment reuses the same idempotencyKey", async ({ page }
     }
   });
 
-  await page.goto("/member/pay/obl-e2e-1");
+  await page.goto("/member/upcoming");
+  await page.getByRole("button", { name: "Pay Now" }).click();
 
   const payButton = page.getByRole("button", { name: /make payment/i });
   await expect(payButton).toBeEnabled({ timeout: 15_000 });
@@ -125,6 +131,7 @@ test("retrying a failed payment reuses the same idempotencyKey", async ({ page }
   await expect(page).toHaveURL(/checkout\.example\.com/, { timeout: 15_000 });
 
   expect(initCalls).toBe(2);
+  expect(obligationIds).toEqual([obligation.id, obligation.id]);
   expect(keys[0]).toBeTruthy();
   expect(keys[1]).toBe(keys[0]);
   // UUID shape — the same contract paymentIdempotencyContract.test.js pins.
