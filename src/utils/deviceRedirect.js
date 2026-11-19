@@ -72,7 +72,7 @@ export const MARKETING_ORIGIN = import.meta.env.VITE_MARKETING_URL ?? "https://g
 // True only on the real production app deployment — never in local dev or
 // a preview build, so the landing pages stay directly viewable there for
 // testing/porting to glass-waitlist-v1 (see that repo's README).
-const APP_HOSTS = new Set(["app.glasspay.app"]);
+const APP_HOSTS = new Set(["app.glasspay.app", "staging.glasspay.app", "staging-app.glasspay.app"]);
 
 export function isAppHost() {
   return APP_HOSTS.has(window.location.hostname);

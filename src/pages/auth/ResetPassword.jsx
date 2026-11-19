@@ -139,7 +139,7 @@ export default function ResetPassword() {
       <div className="w-full max-w-md flex flex-col md:mt-14 mb-auto gap-6">
         <div>
           <h1 className="text-headline text-gray-900 mb-1">Reset Password</h1>
-          <p className="text-sm text-gray-500">Choose a new password for your account.</p>
+          
         </div>
 
         {!credentials.email || !credentials.token ? (

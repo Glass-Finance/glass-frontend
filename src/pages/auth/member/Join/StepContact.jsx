@@ -155,29 +155,55 @@ export default function StepContact({ initialEmail, onNext, onGoogleAuth, hasCom
             />
           )}
         </span>
-        <span className="text-xs md:text-sm text-gray-700">
-          I accept the{" "}
-          <Link
-            to="/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="font-medium underline text-brand-deep"
-          >
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link
-            to="/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="font-medium underline text-brand-deep"
-          >
-            Privacy Policy
-          </Link>
-        </span>
-      </label>
+        <div className="my-4">
+        <label className="flex items-start gap-2 cursor-pointer select-none">
+          {/* appearance-none takes over rendering entirely -- the browser's
+              native checkbox is filled white by the OS/browser UA style
+              regardless of our own bg classes, which is why removing
+              bg-white alone never changed anything. Checkmark is drawn by
+              hand since appearance-none also kills the native tick. */}
+          <span className="relative mt-0.5 w-4 h-4 flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => {
+                setAgreed(e.target.checked);
+                setError("");
+              }}
+              className="appearance-none w-4 h-4 rounded-sm border border-outline-input/40 checked:bg-brand-deep checked:border-brand-deep cursor-pointer"
+            />
+            {agreed && (
+              <Check
+                size={12}
+                strokeWidth={3}
+                className="absolute inset-0 m-auto text-white pointer-events-none"
+              />
+            )}
+          </span>
+          <span className="text-xs md:text-sm text-gray-700">
+            I accept the{" "}
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="font-medium underline text-brand-deep"
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="font-medium underline text-brand-deep"
+            >
+              Privacy Policy
+            </Link>
+          </span>
+        </label>
+      </div>
 
       {accountExists && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
@@ -196,7 +222,7 @@ export default function StepContact({ initialEmail, onNext, onGoogleAuth, hasCom
 
       <ErrorMessage message={error} />
 
-      <PrimaryButton onClick={handleSubmit} disabled={!email.trim()} loading={sending} size="sm">
+      <PrimaryButton onClick={handleSubmit} disabled={!email.trim()} loading={sending} size="md">
         {sending ? "Sending Code..." : "Continue"}
       </PrimaryButton>
 

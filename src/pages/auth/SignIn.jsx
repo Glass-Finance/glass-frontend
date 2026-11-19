@@ -460,7 +460,7 @@ export default function SignIn() {
           <p className="text-sm text-gray-500">
             {mode === "otp"
               ? "We'll email or text you a one-time code, no password needed."
-              : "Enter your credentials to continue."}
+              : ""}
           </p>
         </div>
 
