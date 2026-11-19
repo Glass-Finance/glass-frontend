@@ -114,11 +114,11 @@ export default function ChoosePath() {
 
       {/* Desktop (lg+) follows Figma "MacBook Pro 14" - 24": no step label
           (the phone frame dropped it too), Headline/Large title at y=148, a
-          938px column of two 300px cards, the blue "isn't final" banner and a
+          938px row of two 320px cards, the blue "isn't final" banner and a
           420px, 64px Continue. Every desktop value is lg:, so the phone
           layout is untouched. */}
       <main className="relative flex-1 flex flex-col items-center justify-start px-4 lg:px-8 pt-6 lg:pt-[57px] lg:[@media(max-height:800px)]:pt-5! pb-10 lg:[@media(max-height:800px)]:pb-4!">
-        <div className="text-center mb-20 lg:mb-[66px] lg:[@media(max-height:800px)]:mb-7!">
+        <div className="text-center mb-20 lg:mb-[66px] lg:[@media(max-height:800px)]:mb-3!">
           <h1 className="text-base font-medium text-ink mb-1 lg:text-[32px] lg:leading-10 lg:font-semibold lg:text-ink">
             What would you like to do?
           </h1>
@@ -183,7 +183,7 @@ export default function ChoosePath() {
         {/* Desktop only (not in the phone frame): the design-system Banner
             (docs/design-system.md §9.4 -- #ccdaff fill, brand @20% stroke,
             r=4) with the info icon, 48px above Continue. */}
-        <div className="hidden lg:flex items-center gap-6 px-6 py-4 lg:[@media(max-height:800px)]:py-3 mb-12 lg:[@media(max-height:800px)]:mb-6 w-full max-w-[938px] rounded-g-1 bg-brand-100 border border-brand/20">
+        <div className="hidden lg:flex items-center gap-6 px-6 py-4 lg:[@media(max-height:800px)]:py-3 mb-12 lg:[@media(max-height:800px)]:mb-3 w-full max-w-[938px] rounded-g-1 bg-brand-100 border border-brand/20">
           <span
             aria-hidden="true"
             className="w-6 h-6 rounded-full bg-brand text-white text-sm font-semibold flex items-center justify-center flex-shrink-0"
