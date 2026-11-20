@@ -7,7 +7,7 @@ import client from "./client";
 // GET /api/v1/communities/{communityIdentifier}/payment-links
 // params supports memberId (audience-aware: returns only links that actually
 // target that member — ALL_MEMBERS, their group, or explicit selection) plus
-// the usual search/status/paymentType/audience/includeMetrics filters.
+// the usual search/status/paymentType/audience filters. Admin list metrics are always included.
 export const getCommunityPaymentLinks = (communityId, params = {}) =>
   client.get(`/communities/${communityId}/payment-links`, { params });
 
@@ -31,7 +31,7 @@ export const updatePaymentLink = (communityId, paymentLinkId, payload) =>
   client.patch(`/communities/${communityId}/payment-links/${paymentLinkId}`, payload);
 
 // ─── Lifecycle actions ────────────────────────────────────────────────────────
-// Confirmed via backend Swagger: activate/pause/resume/expire/archive are
+// Confirmed via backend Swagger: activate/pause/resume/expire are
 // PATCH (state transitions on the same resource). Only duplicate is POST
 // (creates a new resource).
 function patchAction(action) {
@@ -43,7 +43,9 @@ export const activatePaymentLink = patchAction("activate");
 export const pausePaymentLink = patchAction("pause");
 export const resumePaymentLink = patchAction("resume");
 export const expirePaymentLink = patchAction("expire");
-export const archivePaymentLink = patchAction("archive");
+// DELETE — permanently removes an eligible draft; the backend rejects billing history.
+export const deletePaymentLink = (communityId, paymentLinkId) =>
+  client.delete(`/communities/${communityId}/payment-links/${paymentLinkId}`);
 
 // POST — creates a new payment link from an existing one
 export const duplicatePaymentLink = (communityId, paymentLinkId, payload) =>

@@ -6,6 +6,7 @@ import { usePayments } from "../../hooks/usePayments";
 import { UpcomingPaymentsSkeleton } from "../../components/memberApp/MemberPageSkeletons";
 import GlassLogoGlow from "../../components/memberApp/GlassLogoGlow";
 import { formatNaira, formatDate, toTitleCase } from "../../utils/format";
+import { recurringPeriodLabel } from "../../utils/recurring";
 import { useExportJob } from "../../hooks/useExportJob";
 import { exportMyObligations } from "../../api/exports";
 import MemberPageHeader from "../../components/memberApp/MemberPageHeader";
@@ -59,6 +60,7 @@ function FilterDropdown({ value, onChange }) {
 
 function PaymentRow({ item, onPay, paying }) {
   const isRecurring = item.type === "recurring";
+  const period = isRecurring ? recurringPeriodLabel(item.frequency, item.interval) : null;
   const badge = isRecurring
     ? { label: "Recurring", cls: "text-accent-purple", dotCls: "bg-accent-purple" }
     : { label: "One-time", cls: "text-danger", dotCls: "bg-danger" };
@@ -68,7 +70,7 @@ function PaymentRow({ item, onPay, paying }) {
       <div className="min-w-0">
         <div className="flex items-baseline gap-1.5 mb-1.5">
           <span className="text-xl font-bold text-ink">{formatNaira(item.amount)}</span>
-          {isRecurring && <span className="text-[13px] text-ink-ghost">/month</span>}
+          {period && <span className="text-[13px] text-ink-ghost">/{period}</span>}
           <span
             className={`inline-flex items-center gap-[5px] text-xs font-semibold ml-1 ${badge.cls}`}
           >
@@ -112,16 +114,16 @@ export default function UpcomingPayments() {
 
   const upcoming = data?.upcoming ?? [];
   const filtered = upcoming.filter((item) => {
+    if (!item.obligationId || !item.paymentLinkId) return false;
     if (filter === "All") return true;
     if (filter === "Recurring") return item.type === "recurring";
     return item.type === "one-time";
   });
 
   function handlePay(item) {
-    const suffix = item._isLink ? "?via=link" : "";
     // See Home.jsx's handlePay -- PaymentSummary's own fetch may not carry
     // community info back, so pass along what we already have as a fallback.
-    navigate(`/member/pay/${item.id}${suffix}`, {
+    navigate(`/member/pay/${item.obligationId}`, {
       state: { communityName: item.communityName, communityLogo: item.logo },
     });
   }

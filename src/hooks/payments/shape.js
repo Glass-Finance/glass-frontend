@@ -22,7 +22,12 @@ export function shapeObligation(raw) {
     dueDate: raw.dueAt,
     // recurringPlan field + paymentType on the link both indicate a recurring plan
     type: raw.recurringPlan || plType === "RECURRING" ? "recurring" : "one-time",
-    frequency: raw.paymentLink?.frequency ?? raw.paymentLink?.billingFrequency ?? null,
+    frequency:
+      raw.recurringPlan?.frequency ??
+      raw.paymentLink?.frequency ??
+      raw.paymentLink?.billingFrequency ??
+      null,
+    interval: raw.recurringPlan?.interval ?? null,
     status: (() => {
       const s = (raw.status ?? "PENDING").toUpperCase();
       return s === "SUCCESSFUL" ? "PAID" : s;

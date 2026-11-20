@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useEffect, useRef } from "react";
 import { Button } from "../../components/ui/Button";
 import { ArrowLeft, History } from "lucide-react";
 import useKycFlow from "../../components/kyc/useKycFlow";
+import { readOnboardingProgress } from "../../utils/onboardingProgress";
 
 // Dashboard-styled identity verification for admins. The member app offers
 // its own responsive /member/verify-identity route. Thin chrome wrapper around the shared KYC flow
@@ -21,6 +22,15 @@ export default function VerifyIdentity() {
     onDismiss: () => navigate("/dashboard/home"),
     onHistory: () => navigate("/dashboard/verify-identity/history"),
   });
+
+  const emailRef = useRef("");
+  // Restore email from onboardingProgress if no router state carries it:
+  useEffect(() => {
+    const stored = readOnboardingProgress();
+    if (stored?.email && !location.state?.email) {
+      emailRef.current = stored.email;
+    }
+  }, []);
 
   return (
     <div className="relative flex flex-col min-h-full">

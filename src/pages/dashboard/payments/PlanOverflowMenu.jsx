@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { MoreHorizontal, Pencil, Bell, Users, Pause, Play, Trash2 } from "lucide-react";
+import { usePaymentPlanAccess } from "../../../hooks/usePaymentPlanAccess";
+import { getErrorMessage } from "../../../utils/errorHandler";
 import ConfirmDialog from "../../../components/dashboard/ConfirmDialog";
 
 function MenuItem({ icon, label, onClick, disabled, danger, title }) {
@@ -21,7 +23,8 @@ function MenuItem({ icon, label, onClick, disabled, danger, title }) {
 export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMembers, onDuplicate }) {
   const [open, setOpen] = useState(false);
   const [confirmingEnd, setConfirmingEnd] = useState(false);
-  const [confirmingArchive, setConfirmingArchive] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { canDelete } = usePaymentPlanAccess();
   const status = plan.status;
   const isActive = status === "ACTIVE";
   const isPaused = status === "PAUSED";
@@ -115,25 +118,30 @@ export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMember
                 />
               </>
             )}
-            {status !== "ARCHIVED" && (
+            {isDraft && canDelete && (
               <>
                 <div className="h-px bg-gray-100 my-1" />
                 <MenuItem
-                  label="Archive"
+                  icon={<Trash2 size={13} />}
+                  label="Delete"
                   danger
+                  disabled={planPlans.delete.isPending}
                   onClick={() => {
-                    setConfirmingArchive(true);
-                    close();
-                  }}
-                />
-                <MenuItem
-                  label="Duplicate"
-                  onClick={() => {
-                    onDuplicate(plan);
+                    planPlans.delete.reset();
+                    setConfirmingDelete(true);
                     close();
                   }}
                 />
               </>
+            )}
+            {status !== "DELETED" && (
+              <MenuItem
+                label="Duplicate"
+                onClick={() => {
+                  onDuplicate(plan);
+                  close();
+                }}
+              />
             )}
           </div>
         </>
@@ -154,17 +162,19 @@ export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMember
         />
       )}
 
-      {confirmingArchive && (
+      {confirmingDelete && isDraft && canDelete && (
         <ConfirmDialog
-          title="Archive Plan"
+          title="Delete Plan"
           subtitle={plan.name}
-          description="This hides the plan from the active list and stops any further collection on it. There's no way to unarchive it afterward -- only duplicate it as a new plan."
-          confirmLabel="Archive"
-          confirmingLabel="Archiving…"
-          confirming={planPlans.archive.isPending}
-          onClose={() => setConfirmingArchive(false)}
+          description="This permanently deletes this draft payment plan. This cannot be undone. Plans with payment or billing history cannot be deleted."
+          confirmLabel="Delete"
+          confirmingLabel="Deleting…"
+          confirming={planPlans.delete.isPending}
+          confirmDisabled={planPlans.delete.isPending}
+          error={planPlans.delete.error ? getErrorMessage(planPlans.delete.error) : ""}
+          onClose={() => setConfirmingDelete(false)}
           onConfirm={() =>
-            planPlans.archive.mutate(plan.id, { onSuccess: () => setConfirmingArchive(false) })
+            planPlans.delete.mutate(plan.id, { onSuccess: () => setConfirmingDelete(false) })
           }
         />
       )}

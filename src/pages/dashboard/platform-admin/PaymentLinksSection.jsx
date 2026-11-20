@@ -29,7 +29,6 @@ export default function PaymentLinksSection() {
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(status !== "ALL" ? { status } : {}),
     ...(type !== "ALL" ? { paymentType: type } : {}),
-    includeMetrics: true,
   };
 
   const { data, isLoading, isFetching, error } = useQuery({
@@ -72,7 +71,7 @@ export default function PaymentLinksSection() {
                 { value: "DRAFT", label: "Draft" },
                 { value: "PAUSED", label: "Paused" },
                 { value: "EXPIRED", label: "Expired" },
-                { value: "ARCHIVED", label: "Archived" },
+                { value: "DELETED", label: "Deleted" },
               ]}
             />
             <FilterSelect

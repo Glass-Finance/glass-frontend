@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import UpcomingPayments from "../../../pages/memberApp/UpcomingPayments";
 import { usePayments } from "../../../hooks/usePayments";
 import { useExportJob } from "../../../hooks/useExportJob";
+import { shapeObligation, shapePaymentLink } from "../../../hooks/payments/shape";
 
 vi.mock("../../../hooks/usePayments");
 vi.mock("../../../hooks/useExportJob");
@@ -34,6 +35,53 @@ beforeEach(() => {
     refresh: refreshSpy,
   });
   useExportJob.mockReturnValue({ run: vi.fn(), isExporting: false });
+});
+
+describe("UpcomingPayments payable dues", () => {
+  it("shows only obligations tied to payment links and opens checkout with the obligation ID", () => {
+    usePayments.mockReturnValue({
+      data: {
+        upcoming: [
+          shapeObligation({
+            id: "obligation-1",
+            amount: 10000,
+            paymentLink: { id: "link-1", title: "Community Dues" },
+          }),
+          shapePaymentLink({ id: "link-2", title: "Unassigned Dues", amount: 5000 }),
+        ],
+      },
+    });
+    renderPage();
+
+    expect(screen.queryByText("Unassigned Dues")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Pay Now" }));
+    expect(navigateSpy).toHaveBeenCalledWith("/member/pay/obligation-1", expect.any(Object));
+  });
+
+  it("uses the API's recurring frequency and omits the suffix when it is missing", () => {
+    usePayments.mockReturnValue({
+      data: {
+        upcoming: [
+          shapeObligation({
+            id: "obligation-1",
+            amount: 14500,
+            paymentLink: { id: "link-1", title: "Daily Dues", paymentType: "RECURRING" },
+            recurringPlan: { frequency: "DAILY" },
+          }),
+          shapeObligation({
+            id: "obligation-2",
+            amount: 5000,
+            paymentLink: { id: "link-2", title: "Other Dues", paymentType: "RECURRING" },
+          }),
+        ],
+      },
+    });
+    renderPage();
+
+    expect(screen.getByText("/day")).toBeTruthy();
+    expect(screen.queryByText("/month")).toBeNull();
+    expect(screen.getAllByText("Recurring")).toHaveLength(2);
+  });
 });
 
 describe("UpcomingPayments desktop empty state", () => {

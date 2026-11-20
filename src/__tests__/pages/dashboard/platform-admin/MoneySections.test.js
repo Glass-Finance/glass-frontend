@@ -1,8 +1,9 @@
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SettlementsSection from "../../../../pages/dashboard/platform-admin/SettlementsSection";
+import ObligationsSection from "../../../../pages/dashboard/platform-admin/ObligationsSection";
 import PaymentLinksSection from "../../../../pages/dashboard/platform-admin/PaymentLinksSection";
 import ReconciliationSection from "../../../../pages/dashboard/platform-admin/ReconciliationSection";
 import BalancesSection from "../../../../pages/dashboard/platform-admin/BalancesSection";
@@ -13,6 +14,7 @@ vi.mock("../../../../api/admin", async (importOriginal) => ({
   getAdminSettlements: vi.fn(),
   getAdminSettlement: vi.fn(),
   getAdminPaymentLinks: vi.fn(),
+  getAdminObligations: vi.fn(),
   getAdminReconciliationRuns: vi.fn(),
   getAdminReconciliationFindings: vi.fn(),
   getAdminBalances: vi.fn(),
@@ -33,6 +35,42 @@ afterEach(() => {
 });
 
 describe("platform-admin amount displays", () => {
+  it("only offers supported obligation list statuses and sends the chosen value", async () => {
+    admin.getAdminObligations.mockResolvedValue(page([]));
+    renderSection(ObligationsSection);
+    const filter = screen.getAllByRole("combobox")[0];
+    expect(
+      within(filter)
+        .getAllByRole("option")
+        .map((option) => option.value),
+    ).toEqual(["ALL", "DUE", "PAID", "OVERDUE", "WAIVED", "CANCELLED"]);
+    fireEvent.change(filter, { target: { value: "CANCELLED" } });
+    await waitFor(() =>
+      expect(admin.getAdminObligations).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: "CANCELLED" }),
+      ),
+    );
+  });
+
+  it("requests admin payment links without the removed metrics flag", async () => {
+    admin.getAdminPaymentLinks.mockResolvedValue(page([]));
+    renderSection(PaymentLinksSection);
+    await waitFor(() => expect(admin.getAdminPaymentLinks).toHaveBeenCalled());
+    expect(admin.getAdminPaymentLinks.mock.calls[0][0]).not.toHaveProperty("includeMetrics");
+  });
+  it("filters legacy deleted payment links using DELETED", async () => {
+    admin.getAdminPaymentLinks.mockResolvedValue(page([]));
+    renderSection(PaymentLinksSection);
+    const filter = screen.getAllByRole("combobox")[0];
+    expect(within(filter).queryByRole("option", { name: "Archived" })).toBeNull();
+    fireEvent.change(filter, { target: { value: "DELETED" } });
+    await waitFor(() =>
+      expect(admin.getAdminPaymentLinks).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: "DELETED" }),
+      ),
+    );
+  });
+
   it("shows settlement totals, fees, variances and linked transaction amounts as returned", async () => {
     const settlement = {
       id: "s1",

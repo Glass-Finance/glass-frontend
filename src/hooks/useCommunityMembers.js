@@ -1,3 +1,4 @@
+import { refreshCommunityBilling } from "./refreshCommunityBilling";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAllCommunityMembers,
@@ -14,8 +15,8 @@ function unwrapList(res) {
   return data?.content ?? [];
 }
 
-// Detail responses include optional server aggregates in `stats`; list and
-// mutation responses do not. Keep this cache entry separate from the roster.
+// List and detail responses include server aggregates in `stats`; mutation
+// responses omit them. Detail data stays separate from the flat roster cache.
 export function useCommunityMember(communityId, memberId) {
   return useQuery({
     queryKey: ["community", communityId, "members", "detail", memberId],
@@ -57,7 +58,10 @@ export function useCommunityMembers(communityId, { includeHistorical = false } =
 
   const updateMember = useMutation({
     mutationFn: ({ memberId, payload }) => updateCommunityMember(communityId, memberId, payload),
-    onSuccess: invalidate,
+    onSuccess: (_data, { payload }) =>
+      Object.hasOwn(payload, "billingExempt")
+        ? refreshCommunityBilling(queryClient, communityId)
+        : invalidate(),
     meta: { successMessage: "Member updated" },
   });
 

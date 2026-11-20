@@ -2,6 +2,13 @@
 
 ## Current behavior
 
+Member upcoming payments, next payment due, and total outstanding use only the
+member’s obligations from `GET /finance/obligations/me`. Active community payment
+links without an obligation are not treated as amounts owed: the member may be
+exempt or outside the plan’s audience. A plan appears as due only after the backend
+returns an unpaid obligation for that member. This applies to the member overview,
+Upcoming Payments, and the admin dashboard’s personal payments section.
+
 Payment API wrappers live primarily in `src/api/members.js` and `src/api/payments.js`. React Query mutations initiate payment-link payments, then invalidate obligation and transaction queries. Payment pages handle the processor redirect and call the backend verification endpoint using the returned reference. Saved payment authorizations support auto-pay flows.
 
 Payment initiation sends an `idempotencyKey`, amount, obligation information, and payment metadata. Member and admin payment UI components create a UUID for the active payment attempt and reuse it for retries within that mounted flow.
@@ -27,6 +34,29 @@ A payment plan's terms (`amountMode`, `visibility`, `audience`, `memberIds`) are
 - `visibility: PRIVATE` requires a non-empty audience server-side (`validatePrivateAudience`).
 - `audience: GROUP` is **not** offered: it needs the community-groups endpoints, which this app has no surface for, and the backend rejects a GROUP audience with no `groupIds`.
 - `shapePlan` in `usePaymentPlans` passes all four through; the edit modal hydrates from them. Omitting a field on PATCH leaves the stored value alone, so the modal re-sends the current terms on every save.
+
+## Community member payment statistics
+
+Member list rows (`GET /communities/{communityIdentifier}/members`) and single-member
+responses include all six fields in `stats`; no opt-in flag is required. The Members
+table uses `totalObligationPaymentLinkCount` for Plans and displays
+`paidObligationPaymentLinkCount/totalObligationPaymentLinkCount Paid`, including
+`0/0 Paid` for explicit zeros. Missing statistics render as unavailable, never zero.
+
+These counts group recurring cycles by payment link. A link qualifies as paid when
+it has PAID or WAIVED obligations and no DUE/OVERDUE cycle. Total includes links
+with DUE, OVERDUE, PAID or WAIVED obligations; CANCELLED-only links are excluded.
+The obligation counts retain history across link statuses and billing exemption.
+`activePaymentLinkCount` instead counts currently targeted ACTIVE plans for active,
+non-exempt members, even without obligations, and is not this table's denominator.
+
+The hook retains financial lists for plan filtering, history and last-payment dates,
+not aggregate counts. Member mutations refresh list/detail caches together; payment-plan
+mutations also invalidate both member caches. Existing asynchronous cancellation can
+briefly leave pending statistics visible until the backend finishes processing.
+
+Contract: [Community Member Payment Statistics — Frontend Guide](https://app.notion.com/p/41a9a22eb2a981bdbfd4c0a5f7351219),
+updated 2026-11-18.
 
 ## Platform-admin amount units and community commissions
 
