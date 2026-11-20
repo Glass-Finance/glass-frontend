@@ -29,8 +29,8 @@ export function shapeObligation(raw) {
     })(),
     paymentLinkId: raw.paymentLink?.id,
     // Whether the plan this obligation belongs to is still ACTIVE -- an
-    // obligation generated before a plan was paused/archived/expired can
-    // outlive that change (the backend doesn't retroactively cancel it),
+    // obligation generated before a plan was paused/expired/deleted can
+    // outlive that change (cancellation is asynchronous on the backend),
     // so without this a duplicated-then-deactivated plan's stale unpaid
     // obligation keeps showing as due indefinitely even though the plan
     // itself no longer accepts payments.

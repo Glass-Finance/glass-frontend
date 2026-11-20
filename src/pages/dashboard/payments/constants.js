@@ -15,7 +15,9 @@ export const PLAN_STATUS = {
     dotCls: "bg-danger-bright",
     label: "Inactive",
   },
-  ARCHIVED: {
+  // DELETED replaced ARCHIVED in glass-backend #120: every archived link was
+  // migrated to it, so it keeps the label archived plans had ("Inactive").
+  DELETED: {
     cls: "bg-danger-wash-2 text-danger-bright",
     dotCls: "bg-danger-bright",
     label: "Inactive",

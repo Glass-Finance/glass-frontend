@@ -28,6 +28,18 @@ A payment plan's terms (`amountMode`, `visibility`, `audience`, `memberIds`) are
 - `audience: GROUP` is **not** offered: it needs the community-groups endpoints, which this app has no surface for, and the backend rejects a GROUP audience with no `groupIds`.
 - `shapePlan` in `usePaymentPlans` passes all four through; the edit modal hydrates from them. Omitting a field on PATCH leaves the stored value alone, so the modal re-sends the current terms on every save.
 
+### Plan lifecycle: end, delete, and the removed archive
+
+glass-backend #120 (merged 2026-11-18, `BREAKING CHANGE`) removed payment-link **archive**. What replaced it, and how the dashboard maps onto it:
+
+- **Drafts can be deleted, permanently.** `DELETE /communities/{id}/payment-links/{id}` (`deletePaymentLink` → `usePaymentPlans().deleteDraft`) only accepts a `DRAFT` with no payment or billing history; any other status, or a draft with history, is a 400. `PlanOverflowMenu` offers **Delete Draft** (with a confirmation) on drafts only and lets the backend's message explain the history case.
+- **Live plans end with expire.** `ACTIVE`/`PAUSED` plans keep **End Plan** (`PATCH …/expire`), which now also cancels the plan's open obligations asynchronously.
+- **`ARCHIVED` is gone; `DELETED` is terminal.** Every archived link was migrated to `DELETED`. The status enum is now `DRAFT`, `ACTIVATING`, `ACTIVE`, `ACTIVATION_FAILED`, `PAUSED`, `EXPIRED`, `DELETED`. A `DELETED` plan can't be updated, so its menu offers neither Edit nor Duplicate; it shows as "Inactive", as archived plans did.
+- **Metrics are always included.** The `includeMetrics` query option was removed from the payment-link list endpoints; per-link metrics come back by default.
+- **Admin obligations filter on five statuses.** `GET /admin/obligations` returns and filters only `DUE`, `PAID`, `OVERDUE`, `WAIVED` and `CANCELLED`; any other `status` value is a 400.
+
+`npm run audit:endpoints -- --strict` caught only the first of these (a removed route). Status values and query options are invisible to it, so a backend `BREAKING CHANGE` note is worth reading in full, not just until CI goes green.
+
 ## Platform-admin amount units and community commissions
 
 Admin transaction, settlement, payment-link (including collected metrics), obligation,

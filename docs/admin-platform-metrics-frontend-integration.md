@@ -42,7 +42,7 @@ Every counter is an integer backed by Java `long`. Empty results return zero, wi
 
 - `communities`: All statuses except `DELETING` and `DELETED`
 - `users`: Accounts with platform role `USER`, excluding `PENDING_DELETION` and `DELETED`
-- `paymentLinks.total`: All statuses, including draft, paused, archived, and activation states
+- `paymentLinks.total`: All statuses, including draft, paused, deleted (formerly archived), and activation states
 - `paymentLinks.active`: Stored status `ACTIVE`
 - `paymentLinks.expired`: Stored status `EXPIRED`
 - `transactions`: All statuses, including unsuccessful and pending transactions

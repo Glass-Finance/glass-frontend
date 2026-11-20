@@ -29,7 +29,8 @@ export default function PaymentLinksSection() {
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(status !== "ALL" ? { status } : {}),
     ...(type !== "ALL" ? { paymentType: type } : {}),
-    includeMetrics: true,
+    // No includeMetrics: glass-backend #120 removed the option and returns
+    // batched metrics by default.
   };
 
   const { data, isLoading, isFetching, error } = useQuery({
@@ -72,7 +73,9 @@ export default function PaymentLinksSection() {
                 { value: "DRAFT", label: "Draft" },
                 { value: "PAUSED", label: "Paused" },
                 { value: "EXPIRED", label: "Expired" },
-                { value: "ARCHIVED", label: "Archived" },
+                // ARCHIVED no longer exists (glass-backend #120 migrated it to
+                // DELETED); filtering by it would be rejected as invalid.
+                { value: "DELETED", label: "Deleted" },
               ]}
             />
             <FilterSelect

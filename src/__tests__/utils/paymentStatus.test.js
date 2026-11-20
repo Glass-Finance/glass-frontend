@@ -28,7 +28,7 @@ describe("payment status predicates", () => {
     // Different axis — plan lifecycle / job / payout statuses must never
     // match a payment predicate.
     ["ACTIVE", false, false, false, false, false],
-    ["ARCHIVED", false, false, false, false, false],
+    ["DELETED", false, false, false, false, false],
     ["EXPIRED", false, false, false, false, false],
     ["COMPLETED", false, false, false, false, false],
     ["REJECTED", false, false, false, false, false],

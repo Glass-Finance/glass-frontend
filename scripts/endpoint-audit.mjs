@@ -77,7 +77,9 @@ const TEMPLATE_ACTIONS = [
     // patchAction(action) → PATCH .../payment-links/{id}/{action}; group 1 is
     // everything before the verb, so an expansion is `${prefix}/${verb}`.
     match: /^(.*\/payment-links\/\{\})\/(\{\})$/,
-    values: ["activate", "pause", "resume", "expire", "archive"],
+    // No "archive": glass-backend #120 removed PATCH .../archive in favour of
+    // a draft-only DELETE on the link itself (deletePaymentLink).
+    values: ["activate", "pause", "resume", "expire"],
   },
 ];
 

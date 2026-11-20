@@ -131,31 +131,7 @@ export default function StepContact({ initialEmail, onNext, onGoogleAuth, hasCom
         <ErrorMessage message={fieldErrors.email} />
       </div>
 
-      <label className="flex items-start gap-2 cursor-pointer select-none">
-        {/* appearance-none takes over rendering entirely -- the browser's
-            native checkbox is filled white by the OS/browser UA style
-            regardless of our own bg classes, which is why removing
-            bg-white alone never changed anything. Checkmark is drawn by
-            hand since appearance-none also kills the native tick. */}
-        <span className="relative mt-0.5 w-4 h-4 flex-shrink-0">
-          <input
-            type="checkbox"
-            checked={agreed}
-            onChange={(e) => {
-              setAgreed(e.target.checked);
-              setError("");
-            }}
-            className="appearance-none w-4 h-4 rounded-sm border border-outline-input/40 checked:bg-brand-deep checked:border-brand-deep cursor-pointer"
-          />
-          {agreed && (
-            <Check
-              size={12}
-              strokeWidth={3}
-              className="absolute inset-0 m-auto text-white pointer-events-none"
-            />
-          )}
-        </span>
-        <div className="my-4">
+      <div className="my-4">
         <label className="flex items-start gap-2 cursor-pointer select-none">
           {/* appearance-none takes over rendering entirely -- the browser's
               native checkbox is filled white by the OS/browser UA style
