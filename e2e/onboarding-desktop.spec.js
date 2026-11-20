@@ -14,6 +14,7 @@ const PERSONA = {
 
 const SIZES = [
   { width: 1728, height: 982 },
+  { width: 1440, height: 789 },
   { width: 1366, height: 657 },
 ];
 
@@ -46,21 +47,24 @@ for (const path of ["choose-path", "paying-member"]) {
       }));
       expect(overflow, `${path} ${size.width}x${size.height}`).toEqual({ x: 0, y: 0 });
 
-      if (size.height === 982) {
-        // Two cards side by side, 300px tall.
-        const cards = page
-          .locator("main button, div > button")
-          .filter({ hasText: /Community|dues|exempt/ });
-        const boxes = await cards.evaluateAll((els) =>
-          els.map((el) => {
-            const r = el.getBoundingClientRect();
-            return { y: Math.round(r.y), h: Math.round(r.height) };
-          }),
-        );
-        expect(boxes).toHaveLength(2);
-        expect(boxes[0].y).toBe(boxes[1].y);
-        expect(boxes[0].h).toBe(300);
-      }
+      // Two cards side by side at Figma's 300px at EVERY desktop size --
+      // shorter screens tighten the spacing around them, never the cards
+      // (squashing them to 220px left the 24px/18px text looking oversized).
+      const cards = page
+        .locator("main button, div > button")
+        .filter({ hasText: /Community|dues|exempt/ });
+      const boxes = await cards.evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect();
+          return { y: Math.round(r.y), h: Math.round(r.height) };
+        }),
+      );
+      expect(boxes).toHaveLength(2);
+      expect(boxes[0].y).toBe(boxes[1].y);
+      expect(
+        boxes.map((b) => b.h),
+        `${path} ${size.width}x${size.height}`,
+      ).toEqual([300, 300]);
     }
   });
 }
