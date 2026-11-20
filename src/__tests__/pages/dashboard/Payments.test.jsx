@@ -53,7 +53,7 @@ function makePlanPlans(overrides = {}) {
     pause: { mutate: vi.fn(), isPending: false },
     resume: { mutate: vi.fn(), isPending: false },
     expire: { mutate: vi.fn(), isPending: false },
-    archive: { mutate: vi.fn(), isPending: false },
+    deleteDraft: { mutate: vi.fn(), isPending: false },
     ...overrides,
   };
 }
@@ -363,7 +363,7 @@ describe("Payments — direct status mutations from the menu", () => {
 
     expect(plans.pause.mutate).toHaveBeenCalledWith("plan-1");
     expect(plans.expire.mutate).not.toHaveBeenCalled();
-    expect(plans.archive.mutate).not.toHaveBeenCalled();
+    expect(plans.deleteDraft.mutate).not.toHaveBeenCalled();
   });
 
   it("activates a draft plan directly from the menu", () => {
@@ -374,7 +374,7 @@ describe("Payments — direct status mutations from the menu", () => {
     fireEvent.click(screen.getByText("Activate"));
 
     expect(plans.activate.mutate).toHaveBeenCalledWith("plan-1");
-    expect(plans.archive.mutate).not.toHaveBeenCalled();
+    expect(plans.deleteDraft.mutate).not.toHaveBeenCalled();
   });
 
   it("resumes a paused plan directly from the menu", () => {
@@ -385,6 +385,6 @@ describe("Payments — direct status mutations from the menu", () => {
     fireEvent.click(screen.getByText("Resume Plan"));
 
     expect(plans.resume.mutate).toHaveBeenCalledWith("plan-1");
-    expect(plans.archive.mutate).not.toHaveBeenCalled();
+    expect(plans.deleteDraft.mutate).not.toHaveBeenCalled();
   });
 });

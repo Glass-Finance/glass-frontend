@@ -22,16 +22,15 @@ import {
   TableFooter,
 } from "./SharedUI";
 
-// ObligationStatus enum from the backend.
+// GET /admin/obligations returns -- and accepts as a status filter -- only
+// these five ObligationStatus values (glass-backend #120). The others in the
+// enum (PENDING, PARTIAL, FAILED, REFUNDED) are rejected with HTTP 400, so
+// offering them here only produced an error. Rows can't carry them either.
 const STATUS_OPTIONS = [
   { value: "ALL", label: "All statuses" },
-  { value: "PENDING", label: "Pending" },
   { value: "DUE", label: "Due" },
-  { value: "PARTIAL", label: "Partial" },
   { value: "PAID", label: "Paid" },
   { value: "OVERDUE", label: "Overdue" },
-  { value: "FAILED", label: "Failed" },
-  { value: "REFUNDED", label: "Refunded" },
   { value: "WAIVED", label: "Waived" },
   { value: "CANCELLED", label: "Cancelled" },
 ];

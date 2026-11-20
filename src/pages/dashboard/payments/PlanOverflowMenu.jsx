@@ -21,11 +21,15 @@ function MenuItem({ icon, label, onClick, disabled, danger, title }) {
 export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMembers, onDuplicate }) {
   const [open, setOpen] = useState(false);
   const [confirmingEnd, setConfirmingEnd] = useState(false);
-  const [confirmingArchive, setConfirmingArchive] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const status = plan.status;
   const isActive = status === "ACTIVE";
   const isPaused = status === "PAUSED";
   const isDraft = status === "DRAFT";
+  // DELETED is terminal (and is what legacy ARCHIVED plans became in
+  // glass-backend #120): the backend rejects updates to it, so it gets
+  // neither Edit nor Duplicate -- the same rule archived plans had.
+  const isDeleted = status === "DELETED";
   const close = () => setOpen(false);
 
   return (
@@ -43,14 +47,16 @@ export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMember
         <>
           <div className="fixed inset-0 z-10" onClick={close} />
           <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-surface-container-border shadow-xl z-20 overflow-hidden min-w-[180px] py-1">
-            <MenuItem
-              icon={<Pencil size={13} />}
-              label="Edit Plan"
-              onClick={() => {
-                onEdit(plan);
-                close();
-              }}
-            />
+            {!isDeleted && (
+              <MenuItem
+                icon={<Pencil size={13} />}
+                label="Edit Plan"
+                onClick={() => {
+                  onEdit(plan);
+                  close();
+                }}
+              />
+            )}
             {/* On-demand reminders have no backend route yet (the
                 plan-level reminderFrequency/reminderChannels cadence on
                 create/update does). Kept visible but inert, matching the
@@ -113,19 +119,22 @@ export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMember
                     close();
                   }}
                 />
-              </>
-            )}
-            {status !== "ARCHIVED" && (
-              <>
-                <div className="h-px bg-gray-100 my-1" />
+                {/* Drafts only: the backend's DELETE is draft-only and
+                    permanent. Live plans stop via End Plan (expire) above. */}
                 <MenuItem
-                  label="Archive"
+                  icon={<Trash2 size={13} />}
+                  label="Delete Draft"
                   danger
                   onClick={() => {
-                    setConfirmingArchive(true);
+                    setConfirmingDelete(true);
                     close();
                   }}
                 />
+              </>
+            )}
+            {!isDeleted && (
+              <>
+                <div className="h-px bg-gray-100 my-1" />
                 <MenuItem
                   label="Duplicate"
                   onClick={() => {
@@ -154,17 +163,17 @@ export default function PlanOverflowMenu({ plan, planPlans, onEdit, onViewMember
         />
       )}
 
-      {confirmingArchive && (
+      {confirmingDelete && (
         <ConfirmDialog
-          title="Archive Plan"
+          title="Delete Draft"
           subtitle={plan.name}
-          description="This hides the plan from the active list and stops any further collection on it. There's no way to unarchive it afterward -- only duplicate it as a new plan."
-          confirmLabel="Archive"
-          confirmingLabel="Archiving…"
-          confirming={planPlans.archive.isPending}
-          onClose={() => setConfirmingArchive(false)}
+          description="This permanently deletes the draft plan. It can't be undone."
+          confirmLabel="Delete Draft"
+          confirmingLabel="Deleting…"
+          confirming={planPlans.deleteDraft.isPending}
+          onClose={() => setConfirmingDelete(false)}
           onConfirm={() =>
-            planPlans.archive.mutate(plan.id, { onSuccess: () => setConfirmingArchive(false) })
+            planPlans.deleteDraft.mutate(plan.id, { onSuccess: () => setConfirmingDelete(false) })
           }
         />
       )}

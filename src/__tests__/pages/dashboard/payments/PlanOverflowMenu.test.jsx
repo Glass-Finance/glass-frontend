@@ -6,10 +6,10 @@ import PlanOverflowMenu from "../../../../pages/dashboard/payments/PlanOverflowM
 afterEach(cleanup);
 
 // planPlans only needs whichever mutation the rendered status path can
-// reach -- these two (archive/expire) are what every status exercises here.
+// reach -- deleteDraft/expire are what the destructive paths exercise here.
 function makePlanPlans() {
   return {
-    archive: { mutate: vi.fn(), isPending: false },
+    deleteDraft: { mutate: vi.fn(), isPending: false },
     expire: { mutate: vi.fn(), isPending: false },
     pause: { mutate: vi.fn(), isPending: false },
     resume: { mutate: vi.fn(), isPending: false },
@@ -37,51 +37,73 @@ function openMenu() {
   fireEvent.click(screen.getByRole("button"));
 }
 
-describe("PlanOverflowMenu — Archive", () => {
-  it("does not archive immediately -- clicking Archive only opens a confirmation", () => {
-    const { planPlans } = renderMenu();
+// glass-backend #120 replaced archive with a draft-only, permanent DELETE.
+describe("PlanOverflowMenu — Delete Draft", () => {
+  it("does not delete immediately -- clicking Delete Draft only opens a confirmation", () => {
+    const { planPlans } = renderMenu({ status: "DRAFT" });
     openMenu();
 
-    fireEvent.click(screen.getByText("Archive"));
+    fireEvent.click(screen.getByRole("button", { name: "Delete Draft" }));
 
-    expect(planPlans.archive.mutate).not.toHaveBeenCalled();
-    expect(screen.getByText("Archive Plan")).toBeTruthy();
-    expect(screen.getByText(/stops any further collection/i)).toBeTruthy();
+    expect(planPlans.deleteDraft.mutate).not.toHaveBeenCalled();
+    expect(screen.getByText(/permanently deletes the draft/i)).toBeTruthy();
   });
 
-  it("archives the plan only after the confirmation dialog is confirmed", () => {
-    const { plan, planPlans } = renderMenu();
+  it("deletes the draft only after the confirmation dialog is confirmed", () => {
+    const { plan, planPlans } = renderMenu({ status: "DRAFT" });
     openMenu();
-    fireEvent.click(screen.getByText("Archive"));
+    fireEvent.click(screen.getByRole("button", { name: "Delete Draft" }));
 
-    // Two "Archive"-labelled controls exist now: the confirm dialog's
-    // button is the last one rendered.
-    const archiveButtons = screen.getAllByText("Archive");
-    fireEvent.click(archiveButtons[archiveButtons.length - 1]);
+    // The dialog's title and its confirm button share the label; the
+    // confirm button is the only *button* named that once the menu closed.
+    fireEvent.click(screen.getByRole("button", { name: "Delete Draft" }));
 
-    expect(planPlans.archive.mutate).toHaveBeenCalledTimes(1);
-    expect(planPlans.archive.mutate).toHaveBeenCalledWith(
+    expect(planPlans.deleteDraft.mutate).toHaveBeenCalledTimes(1);
+    expect(planPlans.deleteDraft.mutate).toHaveBeenCalledWith(
       plan.id,
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
   });
 
-  it("backing out of the confirmation via Cancel never archives", () => {
-    const { planPlans } = renderMenu();
+  it("backing out of the confirmation via Cancel never deletes", () => {
+    const { planPlans } = renderMenu({ status: "DRAFT" });
     openMenu();
-    fireEvent.click(screen.getByText("Archive"));
+    fireEvent.click(screen.getByRole("button", { name: "Delete Draft" }));
 
     fireEvent.click(screen.getByText("Cancel"));
 
-    expect(planPlans.archive.mutate).not.toHaveBeenCalled();
-    expect(screen.queryByText("Archive Plan")).toBeNull();
+    expect(planPlans.deleteDraft.mutate).not.toHaveBeenCalled();
+    expect(screen.queryByText(/permanently deletes the draft/i)).toBeNull();
   });
 
-  it("is not offered once a plan is already archived", () => {
-    renderMenu({ status: "ARCHIVED" });
+  it.each(["ACTIVE", "PAUSED", "EXPIRED", "DELETED"])(
+    "is not offered on a %s plan -- the backend only deletes drafts",
+    (status) => {
+      renderMenu({ status });
+      openMenu();
+
+      expect(screen.queryByRole("button", { name: "Delete Draft" })).toBeNull();
+      expect(screen.queryByText("Archive")).toBeNull();
+    },
+  );
+});
+
+describe("PlanOverflowMenu — deleted plans", () => {
+  it("offers neither Edit nor Duplicate on a DELETED plan (the backend rejects updates)", () => {
+    renderMenu({ status: "DELETED" });
     openMenu();
 
-    expect(screen.queryByText("Archive")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit Plan" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Duplicate" })).toBeNull();
+    // Read-only actions stay available.
+    expect(screen.getByRole("button", { name: "View Members" })).toBeTruthy();
+  });
+
+  it("still offers Duplicate on an expired plan -- End Plan's own copy points there", () => {
+    renderMenu({ status: "EXPIRED" });
+    openMenu();
+
+    expect(screen.getByRole("button", { name: "Duplicate" })).toBeTruthy();
   });
 });
 

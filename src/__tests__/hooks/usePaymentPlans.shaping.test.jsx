@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePaymentPlans } from "../../hooks/usePaymentPlans";
-import { getCommunityPaymentLinks } from "../../api/payments";
+import { getCommunityPaymentLinks, deletePaymentLink } from "../../api/payments";
 
 // shapePlan is module-private, so this exercises it the only way it's
 // reachable: through the hook, against a mocked API response.
@@ -21,7 +21,7 @@ vi.mock("../../api/payments", () => ({
   pausePaymentLink: vi.fn(),
   resumePaymentLink: vi.fn(),
   expirePaymentLink: vi.fn(),
-  archivePaymentLink: vi.fn(),
+  deletePaymentLink: vi.fn(),
   duplicatePaymentLink: vi.fn(),
 }));
 
@@ -154,5 +154,30 @@ describe("usePaymentPlans — shaping the editable plan terms", () => {
       groupIds: ["group-c"],
       memberIds: [],
     });
+  });
+});
+
+// glass-backend #120 (BREAKING): archive was replaced by a draft-only DELETE,
+// and the list's includeMetrics option was removed (metrics are the default).
+describe("usePaymentPlans — backend #120 lifecycle contract", () => {
+  it("fetches the plan list without the removed includeMetrics option", async () => {
+    getCommunityPaymentLinks.mockResolvedValue({ data: { data: { content: [] } } });
+
+    renderPlans();
+
+    await waitFor(() => expect(getCommunityPaymentLinks).toHaveBeenCalled());
+    expect(getCommunityPaymentLinks).toHaveBeenCalledWith(COMMUNITY_ID);
+  });
+
+  it("deleteDraft calls DELETE for the plan and exposes no archive mutation", async () => {
+    getCommunityPaymentLinks.mockResolvedValue({ data: { data: { content: [] } } });
+    deletePaymentLink.mockResolvedValue({ data: { data: "Payment link deleted" } });
+
+    const { result } = renderPlans();
+    expect(result.current.archive).toBeUndefined();
+
+    await act(() => result.current.deleteDraft.mutateAsync("link-draft"));
+
+    expect(deletePaymentLink).toHaveBeenCalledWith(COMMUNITY_ID, "link-draft");
   });
 });

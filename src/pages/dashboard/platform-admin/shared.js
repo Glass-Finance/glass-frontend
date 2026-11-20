@@ -118,7 +118,6 @@ export const STATUS_COLORS = {
   NEED_MORE_INFORMATION: { bg: "bg-orange-50", text: "text-orange-700" },
   DRAFT: { bg: "bg-gray-100", text: "text-gray-500" },
   EXPIRED: { bg: "bg-gray-100", text: "text-gray-500" },
-  ARCHIVED: { bg: "bg-gray-100", text: "text-gray-500" },
   PAUSED: { bg: "bg-amber-50", text: "text-amber-700" },
   COMPLETED: { bg: "bg-blue-50", text: "text-blue-700" },
   FAILED: { bg: "bg-red-50", text: "text-red-700" },

@@ -18,7 +18,7 @@ vi.mock("../../api/payments", () => ({
   pausePaymentLink: vi.fn(),
   resumePaymentLink: vi.fn(),
   expirePaymentLink: vi.fn(),
-  archivePaymentLink: vi.fn(),
+  deletePaymentLink: vi.fn(),
   duplicatePaymentLink: vi.fn(),
 }));
 
@@ -56,9 +56,9 @@ const RAW_LINKS = [
     },
   },
   {
-    id: "link-archived",
+    id: "link-deleted",
     title: "Last term's plan",
-    status: "ARCHIVED",
+    status: "DELETED",
     amount: 1000,
     paymentType: "ONE_TIME",
     metrics: {
@@ -155,7 +155,7 @@ describe('F2 — ["community", id, "payment-links"] cache shape', () => {
       expect(plans.result.current.plans[1].name).toBe("Last term's plan");
 
       // ...and the member-payment consumer still derives plan coverage from
-      // the RAW list: only the ACTIVE link counts (archived one excluded).
+      // the RAW list: only the ACTIVE link counts (deleted one excluded).
       expect(members.result.current.members[0].planCount).toBe(1);
       expect(members.result.current.members[0].totalCount).toBe(1);
       expect(members.result.current.members[0].paidCount).toBe(0);
@@ -170,7 +170,7 @@ describe('F2 — ["community", id, "payment-links"] cache shape', () => {
     const before = getCommunityPaymentLinks.mock.calls.length;
     expect(before).toBe(2);
 
-    // What usePaymentPlans.invalidate() issues after create/update/archive.
+    // What usePaymentPlans.invalidate() issues after create/update/deleteDraft.
     await queryClient.invalidateQueries({ queryKey: RAW_KEY });
 
     await waitFor(() => expect(getCommunityPaymentLinks.mock.calls.length).toBe(before + 2));

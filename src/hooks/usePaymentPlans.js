@@ -7,7 +7,7 @@ import {
   pausePaymentLink,
   resumePaymentLink,
   expirePaymentLink,
-  archivePaymentLink,
+  deletePaymentLink,
   duplicatePaymentLink,
 } from "../api/payments";
 
@@ -73,8 +73,7 @@ export function usePaymentPlans(communityId) {
   const query = useQuery({
     // "plans" discriminator: this hook and useMembersWithPayments both read
     // GET .../payment-links for the same community, but they are not the same
-    // resource in the cache — this one sends includeMetrics=true and maps the
-    // response through shapePlan (plan/summary objects for the Payments table
+    // resource in the cache — this one maps the response through shapePlan (plan/summary objects for the Payments table
     // and dashboard cards), while useMembersWithPayments caches the raw
     // PaymentLink list under ["community", id, "payment-links"] and only reads
     // id/status off it. Sharing one key meant whichever queryFn fetched first
@@ -82,11 +81,10 @@ export function usePaymentPlans(communityId) {
     // (no name/amountCollected/paidCount) and vice versa.
     queryKey: ["community", communityId, "payment-links", "plans"],
     queryFn: async () => {
-      // includeMetrics is a real, confirmed query param on this endpoint
-      // (PaymentLinkQueryDto) -- without it the list response's per-item
-      // metrics object can't be assumed populated, silently zeroing every
-      // amountCollected/expectedAmount card on the dashboard.
-      const res = await getCommunityPaymentLinks(communityId, { includeMetrics: true });
+      // Per-item metrics (amountCollected/expectedAmount for the dashboard
+      // cards) come back by default: glass-backend #120 removed the old
+      // includeMetrics option and made metrics unconditional.
+      const res = await getCommunityPaymentLinks(communityId);
       return unwrapList(res).map(shapePlan);
     },
     enabled,
@@ -140,10 +138,13 @@ export function usePaymentPlans(communityId) {
     onSuccess: invalidate,
     meta: { successMessage: "Payment plan expired" },
   });
-  const archive = useMutation({
-    mutationFn: (paymentLinkId) => archivePaymentLink(communityId, paymentLinkId),
+  // Draft-only, permanent (replaces the removed archive -- see
+  // api/payments.js). A draft with payment/billing history is rejected by the
+  // backend with a 400 whose message the global mutation toast surfaces.
+  const deleteDraft = useMutation({
+    mutationFn: (paymentLinkId) => deletePaymentLink(communityId, paymentLinkId),
     onSuccess: invalidate,
-    meta: { successMessage: "Payment plan archived" },
+    meta: { successMessage: "Draft plan deleted" },
   });
   // DuplicatePaymentLinkRequest (confirmed via Swagger) takes title, slug,
   // description, startAt/dueAt/expireAt, and an optional recurringPlan
@@ -170,7 +171,7 @@ export function usePaymentPlans(communityId) {
     pause,
     resume,
     expire,
-    archive,
+    deleteDraft,
     duplicate,
   };
 }
