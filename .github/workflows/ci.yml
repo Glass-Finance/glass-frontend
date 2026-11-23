@@ -138,7 +138,7 @@ jobs:
       # ghcr.io publishes `3.99.3`, not `v3.99.3`, and a wrong tag fails the
       # job with "manifest unknown" rather than scanning anything.
       - name: Scan for leaked credentials
-        uses: trufflesecurity/trufflehog@3bd2b5887eb0efb8fa18bfd1d296032924e4ffdc # v3.99.9
+        uses: trufflesecurity/trufflehog@d232362a64a09a9e7d58267b8f5acef00ae90e23 # v3.100.0
         with:
           version: "3.99.3"
           extra_args: --results=verified,unknown
