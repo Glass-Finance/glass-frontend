@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { MapPin } from "lucide-react";
+import { MapPin, X, Instagram, Linkedin } from "lucide-react";
 import { Crisp } from "crisp-sdk-web";
 import { goToApp } from "../utils/deviceRedirect";
 import glassLogo from "../assets/Glass.webp";
@@ -48,40 +48,6 @@ export default function Footer() {
 
   return (
     <footer className="relative isolate overflow-hidden bg-brand-ink text-white">
-      {/* Decorative Glass mark, centred on the whole footer. Not a Figma node
-          (1:1374 draws no watermark) — owner-approved extension, see
-          docs/design-system.md §9.8. Stops are the sanctioned brand blue and deep
-          navy; the mask is what cuts the stepped line through the plate.
-          Hidden below md: on a phone the mark outgrows the footer and its cut
-          line collides with the nav columns, so the footer stays flat there. */}
-      <svg
-        aria-hidden="true"
-        viewBox="26 18 204 182"
-        className="hidden md:block pointer-events-none select-none absolute left-1/2 top-1/2 z-0 h-[104%] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.55]"
-      >
-        <defs>
-          <linearGradient id="footerMarkGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#002fa7" />
-            <stop offset="1" stopColor="#001f6e" />
-          </linearGradient>
-          <mask id="footerMarkMask">
-            <rect x="0" y="0" width="260" height="220" fill="#fff" />
-            <path
-              d="M165 10 L165 80 L103 80 L103 140 L157 140 L157 120 L240 120"
-              fill="none"
-              stroke="#000"
-              strokeWidth="6.5"
-              strokeLinejoin="miter"
-            />
-          </mask>
-        </defs>
-        <path
-          mask="url(#footerMarkMask)"
-          fill="url(#footerMarkGrad)"
-          d="M31 84 L90 22 L222 22 L222 140 L150 194 L31 194Z"
-        />
-      </svg>
-
       {/* ── CTA ── */}
       <div className="relative pt-20 md:pt-28 pb-20 overflow-hidden">
         <div className="relative z-10 max-w-[860px] mx-auto px-6 text-center">
@@ -119,14 +85,10 @@ export default function Footer() {
       </div>
 
       {/* ── Footer content ── */}
-      {/* z-10 so the nav columns and copyright sit above the watermark. */}
       <div className="relative z-10 max-w-[1140px] mx-auto px-6 pt-14 pb-8">
         {/* Brand */}
         <div className="mb-6">
           <a href="/" className="inline-flex items-center gap-2 no-underline mb-3">
-            {/* Local bundle, not Cloudinary: the remote logo kept rendering
-                unreliably here, and this ships with the app — no CDN round
-                trip for a 28px icon. */}
             <img
               src={glassLogo}
               alt="Glass"
@@ -153,15 +115,25 @@ export default function Footer() {
             <div key={section}>
               <p className="text-[13px] font-bold text-white mb-4">{section}</p>
               <ul className="space-y-2.5 list-none p-0 m-0">
-                {items.map(({ label, href, chat }) => (
+                {items.map(({ label, href, target, rel, Icon, ariaLabel, chat }) => (
                   <li key={label}>
                     {href ? (
                       <a
                         href={href}
+                        target={target}
+                        rel={rel}
                         onClick={chat ? openChat : undefined}
                         className="text-[13px] text-white/60 hover:text-white no-underline transition-colors"
+                        aria-label={ariaLabel}
                       >
-                        {label}
+                        {Icon ? (
+                          <span className="flex items-center gap-2">
+                            <Icon className="h-5 w-5 text-white" />
+                            <span>{label}</span>
+                          </span>
+                        ) : (
+                          <span>{label}</span>
+                        )}
                       </a>
                     ) : (
                       <span className="text-[13px] text-white/35 cursor-default select-none">
@@ -172,6 +144,36 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
+          ))}
+        </div>
+
+        {/* Social icons — horizontal, more space between each, centered in footer */}
+        <div className="flex gap-8 mb-8 justify-center">
+          {[
+            { label: "X", href: "https://x.com/glasspayhq", Icon: X, ariaLabel: "X (Twitter)" },
+            {
+              label: "Instagram",
+              href: "https://www.instagram.com/glasspayhq",
+              Icon: Instagram,
+              ariaLabel: "Instagram",
+            },
+            {
+              label: "LinkedIn",
+              href: "https://ng.linkedin.com/company/glass-finance",
+              Icon: Linkedin,
+              ariaLabel: "LinkedIn",
+            },
+          ].map(({ label, href, Icon, ariaLabel }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={ariaLabel}
+              className="flex items-center justify-center p-2 rounded-g-1 hover:bg-white/10 transition-colors"
+            >
+              <Icon className="h-5 w-5 text-white" />
+            </a>
           ))}
         </div>
 
