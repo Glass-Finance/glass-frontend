@@ -114,19 +114,11 @@ export default function ChoosePath() {
 
       {/* Desktop (lg+) follows Figma "MacBook Pro 14" - 24": no step label
           (the phone frame dropped it too), Headline/Large title at y=148, a
-<<<<<<< HEAD
           938px row of two 320px cards, the blue "isn't final" banner and a
           420px, 64px Continue. Every desktop value is lg:, so the phone
           layout is untouched. */}
       <main className="relative flex-1 flex flex-col items-center justify-start px-4 lg:px-8 pt-6 lg:pt-[57px] lg:[@media(max-height:800px)]:pt-5! pb-10 lg:[@media(max-height:800px)]:pb-4!">
         <div className="text-center mb-20 lg:mb-[66px] lg:[@media(max-height:800px)]:mb-3!">
-=======
-          938px column of two 300px cards, the blue "isn't final" banner and a
-          420px, 64px Continue. Every desktop value is lg:, so the phone
-          layout is untouched. */}
-      <main className="relative flex-1 flex flex-col items-center justify-start px-4 lg:px-8 pt-6 lg:pt-[57px] lg:[@media(max-height:800px)]:pt-5! pb-10 lg:[@media(max-height:800px)]:pb-4!">
-        <div className="text-center mb-20 lg:mb-[66px] lg:[@media(max-height:800px)]:mb-7!">
->>>>>>> pr-287-review
           <h1 className="text-base font-medium text-ink mb-1 lg:text-[32px] lg:leading-10 lg:font-semibold lg:text-ink">
             What would you like to do?
           </h1>
@@ -147,11 +139,7 @@ export default function ChoosePath() {
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
-<<<<<<< HEAD
                 className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:h-[320px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
-=======
-                className={`relative flex flex-col items-center text-center gap-0 px-6 pt-16 pb-6 lg:justify-center lg:h-[300px] lg:pt-[60px] lg:pb-12 lg:[@media(max-height:800px)]:h-[220px]! lg:[@media(max-height:800px)]:pt-[52px]! lg:[@media(max-height:800px)]:pb-6! rounded-g-1 lg:rounded-lg transition-all duration-200 cursor-pointer w-full lg:w-auto lg:flex-1 border bg-white ${isSelected ? "border-2 border-brand" : "border-hairline-neutral max-lg:border-2 lg:border-2 lg:border-hairline"}`}
->>>>>>> pr-287-review
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 mb-4">
                   <CloudImage
@@ -195,11 +183,7 @@ export default function ChoosePath() {
         {/* Desktop only (not in the phone frame): the design-system Banner
             (docs/design-system.md §9.4 -- #ccdaff fill, brand @20% stroke,
             r=4) with the info icon, 48px above Continue. */}
-<<<<<<< HEAD
         <div className="hidden lg:flex items-center gap-6 px-6 py-4 lg:[@media(max-height:800px)]:py-3 mb-12 lg:[@media(max-height:800px)]:mb-3 w-full max-w-[938px] rounded-g-1 bg-brand-100 border border-brand/20">
-=======
-        <div className="hidden lg:flex items-center gap-6 px-6 py-4 lg:[@media(max-height:800px)]:py-3 mb-12 lg:[@media(max-height:800px)]:mb-6 w-full max-w-[938px] rounded-g-1 bg-brand-100 border border-brand/20">
->>>>>>> pr-287-review
           <span
             aria-hidden="true"
             className="w-6 h-6 rounded-full bg-brand text-white text-sm font-semibold flex items-center justify-center flex-shrink-0"
@@ -226,18 +210,6 @@ export default function ChoosePath() {
           >
             Continue
           </Button>
-<<<<<<< HEAD
-=======
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth={false}
-            onClick={() => navigate("/dashboard/home")}
-            className="max-lg:flex-1 max-lg:text-brand lg:text-brand lg:text-[16px] lg:h-auto lg:px-0 lg:py-0 lg:hover:bg-transparent"
-          >
-            Skip
-          </Button>
->>>>>>> pr-287-review
         </div>
         <div className="h-[env(safe-area-inset-bottom,0px)]" />
       </main>

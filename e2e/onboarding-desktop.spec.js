@@ -2,14 +2,8 @@ import { test, expect } from "@playwright/test";
 import { ADMIN_PERSONA, createScenario, installNetworkMock, preparePage, ok } from "./support.js";
 
 // Desktop Choose Path and Paying Member (Figma "MacBook Pro 14" - 24 / - 35").
-<<<<<<< HEAD
 // Checks that both screens hide the step label and fit without scrolling.
 // The full desktop frames are 982px tall; shorter screens tighten spacing.
-=======
-// Pins what the frames changed on desktop -- no "Step X of Y" label, the
-// 300px card row -- and that both screens fit laptop screens without
-// scrolling (the frames are 982px tall; shorter screens tighten spacing).
->>>>>>> pr-287-review
 
 const PERSONA = {
   ...ADMIN_PERSONA,
@@ -37,14 +31,10 @@ test.beforeEach(async ({ page }) => {
   await preparePage(page, PERSONA);
 });
 
-<<<<<<< HEAD
 for (const [path, cardHeight] of [
   ["choose-path", 320],
   ["paying-member", 300],
 ]) {
-=======
-for (const path of ["choose-path", "paying-member"]) {
->>>>>>> pr-287-review
   test(`${path} follows the desktop frame and fits the screen`, async ({ page }) => {
     for (const size of SIZES) {
       await page.setViewportSize(size);
@@ -59,11 +49,7 @@ for (const path of ["choose-path", "paying-member"]) {
       expect(overflow, `${path} ${size.width}x${size.height}`).toEqual({ x: 0, y: 0 });
 
       if (size.height === 982) {
-<<<<<<< HEAD
         // Both cards align side by side at the height for this screen.
-=======
-        // Two cards side by side, 300px tall.
->>>>>>> pr-287-review
         const cards = page
           .locator("main button, div > button")
           .filter({ hasText: /Community|dues|exempt/ });
@@ -75,11 +61,7 @@ for (const path of ["choose-path", "paying-member"]) {
         );
         expect(boxes).toHaveLength(2);
         expect(boxes[0].y).toBe(boxes[1].y);
-<<<<<<< HEAD
         expect(boxes.map(({ h }) => h)).toEqual([cardHeight, cardHeight]);
-=======
-        expect(boxes[0].h).toBe(300);
->>>>>>> pr-287-review
       }
     }
   });
