@@ -13,6 +13,7 @@ import {
   usePendingPaymentVerification,
 } from "../../hooks/usePayments";
 import { useExportJob } from "../../hooks/useExportJob";
+import { useCustomColumns } from "../../hooks/useCustomColumn";
 import { exportCommunityTransactions } from "../../api/exports";
 import totalMembersIcon from "../../assets/dashboard/total-members.webp";
 import inactiveMembersIcon from "../../assets/dashboard/inactive-members.webp";
@@ -24,6 +25,7 @@ import { isMemberRoleOwner } from "../../utils/communityRole";
 import { isPaidObligationStatus } from "../../utils/paymentStatus";
 import { AdminPaymentModal } from "../../components/dashboard/AdminPaymentModal";
 import AddMemberModal from "./admin-dashboard/AddMemberModal";
+import AddColumnModal from "./admin-dashboard/AddColumnModal";
 import CreatePlanModal from "./payments/CreatePlanModal";
 import { getErrorMessage, notifyError } from "../../utils/errorHandler";
 import GettingStartedChecklist from "./admin-dashboard/sections/GettingStartedChecklist";
@@ -68,6 +70,8 @@ function DashboardContent({ isPaying, communityId }) {
   const [alertVisible, setAlertVisible] = useState(true);
   const [payingItem, setPayingItem] = useState(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [addColumnOpen, setAddColumnOpen] = useState(false);
+  const customColumns = useCustomColumns(communityId);
   const [createPlanOpen, setCreatePlanOpen] = useState(false);
   const [gsDismissed, setGsDismissed] = useState(() => {
     try {
@@ -504,6 +508,10 @@ function DashboardContent({ isPaying, communityId }) {
           onRowClick={(txId) =>
             navigate(`/dashboard/transactions/${txId}?community=${communityId ?? ""}`)
           }
+          customColumns={customColumns.columns}
+          customValues={customColumns.values}
+          onCustomValueChange={customColumns.setCellValue}
+          onAddColumn={() => setAddColumnOpen(true)}
         />
       </main>
 
@@ -516,6 +524,16 @@ function DashboardContent({ isPaying, communityId }) {
           communityId={communityId}
           communitySlug={community?.slug}
           onClose={() => setAddMemberOpen(false)}
+        />
+      )}
+      {addColumnOpen && (
+        <AddColumnModal
+          existingNames={customColumns.columns.map((c) => c.name)}
+          onClose={() => setAddColumnOpen(false)}
+          onSubmit={async (draft) => {
+            customColumns.addColumn(draft);
+            return true;
+          }}
         />
       )}
     </>
